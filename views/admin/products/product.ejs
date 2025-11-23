@@ -1,209 +1,122 @@
-<style>
-    .main-content {
-        margin-left: 250px;
-        margin-top: 70px;
-        padding: 2rem;
-        min-height: calc(100vh - 120px);
-        background-color: #f8f9fa;
-        color: #333;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .pagination {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1.5rem;
-}
-.search-container {
-    margin-bottom: 1.5rem;
-}
-
-.search-container form {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.search-container input {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    flex-grow: 1;
-    max-width: 400px;
-}
-.search-container .clear-btn {
-    background-color: #ffffff;
-    color: #000000;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: background-color 0.3s;
-}
-
-.search-container .clear-btn:hover {
-    background-color: #c0392b;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-    background-color: white;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #000000;
-    color: white;
-    font-weight: 500;
-}
-
-tr:hover {
-    background-color: #e1e1e1;
-}
-
-.text-danger {
-    color: #e74c3c;
-    font-weight: 500;
-}
-
-.text-success {
-    color: #2ecc71;
-    font-weight: 500;
-}
-.pagination {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1.5rem;
-}
-
-.pagination a {
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    color: #000000;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    transition: all 0.3s;
-}
-
-.pagination a:hover {
-    background-color: #bcbcbc;
-}
-
-.pagination a.active {
-    background-color: #000000;
-    color: white;
-    border-color: #000000;
-}
-</style>
-
-<%-include ('../../../views/partials/admin/header')%>
-    <main class="main-content">
-        <h1>Product Management</h1>
-
-         <div class="search-container">
-            <form action="/admin/products" method="GET">
-                <input type="text" name="search" value="<%= search %>" placeholder="Search products...">
-                <button type="submit" class="btn btn-dark">Search</button>
-                <% if (search) { %>
-                    <a href="/admin/products" class="btn btn-outline-dark">Clear</a>
-                <% } %>
-            </form>
+<div class="container">
+        <div class="row">
+            <div class="col-6">
+                <h3>Product Management</h1>
+            </div>
+            <div class="col-6">
+                <div class="d-flex justify-content-end">
+                    <a href="/admin/add-products"><button class="btn btn-success">Add New Product</button></a>
+                </div>
+            </div>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th scope="col">Product name</th>
-                    <th scope="col">Brand</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Regular Price</th>
-                    <th scope="col">Offers</th>
-                    <th scope="col">Offer Actions</th>
-                    <th scope="col">Sale Price</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                    <% if(product.length > 0) {%>
-                        <% product.forEach((product,index)=>{ %>
-                    <tr>
-                        <td><%= product.productName %></td>
-                        <td><%= product.brand?.brandName || "NA" %></td>
-                        <td><%= product.category?.name || "NA" %></td>
-                        <td><%= product.regularPrice %></td>
-                        <td>
-                            <div>category offer:<%=product.categoryOffer%> %</div>
-                            <div>brand offer:<%=product.brandOffer%> %</div>
-                            <div>product offer:<%=product.productOffer%> %</div>
-                        </td>
-                        <td>
-                            <% if(product.productOffer===0){ %>
-                                <button class="btn btn-outline-primary" onclick="addOffer('<%= product._id %>')">Add Offer</button>
-                            <%}else{%>
-                                <button class="btn btn-outline-danger" onclick="removeOffer('<%= product._id %>')">Remove Offer</button>
-                            <% } %>
-                        </td>
-                        <td><%= product.salePrice.toFixed() %></td>
-                        <td><%= product.quantity %></td>
-
-                        <td id="status-<%= index %>"
-                            class="<%= product.isBlocked ? 'text-danger' : 'text-success' %>">
-                            <%= product.status %>
-                        </td>
-                        <td>
-                            <a href="/admin/edit-product/<%= product._id %>" class="edit-btn btn btn-outline-dark">Edit</a>
-                            <button type="button"
-                                    class="<%= product.isBlocked ? 'btn btn-success' : 'btn btn-danger' %>"
-                                    id="product-<%= product._id %>"
-                                    data-product-id="<%= product._id %>"
-                                    data-is-blocked="<%= product.isBlocked %>"
-                                    onclick="toggleBlockProduct(this,'<%= index %>')">
-                                    <%= product.isBlocked ? 'Unblock' : 'Block' %>
-
-                            </button>
-                        </td>
-                    </tr>
-                    <% }) %>
-                <% }else{ %>
-                     <tr>
-                        <td colspan="8" style="text-align: center;">No products found</td>
-                    </tr>
-                    <% } %>
-            </tbody>
-        </table>
-
-
-        <!-- pagination -->
-        <% if (totalPages> 1) { %>
-            <div class="pagination">
-                <% if (currentPage> 1) { %>
-                    <a href="/admin/products?page=<%= currentPage - 1 %>&search=<%= search %>">Previous</a>
-                <% } %>
-
-                <% for(let i=1; i <=totalPages; i++) { %>
-                    <a href="/admin/products?page=<%= i %>&search=<%= search %>"
-                        class="<%= currentPage === i ? 'active' : '' %>">
-                        <%= i %>
-                    </a>
-                <% } %>
-
-                <% if (currentPage < totalPages) { %>
-                    <a href="/admin/products?page=<%= currentPage + 1 %>&search=<%= search %>">Next</a>
-                <% } %>
+        <div class="row mb-3">
+            <div class="col-xl-6">
+                <form action="/admin/products" method="get">
+                    <div class="d-flex gap-3 align-items-center">
+                        <input type="search" name="search" value="<%= search %>" placeholder="Search products..." class="form-control">
+                        <button type="submit" class="btn btn-dark">Search</button>
+                        <a href="/admin/products" class="btn btn-outline-dark">Clear</a>
+                    </div>
+                </form>
             </div>
-            <% } %>
-    </main>
-    <%-include ('../../../views/partials/admin/footer')%>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">Product name</th>
+                            <th scope="col">Brand</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Regular Price</th>
+                            <th scope="col">Offers</th>
+                            <th scope="col">Offer Actions</th>
+                            <th scope="col">Sale Price</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            <% if(product.length > 0) {%>
+                                <% product.forEach((product,index)=>{ %>
+                            <tr>
+                                <td><%= product.productName %></td>
+                                <td><%= product.brand?.brandName || "NA" %></td>
+                                <td><%= product.category?.name || "NA" %></td>
+                                <td><%= product.regularPrice %></td>
+                                <td>
+                                    <div>category offer:<%=product.categoryOffer%> %</div>
+                                    <div>brand offer:<%=product.brandOffer%> %</div>
+                                    <div>product offer:<%=product.productOffer%> %</div>
+                                </td>
+                                <td>
+                                    <% if(product.productOffer===0){ %>
+                                        <button class="btn btn-outline-primary" onclick="addOffer('<%= product._id %>')">Add Offer</button>
+                                    <%}else{%>
+                                        <button class="btn btn-outline-danger" onclick="removeOffer('<%= product._id %>')">Remove Offer</button>
+                                    <% } %>
+                                </td>
+                                <td><%= product.salePrice.toFixed() %></td>
+                                <td><%= product.quantity %></td>
+
+                                <td id="status-<%= index %>"
+                                    class="<%= product.isBlocked ? 'text-danger' : 'text-success' %>">
+                                    <%= product.status %>
+                                </td>
+                                <td>
+                                    <a href="/admin/edit-product/<%= product._id %>" class="edit-btn btn btn-outline-dark">Edit</a>
+                                    <button type="button"
+                                            class="<%= product.isBlocked ? 'btn btn-success' : 'btn btn-danger' %>"
+                                            id="product-<%= product._id %>"
+                                            data-product-id="<%= product._id %>"
+                                            data-is-blocked="<%= product.isBlocked %>"
+                                            onclick="toggleBlockProduct(this,'<%= index %>')">
+                                            <%= product.isBlocked ? 'Unblock' : 'Block' %>
+
+                                    </button>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        <% }else{ %>
+                            <tr>
+                                <td colspan="8" style="text-align: center;">No products found</td>
+                            </tr>
+                            <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="d-flex justify-content-center">
+                 <!-- pagination -->
+                    <% if (totalPages> 1) { %>
+                        <div class="">
+                            <% if (currentPage> 1) { %>
+                                <a href="/admin/products?page=<%= currentPage - 1 %>&search=<%= search %>" class="btn btn-outline-dark">Previous</a>
+                            <% } %>
+
+                            <% for(let i=1; i <=totalPages; i++) { %>
+                                <a href="/admin/products?page=<%= i %>&search=<%= search %>"
+                                    class="<%= currentPage === i ? 'btn btn-dark text-white' : 'btn btn-outline-dark' %>">
+                                    <%= i %>
+                                </a>
+                            <% } %>
+
+                            <% if (currentPage < totalPages) { %>
+                                <a href="/admin/products?page=<%= currentPage + 1 %>&search=<%= search %>" class="btn btn-outline-dark">Next</a>
+                            <% } %>
+                        </div>
+                        <% } %>
+                </div>
+            </div>
+        </div>
+    
+    </div>
 
     <script>
         async function addOffer(productId) {

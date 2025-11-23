@@ -1,306 +1,101 @@
-<%-include ('../../../views/partials/admin/header')%>
-
-    <style>
-.main-content {
-    margin-left: 250px;
-    margin-top: 70px;
-    padding: 2rem;
-    min-height: calc(100vh - 120px);
-    background-color: #f8f9fa;
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.main-content nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.main-content nav h1 {
-    font-size: 1.8rem;
-    color: #2c3e50;
-    margin: 0;
-}
-/* 
-.main-content nav a {
-    background-color: #3498db;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.3s;
-}
-
-.main-content nav a:hover {
-    background-color: #2980b9;
-} */
-
-.search-container {
-    margin-bottom: 1.5rem;
-}
-
-.search-container form {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.search-container input {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    flex-grow: 1;
-    max-width: 400px;
-}
-
-/* .search-container button {
-    background-color: #2b2d42;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.search-container button:hover {
-    background-color: #4c529a;
-} */
-
-.search-container .clear-btn {
-    background-color: #ffffff;
-    color: #000000;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: background-color 0.3s;
-}
-
-.search-container .clear-btn:hover {
-    background-color: #c0392b;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-    background-color: white;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #000000;
-    color: white;
-    font-weight: 500;
-}
-
-tr:hover {
-    background-color: #f5f5f5;
-}
-
-.text-danger {
-    color: #e74c3c;
-    font-weight: 500;
-}
-
-.text-success {
-    color: #2ecc71;
-    font-weight: 500;
-}
-
-/* .edit-btn {
-    background-color: #33b4ff;
-    color: white;
-    padding: 0.3rem 0.8rem;
-    border-radius: 4px;
-    text-decoration: none;
-    margin-right: 0.5rem;
-    transition: background-color 0.3s;
-} */
-
-/* .edit-btn:hover {
-    background-color: #134460;
-} */
-
-/* .list-unlist-form button {
-    background-color: #013d5e;
-    color: white;
-    padding: 0.3rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.list-unlist-form button:hover {
-    background-color: #000000;
-    color: white;
-} */
- /* .btn {
-    display: inline-block;
-    padding: 0.8rem 1.5rem;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    text-align: center;
-}
-
-.btn-dark {
-    background-color: #000000;
-    color: white;
-    border: none;
-}
-
-.btn-dark:hover {
-    background-color: #1a252f;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.btn-outline-dark {
-    background-color: transparent;
-    color: #2c3e50;
-    border: 1px solid #2c3e50;
-    margin-left: 1rem;
-}
-
-.btn-outline-dark:hover {
-    background-color: #f8f9fa;
-    color: #1a252f;
-    border-color: #1a252f;
-    transform: translateY(-1px);
-} */
-
-.pagination {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1.5rem;
-}
-
-.pagination a {
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    color: #000000;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    transition: all 0.3s;
-}
-
-.pagination a:hover {
-    background-color: #bcbcbc;
-}
-
-.pagination a.active {
-    background-color: #000000;
-    color: white;
-    border-color: #000000;
-}
-</style>
-
-<section class="main-content">
-    <nav>
-        <h1>Category Management</h1>
-        <a href="/admin/add-category" class="btn btn-dark">Add Category</a>
-    </nav>
-
-    <div class="search-container">
-        <form action="/admin/category" method="GET">
-            <input type="text" name="search" value="<%= search %>" placeholder="Search categories...">
-            <button type="submit" class="btn btn-dark">Search</button>
-            <% if (search) { %>
-                <a href="/admin/category" class="btn btn-outline-dark">Clear</a>
-            <% } %>
-        </form>
+<div class="container">
+    <div class="row my-3">
+        <div class="col-6">
+            <h3>Category Management</h3>
+        </div>
+        <div class="col-6 d-flex justify-content-end">
+            <a href="/admin/add-category"><button class="btn btn-dark">Add Category</button></a>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Products</th>
-                <th>Offer%</th>
-                <th>Offer actions</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (categories.length > 0) { %>
-                <% categories.forEach((category,index)=> { %>
-                    <tr>
-                        <td><%= category.name %></td>
-                        <td><%= category.products %></td>
-                        <td><%= category.offer %> %</td>
-                        <td>
-                            <%if(category.offer===0){%>
-                                <a href="#">
-                                    <button class="btn btn-outline-primary" onclick="addOffer('<%=category._id%>','<%= category.name %>')">Add Offer</button>
-                                </a>
-                            </button>
-                            <%}else{%>
-                            <a href="#">
-                                    <button class="btn btn-outline-danger" onclick="removeOffer('<%=category._id%>','<%= category.name %>')">Remove Offer</button>
-                                </a>
-                            <%}%>
-                        </td>
-                        <td 
-                            id="status-<%= index %>" 
-                            class="<%= category.isDeleted ? 'text-danger' : 'text-success' %>">
-                            <%= category.isDeleted ? 'Unlisted' : 'Listed' %>
-                        </td>
-                        <td>
-                            <a href="/admin/edit-category/<%= category._id %>" class="edit-btn btn btn-outline-dark">Edit</a>
-                            <button type="button" 
-                                    class="btn btn-dark"
-                                    id="category-<%= category._id %>"
-                                    data-category-id="<%= category._id %>"
-                                    data-is-deleted="<%= category.isDeleted %>"
-                                    onclick="toggleListCategory(this,'<%= index %>')">
-                                <%= category.isDeleted ? "List" : "Unlist" %>        
-                            </button>
-                        </td>
-                    </tr>
-                <% }) %>
-            <% } else { %>
-                <tr>
-                    <td colspan="5" style="text-align: center;">No categories found</td>
-                </tr>
-            <% } %>
-        </tbody>
-    </table>
-
-    <% if (totalPages > 1) { %>
-        <div class="pagination">
-            <% if (currentPage > 1) { %>
-                <a href="/admin/category?page=<%= currentPage - 1 %>&search=<%= search %>">Previous</a>
-            <% } %>
-
-            <% for(let i=1; i <=totalPages; i++) { %>
-                <a href="/admin/category?page=<%= i %>&search=<%= search %>" class="<%= currentPage === i ? 'active' : '' %>">
-                    <%= i %>
-                </a>
-            <% } %>
-
-            <% if (currentPage < totalPages) { %>
-                <a href="/admin/category?page=<%= currentPage + 1 %>&search=<%= search %>">Next</a>
-            <% } %>
+    <div class="row mb-3">
+        <div class="col-xl-6">
+            <form action="" method="get">
+                <div class="d-flex gap-3 align-items-center">
+                    <input type="text" name="search" value="<%= search %>" placeholder="Search categories..." class="form-control">
+                    <button type="submit" class="btn btn-dark">Search</button>
+                    <a href="/admin/category" class="btn btn-outline-dark">Clear</a>
+                </div>
+            </form>
         </div>
-    <% } %>
-</section>
-    <%-include ('../../../views/partials/admin/footer')%>
+    </div>
+    <div class="row mb-3">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Products</th>
+                    <th>Offer%</th>
+                    <th>Offer actions</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (categories.length > 0) { %>
+                    <% categories.forEach((category,index)=> { %>
+                        <tr>
+                            <td><%= category.name %></td>
+                            <td><%= category.products %></td>
+                            <td><%= category.offer %> %</td>
+                            <td>
+                                <%if(category.offer===0){%>
+                                    <a href="#">
+                                        <button class="btn btn-outline-primary" onclick="addOffer('<%=category._id%>','<%= category.name %>')">Add Offer</button>
+                                    </a>
+                                </button>
+                                <%}else{%>
+                                <a href="#">
+                                        <button class="btn btn-outline-danger" onclick="removeOffer('<%=category._id%>','<%= category.name %>')">Remove Offer</button>
+                                    </a>
+                                <%}%>
+                            </td>
+                            <td 
+                                id="status-<%= index %>" 
+                                class="<%= category.isDeleted ? 'text-danger' : 'text-success' %>">
+                                <%= category.isDeleted ? 'Unlisted' : 'Listed' %>
+                            </td>
+                            <td>
+                                <a href="/admin/edit-category/<%= category._id %>" class="edit-btn btn btn-outline-dark">Edit</a>
+                                <button type="button" 
+                                        class="btn <%= category.isDeleted ? 'btn-outline-success' : 'btn-outline-danger' %>"
+                                        id="category-<%= category._id %>"
+                                        data-category-id="<%= category._id %>"
+                                        data-is-deleted="<%= category.isDeleted %>"
+                                        onclick="toggleListCategory(this,'<%= index %>')">
+                                    <%= category.isDeleted ? "List" : "Unlist" %>        
+                                </button>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No categories found</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+    <div class="row mb-3">
+        <div class="d-flex justify-content-center gap-3">
+        <% if (currentPage > 1) { %>
+            <a href="/admin/category?page=<%= currentPage - 1 %>&search=<%= search %>" class="btn btn-light">Previous</a>
+        <% } %>
+
+        <% for(let i=1; i <=totalPages; i++) { %>
+            <a href="/admin/category?page=<%= i %>&search=<%= search %>" class="<%= currentPage === i ? 'btn btn-dark' : 'btn btn-outline-dark' %>">
+                <%= i %>
+            </a>
+        <% } %>
+
+        <% if (currentPage < totalPages) { %>
+            <a href="/admin/category?page=<%= currentPage + 1 %>&search=<%= search %>" class="btn btn-light">Next</a>
+        <% } %>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
     async function addOffer(categoryId,categoryName) {

@@ -310,7 +310,10 @@
                     showConfirmButton:false
                 })
                 // update cart icon
-                document.getElementById('cartCount').textContent = responseJson.cartLength;
+                // document.getElementById('cartCount').textContent = responseJson.cartLength;
+                .then(()=>{
+                    location.reload();
+                })
             }else{
                 throw new Error(responseJson.status || 'Failed to add to cart');
             }

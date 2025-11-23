@@ -1,149 +1,139 @@
-<style>
-    .main-content {
-        margin-left: 250px;
-        margin-top: 70px;
-        padding: 2rem;
-        min-height: calc(100vh - 120px);
-        background-color: #f8f9fa;
-        color: #333;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    .error-message {
-        color: red;
-        font-size: smaller;
-    }
-</style>
-
 <!-- cropper JS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
-<%-include ('../../../views/partials/admin/header')%>
-
-
-    <section class="main-content">
-        <div class="container border">
-            <div class="row">
+<div class="container">
+        <div class="row">
+            <div class="col">
                 <h2 class="h1 text-center">Edit Product</h2>
             </div>
-            <form id="editForm" method="post">
-
-                <div class="row">
-                    <div class="col-4">
-                        <label for="productName" class="form-label">Product Name</label>
-                        <input type="text" placeholder="Type here" 
-                            name="productName" class="form-control border" 
-                            id="productName" value="<%= product.productName %>">
-                        <div id="productName-error" class="error-message"></div>
-                    </div>
-
-                    <div class="col-4">
-                        <label class="form-label">Brand</label>
-                        <select class="form-select border" name="brand">
-                            <% for(let i=0;i< brand.length;i++){ %>
-                                <option value="<%= brand[i].brandName %>" <%= String(brand[i]._id) === String(product.brand) ? 'selected' : '' %> >
-                                    <%= brand[i].brandName %>
-                                </option>
-                                <%}%>
-                        </select>
-                        <div id="brand-error" class="error-message"></div>
-                    </div>
-
-                    <div class="col-4">
-                        <label class="form-label">Category</label>
-                        <select class="form-select border" name="category">
-                        <% for(let i=0;i< category.length;i++){ %>
-                            <option value="<%= category[i].name %>" <%= String(category[i]._id) === String(product.category) ? 'selected' : '' %>>
-                                <%= category[i].name %>
-                            </option>
-                            <% } %>
-                        </select>
-                        <div id="category-error" class="error-message"></div>
-                    </div>
-
-                </div>
-                
-                <div class="row">
-                    <div class="col">
-                        <label class="form-label">Full description</label>
-                        <textarea placeholder="Type here" name="productDescription" 
-                                class="form-control border"rows="4"><%= product.description %></textarea>
-                        <div id="description-error" class="error-message"></div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-3">
-                        <label class="form-label">Regular price</label>
-                        <input placeholder="₹" name="regularPrice" 
-                            type="text" class="form-control border" value="<%= product.regularPrice %>">
-                        <div id="regularPrice-error" class="error-message"></div>
-                    </div>
-
-
-                    <div class="col-3">
-                        <label class="form-label">Sale price</label>
-                        <input placeholder="₹" name="salePrice" 
-                            type="text" class="form-control border" value="<%= product.salePrice %>">
-                        <div id="salePrice-error" class="error-message"></div>
-                    </div>
-
-                    
-                    <div class="col-3">
-                        <label class="form-label">Quantity</label>
-                        <input placeholder="" name="quantity" 
-                            type="text" class="form-control border" value="<%= product.quantity %>">
-                        <div id="quantity-error" class="error-message"></div>
-                    </div>
-
-                    <div class="col-3">
-                        <label class="form-label">Color</label>
-                        <input name="color" type="text" class="form-control border" value="<%= product.color %>">
-                        <div id="color-error" class="error-message"></div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-12">
-                        <h1 class="h3">Current Images:</h1>
-                    </div>
-
-                    <div class="row" id="existingImages">
-                        <% product.productImage.forEach((img) => { %>
-                            <div class="image-box">
-                                <img src="<%= img.url %>" width="300">
-                                <button type="button" class="removeImageBtn btn btn-outline-danger">Remove</button>
-                            </div>
-                            <br>-<br>
-                        <% }) %>
-                    </div>
-                </div>
-
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <h4>Add New Images:</h4>
-                        <input type="file" id="newImages" class="form-control border" accept="image/*">
-                        <div id="cropContainer" style="width: 500px;"></div> <!-- where CropperJS will show image -->
-                        <div id="previewContainer" class="d-flex flex-wrap gap-2 mt-3"></div>
-                    </div>
-                </div>
-
-                <!-- Hidden input to send removed image IDs -->
-                <input type="hidden" name="removedImages" id="removedImages">
-
-
-
-                <div class="row">
-                    <div class="row justify-content-center">
-                        <button class="w-50 bg-success text-white btn" type="submit" id="submitBtn">Update Product</button>
-                    </div> 
-                </div>
-            </form>
         </div>
-    </section>
+        <form id="editForm" action="">
+            <div class="row">
+                <div class="col-sm-4">
+                    <label for="productName" class="form-label fw-bold">Product Name</label>
+                    <input type="text" placeholder="Type here" 
+                        name="productName" class="form-control border" 
+                        id="productName" value="<%= product.productName %>">
+                    <div id="productName-error" class="error-message text-danger"></div>
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label fw-bold">Brand</label>
+                    <select class="form-select border" name="brand">
+                        <% for(let i=0;i< brand.length;i++){ %>
+                            <option value="<%= brand[i].brandName %>" <%= String(brand[i]._id) === String(product.brand) ? 'selected' : '' %> >
+                                <%= brand[i].brandName %>
+                            </option>
+                            <%}%>
+                    </select>
+                    <div id="brand-error" class="error-message text-danger"></div>
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label fw-bold">Category</label>
+                    <select class="form-select border" name="category">
+                     <% for(let i=0;i< category.length;i++){ %>
+                        <option value="<%= category[i].name %>" <%= String(category[i]._id) === String(product.category) ? 'selected' : '' %>>
+                            <%= category[i].name %>
+                        </option>
+                        <% } %>
+                    </select>
+                    <div id="category-error" class="error-message text-danger"></div>
+                </div>
+            </div>
 
-    
-<%-include ('../../../views/partials/admin/footer')%>
+            <div class="row">
+                <div class="col">
+                    <label class="form-label fw-bold">Full description</label>
+                    <textarea placeholder="Type here" name="productDescription" 
+                            class="form-control border"rows="4"><%= product.description %></textarea>
+                    <div id="description-error" class="error-message text-danger"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-3">
+                    <label class="form-label fw-bold">Regular price</label>
+                    <input placeholder="₹" name="regularPrice" 
+                        type="text" class="form-control border" value="<%= product.regularPrice %>">
+                    <div id="regularPrice-error" class="error-message"></div>
+                </div>
+
+
+                <div class="col-sm-3">
+                    <label class="form-label fw-bold">Sale price</label>
+                    <input placeholder="₹" name="salePrice" 
+                        type="text" class="form-control border" value="<%= product.salePrice %>">
+                    <div id="salePrice-error" class="error-message"></div>
+                </div>
+
+                
+                <div class="col-sm-3">
+                    <label class="form-label fw-bold">Quantity</label>
+                    <input placeholder="" name="quantity" 
+                        type="text" class="form-control border" value="<%= product.quantity %>">
+                    <div id="quantity-error" class="error-message"></div>
+                </div>
+
+                <div class="col-sm-3">
+                    <label class="form-label fw-bold">Color</label>
+                    <input name="color" type="text" class="form-control border" value="<%= product.color %>">
+                    <div id="color-error" class="error-message"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <h3 class="fw-bold text-center">Current Images:</h3>
+                </div>
+            </div>
+
+            <div class="row" id="existingImages">
+                <% product.productImage.forEach((img) => { %>
+                    <div class="col-sm-3 image-box">
+                        <div>
+                            <img src="<%= img.url %>" class="img-thumbnail">
+                            <button type="button" class="removeImageBtn btn btn-outline-danger">Remove</button>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <h3 class="text-center fw-bold">Add New Images:</h3>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <input type="file" id="newImages" class="form-control border" accept="image/*">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div id="cropContainer" style="width: 250px;"></div> <!-- where CropperJS will show image -->
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div id="previewContainer" class="d-flex flex-wrap gap-2 mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Hidden input to send removed image IDs -->
+            <input type="hidden" name="removedImages" id="removedImages">
+
+            <div class="row">
+                <div class="col">
+                    <div class="d-flex justify-content-center">
+                        <button class="w-50 bg-success text-white btn" type="submit" id="submitBtn">Update Product</button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>

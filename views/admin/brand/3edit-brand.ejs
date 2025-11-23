@@ -1,53 +1,42 @@
-<%-include ('../../../views/partials/admin/header')%>
-<style>
-    .main-content {
-    margin-left: 250px;
-    margin-top: 70px;
-    padding: 2rem;
-    min-height: calc(100vh - 120px);
-    background-color: #f8f9fa;
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
- 
-</style>
-
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
-<div class="main-content">
-    <div class="container">
-        <form id="editBrandForm">
-            
-            <div class="row">
-                <div class="col">
-                    <label for="brandName">Brand Name:</label>
-                    <input type="text" id="brandName" name="brandName" value="<%= brand.brandName %>" class="form-control" required>
-                    <div class="error-message" id="brandName-error"></div>
+<div class="container">
+    <form id="editBrandForm">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+        <div class="col-9">
+            <div>
+                <label for="brandName" class="fw-bold">Brand Name:</label>
+                <input type="text" id="brandName" name="brandName" value="<%= brand.brandName %>" class="form-control" placeholder="Enter brand name" required>
+                <div id="brandName-error" class="error message text-danger"></div>
+            </div>
+        </div>
+        <div class="col-9">
+            <div>
+                <label for="brandLogo" class="fw-bold">Current Brand Image:</label>
+                <div class="d-flex justify-content-center">
+                    <img id="currentLogo" src="<%= brand.brandImage %>" alt="brand" class="img-thumbnail">
+                </div>
+                <div class="d-flex justify-content-center">
+                    <button type="button" class="btn btn-warning mt-2" id="changeBtn">Change Logo</button>
                 </div>
             </div>
-
-            <div class="row">
-                <div class="col-md-6 d-flex flex-column justify-content-center">
-                    <div>Current Brand Logo</div>
-                    <div>
-                        <img id="currentLogo" src="<%= brand.brandImage %>" alt="brand" width="200">
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-warning mt-2" id="changeBtn">Change Logo</button>
-                    </div>
-                    <input type="file" id="fileInput" accept="image/*" style="display:none;" class="form-control">
-                    <div id="preview"></div>
-                </div>
+        </div>
+        <div class="col-4">
+            <div>
+                <input type="file" id="fileInput" accept="image/*" style="display:none;" class="form-control">
             </div>
-
-            <div class="row">
-                <div class="col d-flex justify-content-center">
-                    <button id="submitBtn" type="submit" class="btn btn-dark w-50">Update</button>
-                </div>
+            <div class="d-flex justify-content-center">
+                <div id="preview" class="my-3"></div>
             </div>
-        </form>
+        </div>
+         <div class="col-9">
+            <div class="d-flex justify-content-center">
+                <button id="submitBtn" type="submit" class="btn btn-success">Update</button>
+            </div>
+        </div>
     </div>
+    </form>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -126,7 +115,7 @@ fileInput.addEventListener("change", () => {
                 preview.innerHTML = "";
                 const croppedImg = document.createElement("img");
                 croppedImg.src = URL.createObjectURL(blob);
-                croppedImg.width = 200;
+                croppedImg.width = 400;
 
                 preview.appendChild(croppedImg);
             });

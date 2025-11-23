@@ -1,71 +1,67 @@
-<style>
-     .main-content {
-        margin-left: 250px;
-        margin-top: 70px;
-        padding: 2rem;
-        min-height: calc(100vh - 120px);
-    }
-    .error-message {
-    color: #dc3545;
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
-    display: none;
-  }
-</style>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
-<%- include("../../../views/partials/admin/header") %>
+<div class="container">
+    <div class="row mb-3">
+        <h3 class="text-center">Add new banner</h3>
+    </div>
 
-<section class="main-content">
-    <h1>Add New Banner</h1>
-
-    <form id="addBannerForm">
-        <div>
-            <label for="bannerTitle">Banner Title</label>
-            <input type="text" name="title" id="bannerTitle">
-            <div id="bannerTitle-error" class="error-message"></div>
+    <form action="" id="addBannerForm">
+    <div class="row mb-3">
+        <div class="col-sm-4">
+            <label for="bannerTitle" class="fw-bold">Banner Title:</label>
+            <input type="text" name="title" id="bannerTitle" class="form-control">
+            <div id="bannerTitle-error" class="error-message text-danger"></div>
         </div>
-        
-
-        <div>
-            <label for="description">Description</label>
-            <textarea name="description" id="description"></textarea>
-            <div id="description-error" class="error-message"></div>
+        <div class="col-sm-8">
+            <label for="description" class="fw-bold">Description:</label>
+            <textarea name="description" id="description" class="form-control"></textarea>
+            <div id="description-error" class="error-message text-danger"></div>
         </div>
+    </div>
 
-        <div>
-            <label for="startDate">Start Date</label>
-            <input type="date" id="startDate" name="startDate">
-            <div id="startDate-error" class="error-message"></div>
-        </div>
-
-        <div>
-            <label for="endDate">End Date</label>
-            <input type="date" id="endDate" name="endDate">
-            <div id="endDate-error" class="error-message"></div>
+    <div class="row mb-3">
+        <div class="col-sm-4">
+            <label for="startDate" class="fw-bold">Start Date:</label>
+            <input type="date" id="startDate" name="startDate" class="form-control">
+            <div id="startDate-error" class="error-message text-danger"></div>
         </div>
 
-        <div>
-            <label for="bannerLink">Link</label>
-            <input type="text" name="link" id="bannerLink">
-            <div id="bannerLink-error" class="error-message"></div>
+        <div class="col-sm-4">
+            <label for="endDate" class="fw-bold">End Date:</label>
+            <input type="date" id="endDate" name="endDate" class="form-control">
+            <div id="endDate-error" class="error-message text-danger"></div>
         </div>
 
-        <div>
-            <h2>Choose Banner Image</h2>
+        <div class="col-sm-4">
+            <label for="bannerLink" class="fw-bold">Link:</label>
+            <input type="text" name="link" id="bannerLink" class="form-control">
+            <div id="bannerLink-error" class="error-message text-danger"></div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <label for="" class="fw-bold">Choose An Image:</label>
+            <input type="file" name="image" id="imageInputField" accept="image/*" class="form-control">
+            <div id="bannerImage-error" class="error-message text-danger"></div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col d-flex justify-content-center">
             <div id="preview"></div>
-            <input type="file" name="image" id="imageInputField" accept="image/*">
-            <div id="bannerImage-error" class="error-message"></div>
         </div>
+    </div>
 
-        <div>
-            <button class="btn btn-dark">Submit</button>
+    <div class="row">
+        <div class="col d-flex justify-content-center gap-3">
+            <button class="btn btn-success">Submit</button>
             <a href="/admin/banners" class="btn btn-outline-dark">Cancel</a>
         </div>
+    </div>
     </form>
-</section>
-
-<%- include("../../../views/partials/admin/footer") %>
+</div>
 <!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -106,7 +102,7 @@
         reader.onload=function(e){
             const img=document.createElement('img');
             img.src=reader.result;
-            img.style.maxWidth='100%';
+            img.style.maxWidth='20%';
             preview.appendChild(img)
 
             const cropper=new Cropper(img,{
@@ -156,6 +152,7 @@
                     const croppedImg=document.createElement('img');
                     croppedImg.src=URL.createObjectURL(blob);
                     croppedImg.style.maxWidth='100%';
+                    croppedImg.classList.add('img-thumbnail')
                     preview.appendChild(croppedImg);
 
                     const removeBtn=document.createElement('button');

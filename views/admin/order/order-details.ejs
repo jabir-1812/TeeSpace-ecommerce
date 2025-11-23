@@ -1,128 +1,135 @@
-<%- include("../../../views/partials/admin/header") %>
-<style>
-    .main-content {
-    margin-left: 250px;
-    margin-top: 70px;
-    padding: 2rem;
-    min-height: calc(100vh - 120px);
-    background-color: #f5f7fa;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-</style>
-
-<div class="main-content">
-<div class="container mt-5">
-  <h2 class="mb-4">Order Details - <%= order.orderId %></h2>
-
-  <!-- User Info -->
-  <div class="card mb-3 shadow-sm">
-    <div class="card-header bg-dark text-white">User Details</div>
-    <div class="card-body">
-      <p><strong>Name:</strong> <%= order.userId?.name %></p>
-      <p><strong>Email:</strong> <%= order.userId?.email %></p>
-      <p><strong>Phone:</strong> <%= order.userId?.phone || "-" %></p>
+<div class="container">
+  <div class="row mb-3">
+    <div class="col">
+      <h3 class="fw-bold text-center">Order Details</h3>
+	  <h5 class="fw-bold">Order ID:<%= order.orderId %></h5>
     </div>
   </div>
 
-  <!-- Shipping Address -->
-  <div class="card mb-3 shadow-sm">
-    <div class="card-header bg-dark text-white">Shipping Address</div>
-    <div class="card-body">
-      <p><strong>Name:</strong> <%= order.shippingAddress.name %></p>
-      <p><strong>City:</strong> <%= order.shippingAddress.city %></p>
-      <p><strong>State:</strong> <%= order.shippingAddress.state %></p>
-      <p><strong>Pincode:</strong> <%= order.shippingAddress.pincode %></p>
-      <p><strong>Phone:</strong> <%= order.shippingAddress.phone %></p>
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header fw-bold bg-dark text-white">
+          User Details
+        </div>
+		<div class="card-body">
+			<p><strong>Name:</strong> <%= order.userId?.name %></p>
+			<p><strong>Email:</strong> <%= order.userId?.email %></p>
+			<p><strong>Phone:</strong> <%= order.userId?.phone || "-" %></p>
+		</div>
+      </div>
+    </div>
+	<div class="col-md-6">
+      <div class="card">
+        <div class="card-header fw-bold bg-dark text-white">
+			Shipping Address
+        </div>
+		<div class="card-body">
+			<p><strong>Name:</strong> <%= order.shippingAddress.name %></p>
+			<p><strong>City:</strong> <%= order.shippingAddress.city %></p>
+			<p><strong>State:</strong> <%= order.shippingAddress.state %></p>
+			<p><strong>Pincode:</strong> <%= order.shippingAddress.pincode %></p>
+			<p><strong>Phone:</strong> <%= order.shippingAddress.phone %></p>
+		</div>
+      </div>
     </div>
   </div>
 
-  <!-- Order Items -->
-  <div class="order-card">
-  <h3>Order ID: <%= order.orderId %></h3>
-  <p>User: <%= order.userId?.name %></p>
-  <p>Overall Status: <span id="order-status"><%= order.orderStatus %></span></p>
+  <div class="row mb-3">
+	<div class="col">
+		<h5><span class="fw-bold">Overall Status:</span><%= order.orderStatus %></h5>
+	</div>
+  </div>
 
-  <table class="table table-bordered table-hover mt-4 align-middle">
-    <thead class="table-dark text-center">
-      <tr>
-        <th>Product</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Item Status</th>
-        <th>Return Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% order.orderItems.forEach(item => { %>
-        <tr>
-          <td>
-            <div class="d-flex align-items-center">
-              <img src="<%= item.productImage %>" alt="<%= item.productName %>" width="50" class="rounded me-2">
-              <span><%= item.productName %></span>
-            </div>
-          </td>
-          <td class="text-center"><%= item.quantity %></td>
-          <td class="text-center">₹<%= item.price %></td>
+  <div class="row mb-3">
+	<div class="col">
+		<table class="table table-bordered table-hove align-middle">
+			<thead class="table-dark text-center">
+				<tr>
+				<th>Product</th>
+				<th>Qty</th>
+				<th>Price</th>
+				<th>Item Status</th>
+				<th>Return Status</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% order.orderItems.forEach(item => { %>
+				<tr>
+					<td>
+					<div class="d-flex align-items-center">
+						<img src="<%= item.productImage %>" alt="<%= item.productName %>" width="50" class="rounded me-2">
+						<span><%= item.productName %></span>
+					</div>
+					</td>
+					<td class="text-center"><%= item.quantity %></td>
+					<td class="text-center">₹<%= item.price %></td>
 
-          <!-- Item Status with Update -->
-          <td class="text-center">
-            <div class="d-flex justify-content-center align-items-center gap-2">
-              <select class="form-select form-select-sm w-auto status-select" 
-                data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">
-                <option value="Pending" <%= item.itemStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
-                <option value="Shipped" <%= item.itemStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                <option value="Out for Delivery" <%= item.itemStatus === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
-                <option value="Delivered" <%= item.itemStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                <option value="Cancelled" <%= item.itemStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-              </select>
-              <button class="btn btn-sm btn-primary update-status-btn">Update</button>
-            </div>
-          </td>
+					<!-- Item Status with Update -->
+					<% if(item.itemStatus!=='Delivered'){ %>
+					<td class="text-center">
+					<div class="d-flex justify-content-center align-items-center gap-2">
+						<select class="form-select form-select-sm w-auto status-select" 
+						data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">
+						<option value="Pending" <%= item.itemStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
+						<option value="Shipped" <%= item.itemStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+						<option value="Out for Delivery" <%= item.itemStatus === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+						<option value="Delivered" <%= item.itemStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+						<option value="Cancelled" <%= item.itemStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+						</select>
+						<button class="btn btn-sm btn-primary update-status-btn">
+						Update
+						</button>
+					</div>
+					</td>
+					<% }else if(item.itemStatus==='Delivered'){ %>
+					<td class="text-center">
+						<span class="badge text-bg-success">Delivered</span>
+					</td>
+					<% }else if(item.itemStatus==='Cancelled'){ %>
+					<td class="text-center">
+						<span class="badge text-bg-danger">Delivered</span>
+					</td>
+					<% } %>
 
-          <td class="text-center" data-cell-id="<%= item._id %>">
-          <% if (item.returnStatus === "Requested") { %>
-            <span class="badge bg-warning text-dark">Requested</span><br>
-            <small class="text-muted">Reason: <%= item.returnReason || "-" %></small><br>
-            <div class="mt-1 d-flex justify-content-center gap-2">
-              <button class="btn btn-sm btn-success approve-return-btn" 
-                data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Approve</button>
-              <button class="btn btn-sm btn-danger reject-return-btn" 
-                data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Reject</button>
-            </div>
-          <% } else if (item.returnStatus === "Rejected") { %>
-            <span class="badge bg-danger">Rejected</span>
-          <% } else if (["Approved", "Pickup Scheduled", "Picked Up", "In Transit", "Received", "Refunded", "Replacement Shipped"].includes(item.returnStatus)) { %>
-            <div class="d-flex justify-content-center align-items-center gap-2">
-              <select class="form-select form-select-sm w-auto return-status-select" 
-                data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">
-                <option value="Approved" <%= item.returnStatus === 'Approved' ? 'selected' : '' %>>Approved</option>
-                <option value="Pickup Scheduled" <%= item.returnStatus === 'Pickup Scheduled' ? 'selected' : '' %>>Pickup Scheduled</option>
-                <option value="Picked Up" <%= item.returnStatus === 'Picked Up' ? 'selected' : '' %>>Picked Up</option>
-                <option value="In Transit" <%= item.returnStatus === 'In Transit' ? 'selected' : '' %>>In Transit</option>
-                <option value="Received" <%= item.returnStatus === 'Received' ? 'selected' : '' %>>Received</option>
-                <option value="Refunded" <%= item.returnStatus === 'Refunded' ? 'selected' : '' %>>Refunded</option>
-                <option value="Replacement Shipped" <%= item.returnStatus === 'Replacement Shipped' ? 'selected' : '' %>>Replacement Shipped</option>
-              </select>
-              <button class="btn btn-sm btn-primary update-return-status-btn">Update</button>
-            </div>
-          <% } else { %>
-            <span>-</span>
-          <% } %>
-        </td>
+					<td class="text-center" data-cell-id="<%= item._id %>">
+					<% if (item.returnStatus === "Requested") { %>
+					<span class="badge bg-warning text-dark">Requested</span><br>
+					<small class="text-muted">Reason: <%= item.returnReason || "-" %></small><br>
+					<div class="mt-1 d-flex justify-content-center gap-2">
+						<button class="btn btn-sm btn-success approve-return-btn" 
+						data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Approve</button>
+						<button class="btn btn-sm btn-danger reject-return-btn" 
+						data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Reject</button>
+					</div>
+					<% } else if (item.returnStatus === "Rejected") { %>
+					<span class="badge bg-danger">Rejected</span>
+					<% } else if (["Approved", "Pickup Scheduled", "Picked Up", "In Transit", "Received", "Refunded", "Replacement Shipped"].includes(item.returnStatus)) { %>
+					<div class="d-flex justify-content-center align-items-center gap-2">
+						<select class="form-select form-select-sm w-auto return-status-select" 
+						data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">
+						<option value="Approved" <%= item.returnStatus === 'Approved' ? 'selected' : '' %>>Approved</option>
+						<option value="Pickup Scheduled" <%= item.returnStatus === 'Pickup Scheduled' ? 'selected' : '' %>>Pickup Scheduled</option>
+						<option value="Picked Up" <%= item.returnStatus === 'Picked Up' ? 'selected' : '' %>>Picked Up</option>
+						<option value="In Transit" <%= item.returnStatus === 'In Transit' ? 'selected' : '' %>>In Transit</option>
+						<option value="Received" <%= item.returnStatus === 'Received' ? 'selected' : '' %>>Received</option>
+						<option value="Refunded" <%= item.returnStatus === 'Refunded' ? 'selected' : '' %>>Refunded</option>
+						<option value="Replacement Shipped" <%= item.returnStatus === 'Replacement Shipped' ? 'selected' : '' %>>Replacement Shipped</option>
+						</select>
+						<button class="btn btn-sm btn-primary update-return-status-btn">Update</button>
+					</div>
+					<% } else { %>
+					<span>-</span>
+					<% } %>
+				</td>
 
 
-        </tr>
-      <% }) %>
-    </tbody>
-</table>
-
-
-
-</div>
-
-
-  <a href="/admin/orders" class="btn btn-secondary">Back</a>
-</div>
+				</tr>
+				<% }) %>
+			</tbody>
+			</table>
+	</div>
+  </div>
 </div>
 <script>
 document.querySelectorAll(".update-status-btn").forEach(btn => {
@@ -148,13 +155,14 @@ document.querySelectorAll(".update-status-btn").forEach(btn => {
           icon:'success',
           title:"Status updated"
         })
-        document.getElementById("order-status").innerText = result.orderStatus;
+        // document.getElementById("order-status").innerText = result.orderStatus;
+        location.reload()
       } else {
-        alert(result.message || "Failed to update");
+        Swal.fire(result.message || "Failed to update","","error");
       }
     } catch (err) {
       console.error("Error:", err);
-      alert("Something went wrong");
+      Swal.fire("Something went wrong","","error");
     }
   });
 });
@@ -329,6 +337,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 </script>
-
-
-<%- include("../../../views/partials/admin/footer") %>

@@ -1,27 +1,19 @@
 
 
-<%- include("../../../views/partials/admin/header") %>
-<style>
-    .main-content {
-    margin-left: 250px;
-    margin-top: 70px;
-    padding: 2rem;
-    min-height: calc(100vh - 120px);
-    background-color: #f5f7fa;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-</style>
-<div class="main-content">
-    <div class="container mt-5">
-        <h2 class="mb-4">All Orders</h2>
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <h3 class="text-center fw-bold">All Orders</h3>
+        </div>
+    </div>
 
-        <!-- 🔍 Search + Filter Form -->
-        <form method="get" class="row g-2 mb-3">
-            <div class="col-md-3">
-            <input type="text" name="search" class="form-control" placeholder="Search Order/User" value="<%= search %>">
+    <form action="">
+        <div class="row mb-3 d-flex justify-content-center">
+            <div class="col-sm-3">
+                <input type="search" name="search" class="form-control" placeholder="Search Order/User" value="<%= search %>">
             </div>
-            <div class="col-md-2">
-            <select name="status" class="form-select">
+            <div class="col-sm-2">
+                <select name="status" class="form-select">
                 <option value="">All Status</option>
                 <option value="Pending" <%= status==="Pending"?"selected":"" %>>Pending</option>
                 <option value="Shipped" <%= status==="Shipped"?"selected":"" %>>Shipped</option>
@@ -30,39 +22,36 @@
                 <option value="Cancelled" <%= status==="Cancelled"?"selected":"" %>>Cancelled</option>
                 <option value="Return Requested" <%= status==="Return Requested"?"selected":"" %>>Return Requested</option>
                 <option value="Returned" <%= status==="Returned"?"selected":"" %>>Returned</option>
-
             </select>
             </div>
-            <div class="col-md-2">
-            <select name="sort" class="form-select">
-                <option value="newest" <%= sort==="newest"?"selected":"" %>>Newest First</option>
-                <option value="oldest" <%= sort==="oldest"?"selected":"" %>>Oldest First</option>
-                <option value="amountAsc" <%= sort==="amountAsc"?"selected":"" %>>Amount Low → High</option>
-                <option value="amountDesc" <%= sort==="amountDesc"?"selected":"" %>>Amount High → Low</option>
-            </select>
+            <div class="col-sm-2">
+                <select name="sort" class="form-select">
+                    <option value="newest" <%= sort==="newest"?"selected":"" %>>Newest First</option>
+                    <option value="oldest" <%= sort==="oldest"?"selected":"" %>>Oldest First</option>
+                    <option value="amountAsc" <%= sort==="amountAsc"?"selected":"" %>>Amount Low → High</option>
+                    <option value="amountDesc" <%= sort==="amountDesc"?"selected":"" %>>Amount High → Low</option>
+                </select>
             </div>
-            <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Apply</button>
+            <div class="col-sm-2">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="/admin/orders" class="btn btn-secondary">Clear</a>
             </div>
-            <div class="col-md-2">
-            <a href="/admin/orders" class="btn btn-secondary w-100">Clear</a>
-            </div>
-        </form>
+        </div>
+    </form>
 
-        <!-- Orders Table -->
-        <div class="card shadow-sm">
-            <div class="card-body">
-            <table class="table table-hover align-middle">
+    <div class="row">
+        <div class="col">
+            <table class="table table-hover">
                 <thead class="table-dark">
                     <tr>
-                    <th>Order ID</th>
-                    <th>Date</th>
-                    <th>User</th>
-                    <th>Email</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Return</th>   <!-- 🆕 New column -->
-                    <th>Action</th>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Return</th>   <!-- 🆕 New column -->
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,91 +60,76 @@
                         <td colspan="8" class="text-center text-muted">No orders found</td>
                     </tr>
                     <% } else { %>
-                    <% orders.forEach(order => { %>
-                        <tr>
-                        <td><%= order.orderId %></td>
-                        <td><%= new Date(order.createdAt).toLocaleString() %></td>
-                        <td><%= order.userId?.name || "Unknown" %></td>
-                        <td><%= order.userId?.email || "-" %></td>
-                        <td>₹<%= order.totalAmount %></td>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td><%= order.orderId %></td>
+                                <td><%= new Date(order.createdAt).toLocaleString() %></td>
+                                <td><%= order.userId?.name || "Unknown" %></td>
+                                <td><%= order.userId?.email || "-" %></td>
+                                <td>₹<%= order.totalAmount %></td>
 
-                        <!-- Order Status -->
-                        <td>
-                            <% if(order.orderStatus === "Pending") { %>
-                            <span class="badge bg-primary"><%= order.orderStatus %></span>
-                            <% } else if(order.orderStatus === "Shipped") { %>
-                            <span class="badge bg-info"><%= order.orderStatus %></span>
-                            <% } else if(order.orderStatus === "Out for Delivery") { %>
-                            <span class="badge bg-warning text-dark"><%= order.orderStatus %></span>
-                            <% } else if(order.orderStatus === "Delivered") { %>
-                            <span class="badge bg-success"><%= order.orderStatus %></span>
-                                <small>On <%= new Date(order.deliveredOn).toDateString().slice(4) %></small>
-                            <% } else if(order.orderStatus === "Cancelled") { %>
-                            <span class="badge bg-danger"><%= order.orderStatus %></span>
-                            <% } else { %>
-                            <span class="badge bg-secondary"><%= order.orderStatus %></span>
-                            <% } %>
-                        </td>
+                                <!-- Order Status -->
+                                <td>
+                                    <% if(order.orderStatus === "Pending") { %>
+                                    <span class="badge bg-primary"><%= order.orderStatus %></span>
+                                    <% } else if(order.orderStatus === "Shipped") { %>
+                                    <span class="badge bg-info"><%= order.orderStatus %></span>
+                                    <% } else if(order.orderStatus === "Out for Delivery") { %>
+                                    <span class="badge bg-warning text-dark"><%= order.orderStatus %></span>
+                                    <% } else if(order.orderStatus === "Delivered") { %>
+                                    <span class="badge bg-success"><%= order.orderStatus %></span>
+                                        <small>On <%= new Date(order.deliveredOn).toDateString().slice(4) %></small>
+                                    <% } else if(order.orderStatus === "Cancelled") { %>
+                                    <span class="badge bg-danger"><%= order.orderStatus %></span>
+                                    <% } else { %>
+                                    <span class="badge bg-secondary"><%= order.orderStatus %></span>
+                                    <% } %>
+                                </td>
 
-                        <!-- ✅ Return Column -->
-                        <td>
-                        <% 
-                            const hasRequested = order.orderItems.some(item => item.returnStatus === "Requested");
-                            const hasApproved = order.orderItems.some(item => item.returnStatus === "Approved");
-                            const hasRejected = order.orderItems.some(item => item.returnStatus === "Rejected");
-                        %>
+                                <!-- ✅ Return Column -->
+                                <td>
+                                <% 
+                                    const hasRequested = order.orderItems.some(item => item.returnStatus === "Requested");
+                                    const hasApproved = order.orderItems.some(item => item.returnStatus === "Approved");
+                                    const hasRejected = order.orderItems.some(item => item.returnStatus === "Rejected");
+                                %>
 
-                        <% if (hasRequested) { %>
-                            <span class="badge bg-warning">Return Requested</span>
-                        <% } else if (hasApproved && hasRejected) { %>
-                            <span class="badge bg-info">Return Processed</span>
-                        <% } else if (hasApproved) { %>
-                            <span class="badge bg-success">Return Approved</span>
-                        <% } else if (hasRejected) { %>
-                            <span class="badge bg-danger">Return Rejected</span>
-                        <% } else { %>
-                            <span>-</span>
-                        <% } %>
-                        </td>
-
-
-                        <td>
-
-                        <td>
-                            <a href="/admin/orders/order-details/<%= order._id %>" class="btn btn-sm btn-outline-dark">View</a>
-                        </td>
-                        </tr>
-                    <% }) %>
+                                <% if (hasRequested) { %>
+                                    <span class="badge bg-warning">Return Requested</span>
+                                <% } else if (hasApproved && hasRejected) { %>
+                                    <span class="badge bg-info">Return Processed</span>
+                                <% } else if (hasApproved) { %>
+                                    <span class="badge bg-success">Return Approved</span>
+                                <% } else if (hasRejected) { %>
+                                    <span class="badge bg-danger">Return Rejected</span>
+                                <% } else { %>
+                                    <span>-</span>
+                                <% } %>
+                                </td>
+                                <td>
+                                    <a href="/admin/orders/order-details/<%= order._id %>" class="btn btn-sm btn-outline-dark">View</a>
+                                </td>
+                            </tr>
+                        <% }) %>
                     <% } %>
                 </tbody>
             </table>
+        </div>
+    </div>
 
+    <div class="row">
+        <div class="col d-flex justify-content-center">
+            <% if(currentPage > 1) { %>
+                <a class="btn btn-outline-dark" href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>">Prev</a>
+            <% } %>
 
-            <!-- 📑 Pagination -->
-            <nav>
-                <ul class="pagination justify-content-center">
-                <% if(currentPage > 1) { %>
-                    <li class="page-item">
-                    <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>">Prev</a>
-                    </li>
-                <% } %>
+            <% for(let i=1; i<= totalPages; i++) { %>
+                <a class="<%= currentPage === i ? 'btn btn-dark text-white' : 'btn btn-outline-dark' %>" href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>"><%= i %></a>
+            <% } %>
 
-                <% for(let i=1; i<= totalPages; i++) { %>
-                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                    <a class="page-link" href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>"><%= i %></a>
-                    </li>
-                <% } %>
-
-                <% if(currentPage < totalPages) { %>
-                    <li class="page-item">
-                    <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>">Next</a>
-                    </li>
-                <% } %>
-                </ul>
-            </nav>
-            </div>
+            <% if(currentPage < totalPages) { %>
+                <a class="btn btn-outline-dark" href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>">Next</a>
+            <% } %>
         </div>
     </div>
 </div>
-
-<%- include("../../../views/partials/admin/footer") %>

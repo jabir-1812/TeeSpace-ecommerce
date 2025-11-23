@@ -34,6 +34,7 @@ const customerInfo=async (req,res)=>{
             ]
         }).countDocuments();
         res.render('./admin/customers/customers',{
+            layout:"adminLayout",
             title:"Customers",
             data:userData,
             totalPages:Math.ceil(count/limit),

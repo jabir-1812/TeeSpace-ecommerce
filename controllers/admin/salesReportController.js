@@ -7,7 +7,8 @@ const Order=require('../../models/orderSchema')
 const getSalesReportPage=async (req,res)=>{
     try {
         return res.render('admin/sales report/sales report',{
-            title:"Sales Report",
+          layout:"adminLayout",
+          title:"Sales Report",
         })
     } catch (error) {
         console.log("getSalesReportPage() error=======>",error)
@@ -70,7 +71,16 @@ async function getReportData(type, start, end) {
     { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
   ]);
 
-  return report;
+
+  let totalOrdersCount=0,totalOfferDiscount=0, totalCouponDiscount=0, totalIncome=0;
+  report.forEach((r)=>{
+    totalOrdersCount+=r.totalOrders;
+    totalIncome+=r.totalSales;
+    totalOfferDiscount+=r.totalOfferDiscount;
+    totalCouponDiscount+=r.totalCouponDiscount;
+  })
+
+  return {report, totalOrdersCount, totalOfferDiscount, totalCouponDiscount, totalIncome};
 }
 
 
@@ -81,9 +91,21 @@ const getSalesReport=async (req,res)=>{
     try {
         const {type, start, end} = req.query;
 
-        const report=await getReportData(type,start,end)
+        const {
+          report, 
+          totalOrdersCount, 
+          totalOfferDiscount, 
+          totalCouponDiscount,
+          totalIncome
+        }=await getReportData(type,start,end)
 
-        return res.json({report})
+        return res.json({
+          report,
+          totalOrdersCount,
+          totalOfferDiscount,
+          totalCouponDiscount,
+          totalIncome
+        })
     } catch (error) {
         console.log("getSalesReport() error=======>",error)
         res.redirect("/admin/page-error")
@@ -96,40 +118,16 @@ const getSalesReport=async (req,res)=>{
 
 const getSalesReportPDF = async (req,res)=>{
     try {
-        // const {type, start, end}=req.query;
-        // const report= await getReportData(type, start, end);
-
-        // const doc = new PDFDocument({ margin: 30 });
-        // res.setHeader("Content-Type", "application/pdf");
-        // res.setHeader("Content-Disposition", `attachment; filename="sales_report.pdf"`);
-
-        // doc.fontSize(18).text("TeeSpace Sales Report", { align: "center" });
-        // doc.moveDown();
-
-        // report.forEach((r) => {
-        //     let label = "";
-        //     if (r._id?.day)
-        //     label = `${r._id.day}-${r._id.month}-${r._id.year}`;
-        //     else if (r._id?.week)
-        //     label = `Week ${r._id.week}, ${r._id.year}`;
-        //     else if (r._id?.year)
-        //     label = `${r._id.year}`;
-        //     else label = `${start} to ${end}`;
-
-        //     doc.fontSize(12).text(`Period: ${label}`);
-        //     doc.text(`Total Orders: ${r.totalOrders}`);
-        //     doc.text(`Total Sales: ₹${r.totalSales.toFixed(2)}`);
-        //     doc.text(`Total Offer Discount: ₹${r.totalOfferDiscount.toFixed(2)}`);
-        //     doc.text(`Total Coupon Discount: ₹${r.totalCouponDiscount.toFixed(2)}`);
-        //     doc.text(`Average Order Value: ₹${r.avgOrderValue?.toFixed(2) || "-"}`);
-        //     doc.moveDown();
-        // });
-
-        // doc.end();
-        // doc.pipe(res);
 
         const { type, start, end } = req.query;
-        const report = await getReportData(type, start, end);
+        // const {report} = await getReportData(type, start, end);
+        const {
+          report, 
+          totalOrdersCount, 
+          totalOfferDiscount, 
+          totalCouponDiscount,
+          totalIncome
+        }=await getReportData(type,start,end)
 
         const doc = new PDFDocument({ margin: 40 });
         const filename = "sales_report.pdf";
@@ -192,24 +190,36 @@ const getSalesReportPDF = async (req,res)=>{
             .fillColor("black");
         }
 
-        // Write text
-        doc.text(label, 40, y);
+        
+        doc.text(label, 40, y, { width: 80, ellipsis: true });
         doc.text(`${r.totalOrders}`, 130, y);
         doc.text(`₹${r.totalSales.toFixed(2)}`, 210, y);
         doc.text(`₹${r.totalOfferDiscount.toFixed(2)}`, 310, y);
         doc.text(`₹${r.totalCouponDiscount.toFixed(2)}`, 410, y);
-        doc.text(
-            `₹${r.avgOrderValue?.toFixed(2) || "-"}`,
-            520,
-            y,
-            { align: "right" }
-        );
+        doc.text(`₹${r.avgOrderValue?.toFixed(2) || "-"}`, 520, y, { align: "right" });
+
 
         doc.moveDown(0.5);
         });
 
         doc.moveDown(1);
         doc.moveTo(40, doc.y).lineTo(550, doc.y).stroke("#ccc");
+
+        // 🔹 Totals Section
+        doc.moveDown(1.5);
+
+        doc.fontSize(12).font("Helvetica-Bold").fillColor("#000");
+        doc.text("Summary Totals", 40);  // start at left edge
+
+        doc.moveDown(0.5);
+        doc.font("Helvetica");
+
+        doc.text(`Total Orders: ${totalOrdersCount}`, 40);
+        doc.text(`Total Offer Discount: ₹${totalOfferDiscount.toFixed(2)}`, 40);
+        doc.text(`Total Coupon Discount:  ₹${totalCouponDiscount.toFixed(2)}`, 40);
+        doc.text(`Total Income:          ₹${totalIncome.toFixed(2)}`, 40);
+
+
 
         // 🔹 Footer
         doc.moveDown(2);
@@ -233,7 +243,14 @@ const getSalesReportPDF = async (req,res)=>{
 const getSalesReportExcel = async (req,res)=>{
     try {
         const { type, start, end } = req.query;
-        const report = await getReportData(type, start, end);
+        // const {report} = await getReportData(type, start, end);
+        const {
+          report, 
+          totalOrdersCount, 
+          totalOfferDiscount, 
+          totalCouponDiscount,
+          totalIncome
+        }=await getReportData(type,start,end)
 
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet("TeeSpace Sales Report");
@@ -257,15 +274,31 @@ const getSalesReportExcel = async (req,res)=>{
             label = `${r._id.year}`;
         else label = `${start} to ${end}`;
 
-        sheet.addRow({
-            period: label,
-            totalOrders: r.totalOrders,
-            totalSales: r.totalSales,
-            avgOrderValue: r.avgOrderValue ? r.avgOrderValue.toFixed(2) : "-",
-            totalOfferDiscount: r.totalOfferDiscount,
-            totalCouponDiscount: r.totalCouponDiscount
+          sheet.addRow({
+              period: label,
+              totalOrders: r.totalOrders,
+              totalSales: r.totalSales,
+              avgOrderValue: r.avgOrderValue ? r.avgOrderValue.toFixed(2) : "-",
+              totalOfferDiscount: r.totalOfferDiscount,
+              totalCouponDiscount: r.totalCouponDiscount
+          });
         });
-        });
+
+        // Add an empty row
+        sheet.addRow([]);
+
+        // Summary Header
+        const summaryHeader = sheet.addRow(["Summary Totals"]);
+        summaryHeader.font = { bold: true, size: 14 };
+        summaryHeader.alignment = { horizontal: "left" };
+
+        // Summary Rows
+        sheet.addRow(["Total Orders", totalOrdersCount]);
+        sheet.addRow(["Total Offer Discount (₹)", totalOfferDiscount.toFixed(2)]);
+        sheet.addRow(["Total Coupon Discount (₹)", totalCouponDiscount.toFixed(2)]);
+        sheet.addRow(["Total Income (₹)", totalIncome.toFixed(2)]);
+
+
 
         res.setHeader(
         "Content-Disposition",

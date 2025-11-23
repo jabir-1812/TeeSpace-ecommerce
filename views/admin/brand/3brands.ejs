@@ -1,292 +1,100 @@
-<style>
-  .main-content {
-    margin-left: 250px;
-    margin-top: 70px;
-    padding: 2rem;
-    min-height: calc(100vh - 120px);
-    background-color: #f8f9fa;
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-
-  .main-content nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e0e0e0;
-  }
-
-  .main-content nav h1 {
-    font-size: 1.8rem;
-    color: #2c3e50;
-    margin: 0;
-    font-weight: 600;
-  }
-
-  .main-content nav a {
-    background-color: #000000;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.3s;
-  }
-
-  .main-content nav a:hover {
-    background-color: #585858;
-  }
-
-  .search-container {
-    margin-bottom: 2rem;
-  }
-
-  .search-container form {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  .search-container input {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 300px;
-    font-size: 1rem;
-  }
-
-  /* .btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.3s;
-  } */
-
-  /* .btn-dark {
-    background-color: #000000;
-    color: white;
-  }
-
-  .btn-dark:hover {
-    background-color: #4d4d4d;
-  }
-
-  .btn-outline-dark {
-    background-color: transparent;
-    color: #343a40;
-    border: 1px solid #343a40;
-  }
-
-  .btn-outline-dark:hover {
-    background-color: #343a40;
-    color: white;
-  } */
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-  }
-
-  th {
-    background-color: #000000;
-    color: #ffffff;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.5px;
-  }
-
-  tr:hover {
-    background-color: #e0e0e0;
-  }
-
-  img {
-    max-width: 80px;
-    max-height: 40px;
-    object-fit: contain;
-  }
-
-  /* .action-btn {
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    margin-right: 0.5rem;
-    transition: all 0.3s;
-  } */
-
-  /* .edit-btn {
-    background-color: #f6c23e;
-    color: #2c3e50;
-    text-decoration: none;
-    display: inline-block;
-    margin-right: 0.5rem;
-  }
-
-  .edit-btn:hover {
-    background-color: #e4b22e;
-  }
-
-  .block-btn {
-    background-color: #e74a3b;
-    color: white;
-  }
-
-  .block-btn:hover {
-    background-color: #d62c1a;
-  }
-
-  .unblock-btn {
-    background-color: #1cc88a;
-    color: white;
-  }
-
-  .unblock-btn:hover {
-    background-color: #17a673;
-  } */
-
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 2rem;
-    gap: 0.5rem;
-  }
-
-  .pagination a {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    text-decoration: none;
-    color: #000000;
-    transition: all 0.3s;
-  }
-
-  .pagination a:hover {
-    background-color: #d1d1d1;
-  }
-
-  .pagination a.active {
-    background-color: #000000;
-    color: white;
-    border-color: #000000;
-  }
-
-  .no-data {
-    text-align: center;
-    padding: 2rem;
-    color: #6c757d;
-    font-style: italic;
-  }
-</style>
-
-<%-include ('../../../views/partials/admin/header')%>
-
-<section class="main-content">
-  <nav>
-    <h1>Brand Management</h1>
-    <a href="/admin/add-brand">Add New Brand</a>
-  </nav>
-
-  <div class="search-container">
-    <form action="/admin/brands" method="GET">
-      <input type="text" name="search" value="<%= search %>" placeholder="Search brands...">
-      <button type="submit" class="btn btn-dark">Search</button>
-      <% if (search) { %>
-        <a href="/admin/brands" class="btn btn-outline-dark">Clear</a>
-      <% } %>
-    </form>
+<div class="container">
+  <div class="row my-3">
+    <div class="col-6">
+      <h3>Brand Management</h3>
+    </div>
+    <div class="col-6 d-flex justify-content-end">
+    <a href="/admin/add-brand"><button class="btn btn-dark">Add New Brand</button></a>
+    </div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Brand</th>
-        <th>Logo</th>
-        <th>Products</th>
-        <th>Offer%</th>
-        <th>Offer actions</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% if (brands.length> 0){ %>
-        <% brands.forEach((brand,index)=>{ %>
-          <tr>
-            <td><%= brand.brandName %></td>
-            <td>
-              <img src="<%= brand.brandImage %>" alt="<%= brand.brandName %>" />
-            </td>
-            <td><%= brand.products %></td>
-            <td><%= brand.offer %> %</td>
-            <td>
-              <% if(brand.offer===0){ %>
-                <button class="btn btn-outline-primary" onclick="addOffer('<%= brand._id %>','<%= brand.brandName %>')">Add Offer</button>
-                <%}else{%>
-                  <button class="btn btn-outline-danger" onclick="removeOffer('<%= brand._id %>','<%= brand.brandName %>')">Remove Offer</button>
-                  <% } %>
-            </td>
-            <td 
-                id="status-<%= index %>" 
-                class="<%= brand.isBlocked ? 'text-danger' : 'text-success' %>">
-                <%= brand.isBlocked ? 'Blocked' : 'Active' %>
-            </td>
-            <td>
-              <a href="/admin/edit-brand/<%= brand._id %>" class="btn btn-outline-dark">Edit</a>
-               <button type="button" 
-                                    class="<%= brand.isBlocked ? 'btn btn-success' : 'btn btn-danger' %>"
-                                    id="brand-<%= brand._id %>"
-                                    data-brand-id="<%= brand._id %>"
-                                    data-is-blocked="<%= brand.isBlocked %>"
-                                    onclick="toggleBlockBrand(this,'<%= index %>')">
-                                <%= brand.isBlocked ? "Unblock" : "Block" %>        
-                            </button>
-            </td>
-          </tr>
-        <% }) %>
-      <% }else{ %>
-        <tr>
-          <td colspan="4" class="no-data">No brands found</td>
-        </tr>
-      <% } %>
-    </tbody>
-  </table>
-  
-  <% if (totalPages > 1) { %>
-    <div class="pagination">
-      <% if (currentPage > 1) { %>
-        <a href="/admin/brands?page=<%= currentPage - 1 %>&search=<%= search %>">Previous</a>
-      <% } %>
-
-      <% for(let i=1; i <=totalPages; i++) { %>
-        <a href="/admin/brands?page=<%= i %>&search=<%= search %>" class="<%= currentPage === i ? 'active' : '' %>">
-          <%= i %>
-        </a>
-      <% } %>
-
-      <% if (currentPage < totalPages) { %>
-        <a href="/admin/brands?page=<%= currentPage + 1 %>&search=<%= search %>">Next</a>
-      <% } %>
+  <div class="row mb-3">
+        <div class="col-xl-6">
+            <form action="/admin/brands" method="get">
+                <div class="d-flex gap-3 align-items-center">
+                    <input type="text" name="search" value="<%= search %>" placeholder="Search brands..." class="form-control">
+                    <button type="submit" class="btn btn-dark">Search</button>
+                    <a href="/admin/brands" class="btn btn-outline-dark">Clear</a>
+                </div>
+            </form>
+        </div>
     </div>
-  <% } %>
-</section>
 
-<%-include ('../../../views/partials/admin/footer')%>
+	<div class="row mb-3">
+		<table class="table table-hover">
+			<thead class="table-dark">
+			<tr>
+				<th>Brand</th>
+				<th>Logo</th>
+				<th>Products</th>
+				<th>Offer%</th>
+				<th>Offer actions</th>
+				<th>Status</th>
+				<th>Actions</th>
+			</tr>
+			</thead>
+			<tbody>
+			<% if (brands.length> 0){ %>
+				<% brands.forEach((brand,index)=>{ %>
+				<tr>
+					<td><%= brand.brandName %></td>
+					<td>
+					<img src="<%= brand.brandImage %>" alt="<%= brand.brandName %>" width="40px" />
+					</td>
+					<td><%= brand.products || 0 %></td>
+					<td><%= brand.offer %> %</td>
+					<td>
+					<% if(brand.offer===0){ %>
+						<button class="btn btn-outline-primary" onclick="addOffer('<%= brand._id %>','<%= brand.brandName %>')">Add Offer</button>
+						<%}else{%>
+						<button class="btn btn-outline-danger" onclick="removeOffer('<%= brand._id %>','<%= brand.brandName %>')">Remove Offer</button>
+						<% } %>
+					</td>
+					<td 
+						id="status-<%= index %>" 
+						class="<%= brand.isBlocked ? 'text-danger' : 'text-success' %>">
+						<%= brand.isBlocked ? 'Blocked' : 'Active' %>
+					</td>
+					<td>
+					<a href="/admin/edit-brand/<%= brand._id %>" class="btn btn-outline-dark">Edit</a>
+					<button type="button" 
+											class="<%= brand.isBlocked ? 'btn btn-success' : 'btn btn-danger' %>"
+											id="brand-<%= brand._id %>"
+											data-brand-id="<%= brand._id %>"
+											data-is-blocked="<%= brand.isBlocked %>"
+											onclick="toggleBlockBrand(this,'<%= index %>')">
+										<%= brand.isBlocked ? "Unblock" : "Block" %>        
+									</button>
+					</td>
+				</tr>
+				<% }) %>
+			<% }else{ %>
+				<tr>
+				<td colspan="4" class="no-data">No brands found</td>
+				</tr>
+			<% } %>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="row mb-3">
+		<div class="d-flex justify-content-center gap-3">
+        <% if (currentPage > 1) { %>
+            <a href="/admin/brands?page=<%= currentPage - 1 %>&search=<%= search %>" class="btn btn-light">Previous</a>
+        <% } %>
+
+        <% for(let i=1; i <=totalPages; i++) { %>
+            <a href="/admin/brands?page=<%= i %>&search=<%= search %>" class="<%= currentPage === i ? 'btn btn-dark' : 'btn btn-outline-dark' %>">
+                <%= i %>
+            </a>
+        <% } %>
+
+        <% if (currentPage < totalPages) { %>
+            <a href="/admin/brands?page=<%= currentPage + 1 %>&search=<%= search %>" class="btn btn-light">Next</a>
+        <% } %>
+        </div>
+	</div>
+</div>
 
 <script>
 // async function addOffer(brandId,brandName) {

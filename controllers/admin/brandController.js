@@ -34,6 +34,7 @@ const loadAllBrands=async (req,res)=>{
 
 
         res.render('./admin/brand/3brands',{
+            layout:"adminLayout",
             title:"Brands",
             brands,
             products,
@@ -52,6 +53,7 @@ const loadAllBrands=async (req,res)=>{
 const loadAddBrandPage=async (req,res)=>{
     try {
         res.render('./admin/brand/2add-brand',{
+            layout:"adminLayout",
             title:"Add brand",
             error:null,
             formData:{}
@@ -281,6 +283,7 @@ const loadEditBrand=async (req,res)=>{
         if(!brand) return res.redirect('/admin/page-error');
 
         res.render('./admin/brand/3edit-brand',{
+            layout:"adminLayout",
             title:"Edit Brand",
             brand:brand
         })

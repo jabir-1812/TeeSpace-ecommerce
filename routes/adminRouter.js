@@ -28,14 +28,19 @@ router.get('/page-error',adminController.pageError);
 //Login
 router.get('/login',adminController.loadLogin);
 router.post('/login',adminController.login);
-router.get('logout',adminController.logout);
+router.get('/logout',adminController.logout);
 
 
 
 
 
-
+//dashboard
 router.get('/',adminAuth,dashboardController.loadDashboard);
+router.get('/dashboard/top-ten-products',adminAuth,dashboardController.getTopTenProducts);
+router.get('/dashboard/top-ten-categories',adminAuth,dashboardController.getTopTenCategories)
+router.get('/dashboard/top-ten-brands',adminAuth,dashboardController.getTopTenBrands)
+
+
 
 
 
@@ -124,9 +129,6 @@ router.get('/sales-report-page',adminAuth,salesReportController.getSalesReportPa
 router.get('/sales-report',adminAuth,salesReportController.getSalesReport)
 router.get('/sales-report/download/pdf',adminAuth,salesReportController.getSalesReportPDF)
 router.get('/sales-report/download/excel',adminAuth,salesReportController.getSalesReportExcel)
-
-
-
 
 
 module.exports=router; 

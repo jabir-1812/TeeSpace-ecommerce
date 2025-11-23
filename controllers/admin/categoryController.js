@@ -28,6 +28,7 @@ categoryInfo = async (req,res)=>{
         }
 
         res.render('./admin/category/2category',{
+            layout:"adminLayout",
             title:"Categories",
             categories,
             totalCategories,
@@ -46,6 +47,7 @@ categoryInfo = async (req,res)=>{
 const loadAddCategoryPage = async (req,res)=>{
     try {
         res.render('./admin/category/add-category',{
+            layout:"adminLayout",
             title:"Add Category",
             errors: null, 
             formData: {} 
@@ -69,6 +71,7 @@ const addCategory = async (req,res)=>{
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map(err => ({ msg: err.message }));
             res.render('./admin/category/add-category', {
+                layout:"adminLayout",
                 title:"Add category",
                 errors,
                 formData: req.body
@@ -90,6 +93,7 @@ const loadEditCategory = async (req,res)=>{
             return res.redirect('/admin/category');
         }
         res.render('./admin/category/edit-category',{
+            layout:"adminLayout",
             title:"Edit Category",
             category,
             errors: null
@@ -119,6 +123,7 @@ const editCategory = async (req,res)=>{
             const errors = Object.values(error.errors).map(err => ({ msg: err.message }));
             const category = await Category.findById(req.params.id);
             res.render('./admin/category/edit-category', {
+                layout:"adminLayout",
                 title:"Edit Category",
                 category,
                 errors

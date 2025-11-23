@@ -1,404 +1,131 @@
-<style>
-    /* Basic Reset and General Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-a {
-    text-decoration: none;
-    color: white;
-}
-
-/* Main Content Container */
-.main-content {
-    margin-left: 250px;
-    margin-top: 70px;
-    padding: 2rem;
-    min-height: calc(100vh - 120px);
-    background-color: #f8f9fa;
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Page Header Styles */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 3px solid #007bff;
-}
-
-.page-title {
-    font-size: 2rem;
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-/* Button Styles */
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    display: inline-block;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-}
-
-/* Search Form Styles */
-.coupon-search-form {
-    margin-bottom: 2rem;
-    display: flex;
-    gap: 10px;
-    max-width: 500px;
-}
-
-.coupon-search-form input[type="text"] {
-    flex: 1;
-    padding: 12px 16px;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-}
-
-.coupon-search-form input[type="text"]:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.coupon-search-form button {
-    padding: 12px 24px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.coupon-search-form button:hover {
-    background-color: #218838;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-}
-
-/* Table Styles */
-.coupon-table {
-    width: 100%;
-    background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-}
-
-.coupon-table thead {
-    background-color: #343a40;
-    color: white;
-}
-
-.coupon-table th {
-    padding: 16px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.coupon-table tbody tr {
-    border-bottom: 1px solid #e9ecef;
-    transition: background-color 0.2s ease;
-}
-
-.coupon-table tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-.coupon-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-.coupon-table td {
-    padding: 16px;
-    font-size: 0.95rem;
-    vertical-align: middle;
-}
-
-.coupon-table td strong {
-    color: #007bff;
-    font-weight: 600;
-}
-
-/* Action Button Styles */
-.coupon-table button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    margin-right: 5px;
-}
-
-.coupon-table td:nth-last-child(2) button {
-    background-color: #ffc107;
-    color: #333;
-}
-
-.coupon-table td:nth-last-child(2) button:hover {
-    background-color: #e0a800;
-    transform: scale(1.05);
-}
-
-.coupon-table td:last-child button:first-child {
-    background-color: #17a2b8;
-    color: white;
-}
-
-.coupon-table td:last-child button:first-child:hover {
-    background-color: #138496;
-    transform: scale(1.05);
-}
-
-.coupon-table td:last-child button:last-child {
-    background-color: #dc3545;
-    color: white;
-}
-
-.coupon-table td:last-child button:last-child:hover {
-    background-color: #c82333;
-    transform: scale(1.05);
-}
-
-/* Pagination Styles */
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 2rem;
-}
-
-.pagination a,
-.pagination span {
-    padding: 10px 16px;
-    border: 2px solid #dee2e6;
-    border-radius: 6px;
-    color: #007bff;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    background-color: white;
-}
-
-.pagination a:hover {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
-}
-
-.pagination .active {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
-    font-weight: 600;
-}
-
-.pagination .disabled {
-    color: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-/* Responsive Design for Mobile */
-@media (max-width: 768px) {
-    .main-content {
-        margin-left: 0;
-        padding: 1rem;
-    }
-
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .coupon-search-form {
-        flex-direction: column;
-        max-width: 100%;
-    }
-
-    .coupon-table {
-        font-size: 0.85rem;
-    }
-
-    .coupon-table th,
-    .coupon-table td {
-        padding: 10px;
-    }
-
-    /* Make table scrollable on mobile */
-    .coupon-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-}
-
-/* Status Badge Styles */
-.coupon-table td:nth-child(9) {
-    font-weight: 600;
-}
-
-/* Optional: Add visual indicators for status */
-.coupon-table tbody tr td:nth-child(9) {
-    color: #28a745;
-}
-
-.coupon-table tbody tr:has(td:nth-child(9):contains("Inactive")) td:nth-child(9) {
-    color: #dc3545;
-}
-</style>
-
-<%-include ('../../../views/partials/admin/header')%>
-
-<div class="main-content">
-    <div class="page-header">
-        <h1 class="page-title">Coupon Management</h1>
-        <a href="/admin/coupons/add-new-coupon" class="btn btn-primary">Add New Coupon</a>
+<div class="container">
+    <div class="row my-3">
+        <div class="col-md-6">
+            <h3>Coupon Management</h3>
+        </div>
+        <div class="col-md-6 d-flex justify-content-end">
+            <a href="/admin/coupons/add-new-coupon" class="btn btn-success">Add New Coupon</a>
+        </div>
     </div>
-    
-    <form method="GET" action="/admin/coupons" class="coupon-search-form">
-        <input type="search" name="search" placeholder="Search by coupon code..." value="<%= search %>">
-        <button type="submit">Search</button>
-    </form>
 
-    <table class="coupon-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Coupon Code</th>
-                <th>Type</th>
-                <th>Discount</th>
-                <th>Min Purchase</th>
-                <th>Max Discount</th>
-                <th>Start Date</th>
-                <th>Expiry Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% coupons.forEach((coupon, index) => { %>
-            <tr>
-                <td><%= index + 1 %></td>
-                <td><strong><%= coupon.couponCode %></strong></td>
-                <td><%= coupon.discountType %></td>
-                <td>
-                    <% if (coupon.discountType === 'percentage') { %>
-                        <%= coupon.discountValue %>%
-                    <% } else { %>
-                        FLAT ₹<%= coupon.discountValue || "--" %>/-
-                    <% } %>
-                </td>
-                <td>₹<%= coupon.minPurchase || 0 %></td>
-                <td>₹<%= coupon.maxDiscountAmount || "--" %></td>
-                <td><%= new Date(coupon.startDate).toLocaleDateString() %></td>
-                <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
-                <td>
-                    <%= coupon.isActive ? 'Active' : 'Inactive' %>
-                </td>
-                <td>
-                    <% if(coupon.isActive){ %>
-                        <button onclick="deActivateCoupon('<%= coupon._id %>','<%= coupon.couponCode %>')">De-activate</button>
-                        <% }else{ %>
-                            <button onclick="activateCoupon('<%= coupon._id %>','<%= coupon.couponCode %>')">Activate</button>
+    <div class="row mb-3">
+        <div class="col-xl-6">
+            <form action="">
+                <div class="d-flex gap-3">
+                    <input type="search" name="search" placeholder="Search by coupon code..." value="<%= search %>" class="form-control">
+                    <button type="submit" class="btn btn-dark">Search</button>
+                    <a href="/admin/coupons" class="btn btn-outline-dark">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Coupon Code</th>
+                        <th>Type</th>
+                        <th>Discount</th>
+                        <th>Min Purchase</th>
+                        <th>Max Discount</th>
+                        <th>Start Date</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% coupons.forEach((coupon, index) => { %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td><strong><%= coupon.couponCode %></strong></td>
+                        <td><%= coupon.discountType %></td>
+                        <td>
+                            <% if (coupon.discountType === 'percentage') { %>
+                                <%= coupon.discountValue %>%
+                            <% } else { %>
+                                FLAT ₹<%= coupon.discountValue || "--" %>/-
                             <% } %>
-                </td>
-                <td>
-                    <a href="/admin/coupons/edit-coupon/<%= coupon._id %>"><button>Edit</button></a>
-                    <button onclick="deleteCoupon('<%= coupon._id %>','<%= coupon.couponCode %>')">Delete</button>
-                    <script>
-                        async function deleteCoupon(couponId,couponCode){
-                            const result=await Swal.fire({
-                                title:`Delete ${couponCode}?`,
-                                icon:'warning',
-                                showConfirmButton:true,
-                                confirmButtonText:"Delete",
-                                showCancelButton:true
-                            })
-                            if(result.isConfirmed){
-                                const response = await fetch(`/admin/coupons/delete-coupon/${couponId}`,{
-                                    method:"DELETE",
-                                })
-
-                                const res=await response.json();
-                                if(res.success){
-                                    Swal.fire({
-                                        title:res.message,
-                                        icon:"success",
-                                        timer:5000,
-                                        showConfirmButton:true
-                                    }).then(()=>{
-                                        location.reload()
+                        </td>
+                        <td>₹<%= coupon.minPurchase || 0 %></td>
+                        <td>₹<%= coupon.maxDiscountAmount || "--" %></td>
+                        <td><%= new Date(coupon.startDate).toLocaleDateString() %></td>
+                        <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
+                        <td>
+                            <%= coupon.isActive ? 'Active' : 'Inactive' %>
+                        </td>
+                        <td>
+                            <% if(coupon.isActive){ %>
+                                <button onclick="deActivateCoupon('<%= coupon._id %>','<%= coupon.couponCode %>')" class="btn btn-outline-danger">De-activate</button>
+                                <% }else{ %>
+                                    <button onclick="activateCoupon('<%= coupon._id %>','<%= coupon.couponCode %>')" class="btn btn-outline-success">Activate</button>
+                                    <% } %>
+                        </td>
+                        <td>
+                            <a href="/admin/coupons/edit-coupon/<%= coupon._id %>"><button class="btn btn-outline-dark">Edit</button></a>
+                            <button onclick="deleteCoupon('<%= coupon._id %>','<%= coupon.couponCode %>')" class="btn btn-danger">Delete</button>
+                            <script>
+                                async function deleteCoupon(couponId,couponCode){
+                                    const result=await Swal.fire({
+                                        title:`Delete ${couponCode}?`,
+                                        icon:'warning',
+                                        showConfirmButton:true,
+                                        confirmButtonText:"Delete",
+                                        showCancelButton:true
                                     })
-                                }else{
-                                    Swal.fire("OOPS",res.message,"error")
+                                    if(result.isConfirmed){
+                                        const response = await fetch(`/admin/coupons/delete-coupon/${couponId}`,{
+                                            method:"DELETE",
+                                        })
+
+                                        const res=await response.json();
+                                        if(res.success){
+                                            Swal.fire({
+                                                title:res.message,
+                                                icon:"success",
+                                                timer:5000,
+                                                showConfirmButton:true
+                                            }).then(()=>{
+                                                location.reload()
+                                            })
+                                        }else{
+                                            Swal.fire("OOPS",res.message,"error")
+                                        }
+                                    }
                                 }
-                            }
-                        }
 
-                        
-                    </script>
-                </td>
-            </tr>
-            <% }) %>
-        </tbody>
-    </table>
+                                
+                            </script>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <div class="pagination">
-        <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="prev">Previous</a>
-        <% } else { %>
-            <span class="disabled">Previous</span>
-        <% } %>
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-center gap-2">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="btn btn-outline-dark">Previous</a>
+                <% } %>
 
-        <% for (let i = 1; i <= totalPages; i++) { %>
-            <a href="?page=<%= i %>&search=<%= search %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
-        <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <a href="?page=<%= i %>&search=<%= search %>" class="btn <%= currentPage === i ? 'btn-dark' : 'btn-outline-dark' %>"><%= i %></a>
+                <% } %>
 
-        <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="next">Next</a>
-        <% } else { %>
-            <span class="disabled">Next</span>
-        <% } %>
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="btn btn-outline-dark">Next</a>
+                <% } %>
+            </div>
+        </div>
     </div>
 </div>
-
 
 <script>
     async function deActivateCoupon(couponId,couponCode) {

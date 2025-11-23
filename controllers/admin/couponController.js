@@ -23,6 +23,7 @@ const getCouponsPage = async (req,res)=>{
             .limit(limit);
 
         res.render('admin/coupon/coupon',{
+            layout:"adminLayout",
             title:"Coupons",
             coupons,
             currentPage:page,
@@ -40,6 +41,7 @@ const getAddNewCouponPage =async (req,res)=>{
     try {
         const categories=await Category.find({isDeleted:false});
         res.render('admin/coupon/2add-new-coupon',{
+            layout:"adminLayout",
             title:"Add new coupon",
             categories
         })
@@ -112,6 +114,7 @@ const getEditCouponPage = async (req,res)=>{
         const categories=await Category.find({isDeleted:false});
 
         res.render('admin/coupon/2edit-coupon',{
+            layout:"adminLayout",
             title:"Edit Coupon",
             coupon,
             categories

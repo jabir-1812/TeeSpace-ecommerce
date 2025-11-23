@@ -1,54 +1,37 @@
-<style>
-    .main-content {
-    margin-left: 250px;
-    margin-top: 70px;
-    padding: 2rem;
-    min-height: calc(100vh - 120px);
-    background-color: #f8f9fa;
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  .error-message{
-    color: red;
-  }
-</style>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
-<%-include ('../../../views/partials/admin/header')%>
-
-<div class="main-content">
-    <div class="container">
+<div class="container">
+    <div class="row">
         <form action="">
-            <div class="row">
-                <div class="col">
-                    <label for="brandName">Brand Name:</label>
-                    <input type="text" id="brandName" name="brandName" class="form-control" placeholder="Enter brand name" required>
-                    <div id="brandName-error" class="error-message"></div>
+            <div class="col-6">
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="brandName" class="fw-bold">Brand Name:</label>
+                        <input type="text" id="brandName" name="brandName" class="form-control" placeholder="Enter brand name" required>
+                        <div id="brandName-error" class="error message text-danger"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <label for="fileInput">Brand Logo</label>
-                    <input type="file" id="fileInput" class="form-control border" name="brandLogo" accept="image/*">
-                    <div id="brandLogo-error" class="error-message"></div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="fileInput" class="fw-bold">Brand Logo</label>
+                        <input type="file" id="fileInput" class="form-control border" name="brandLogo" accept="image/*">
+                        <div id="brandLogo-error" class="error-message text-danger"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="row d-flex justify-content-center">
-                <div class="col-md-6 my-5 d-flex justify-content-center">
-                    <div id="preview"></div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <div id="preview"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col d-flex justify-content-center">
-                    <button id="submitBtn" type="submit" class="btn btn-success">Submit</button>
+                <div class="row mb-3">
+                    <div class="col">
+                        <button id="submitBtn" type="submit" class="btn btn-success">Submit</button>
+                    </div>
                 </div>
             </div>
         </form>
     </div>
 </div>
-
-<%-include ('../../../views/partials/admin/footer')%>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 

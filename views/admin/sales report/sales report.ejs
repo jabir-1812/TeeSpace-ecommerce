@@ -1,113 +1,137 @@
-<%-include ('../../../views/partials/admin/header')%>
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h1 class="fw-bold text-center">Sales Report</h1>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col d-flex justify-content-center gap-3">
+            <button class="btn btn-outline-dark" id="dailyBtn" onclick="fetchReport('daily')">Daily</button>
+            <button class="btn btn-outline-dark" id="weeklyBtn" onclick="fetchReport('weekly')">Weekly</button>
+            <button class="btn btn-outline-dark" id="yearlyBtn" onclick="fetchReport('yearly')">Yearly</button>
+        </div>
+    </div>
+
+    <div class="row mb-3 d-flex justify-content-center">
+        <div class="col-6 d-flex justify-content-center gap-3">
+            <input type="date" id="startDate" class="form-control">
+            <input type="date" id="endDate" class="form-control">
+            <button class="btn btn-primary" onclick="fetchCustomReport()">Get Range</button>
+            <a href="?"><button class="btn btn-outline-dark">Clear Range</button></a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col d-flex justify-content-center gap-3">
+            <button class="btn btn-outline-success" onclick="downloadFile('pdf')">⬇️ PDF</button>
+            <button class="btn btn-outline-success" onclick="downloadFile('excel')">⬇️ Excel</button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <canvas id="salesChart" height="100"></canvas>
+        </div>
+    </div>
 
 
-<style>
-    .main-content {
-        margin-left: 250px;
-        margin-top: 70px;
-        padding: 2rem;
-        min-height: calc(100vh - 120px);
-        background-color: #f8f9fa;
-        color: #333;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-</style>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 30px;
-      background: #f8f9fa;
-    }
-    h1 {
-      text-align: center;
-    }
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .controls input, .controls button {
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    #reportTable {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    #reportTable th, #reportTable td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-    #reportTable th {
-      background-color: #007bff;
-      color: white;
-    }
-    canvas {
-      margin-top: 30px;
-    }
-  </style>
- <div class="main-content">
-     <h1>📊 Sales Report Dashboard</h1>
+    <div class="row mb-3">
+        <div class="col-3">
+            <div class="card shadow d-flex flex-column align-items-center">
+                <div class="h3">📦</div>
+                <div class="h3 fw-bold">Total Orders</div>
+                <div class="fw-bold h3 text-success" id="totalOrdersCount"></div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="card shadow d-flex flex-column align-items-center">
+                <div class="h3">💰</div>
+                <div class="h4 fw-bold">Total Income</div>
+                <div class="h3 fw-bold text-success" id="totalIncome"></div>
+            </div>
+        </div>
+        
+        <div class="col-3">
+            <div class="card shadow d-flex flex-column align-items-center">
+                <div class="h3">🎁</div>
+                <div class="h4 fw-bold">Offer Discounts</div>
+                <div class="h3 fw-bold text-success" id="totalOfferDiscount"></div>
+            </div>
+        </div>
+        
+        <div class="col-3">
+            <div class="card shadow d-flex flex-column align-items-center">
+                <div class="h3">🎟️</div>
+                <div class="h4 fw-bold">Coupon Discounts</div>
+                <div class="h3 fw-bold text-success" id="totalCouponDiscount"></div>
+            </div>
+        </div>
+    </div>
 
-  <div class="controls">
-    <button onclick="fetchReport('daily')">Daily</button>
-    <button onclick="fetchReport('weekly')">Weekly</button>
-    <button onclick="fetchReport('yearly')">Yearly</button>
-
-    <input type="date" id="startDate">
-    <input type="date" id="endDate">
-    <button onclick="fetchCustomReport()">Get Range</button>
-
-    <button onclick="downloadFile('pdf')">⬇️ PDF</button>
-    <button onclick="downloadFile('excel')">⬇️ Excel</button>
-  </div>
-
-  <table id="reportTable">
-    <thead>
-      <tr>
-        <th>Date / Period</th>
-        <th>Total Sales (₹)</th>
-        <th>Total Offer Discounts (₹)</th>
-        <th>Total Coupon Discounts (₹)</th>
-        <th>Total Orders</th>
-        <th>Avg Order Value (₹)</th>
-      </tr>
-    </thead>
-    <tbody id="reportBody"></tbody>
-  </table>
-
-  <canvas id="salesChart" height="100"></canvas>
+    <div class="row">
+        <div class="col">
+            <table id="reportTable" class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                    <th>Date / Period</th>
+                    <th>Total Sales (₹)</th>
+                    <th>Total Offer Discounts (₹)</th>
+                    <th>Total Coupon Discounts (₹)</th>
+                    <th>Total Orders</th>
+                    <th>Avg Order Value (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="reportBody"></tbody>
+                </table>
+        </div>
+    </div>
  </div>
 
   <script>
     let currentReportType = "daily"; // default
     let chartInstance;
 
+    // async function fetchReport(type) {
+    //     currentReportType = type; // 🟢 save the selected report type
+    //     const res = await fetch(`/admin/sales-report?type=${type}`);
+    //     const data = await res.json();
+    //     console.log("data.report",data.report)
+    //   console.log("dataaaaaaaa========",data)
+
+    //     renderReport(data.report, type, data.totalOrdersCount, data.totalIncome, data.totalOfferDiscount, data.totalCouponDiscount);  
+    // }
     async function fetchReport(type) {
         currentReportType = type; // 🟢 save the selected report type
-        const res = await fetch(`/admin/sales-report?type=${type}`);
+        const start = document.getElementById("startDate").value;
+        const end = document.getElementById("endDate").value;
+        const res = await fetch(`/admin/sales-report?type=${type}&start=${start}&end=${end}`);
         const data = await res.json();
         console.log("data.report",data.report)
-        renderReport(data.report, type);  
+      console.log("dataaaaaaaa========",data)
+
+        renderReport(data.report, type, data.totalOrdersCount, data.totalIncome, data.totalOfferDiscount, data.totalCouponDiscount);  
     }
 
     async function fetchCustomReport() {
       const start = document.getElementById("startDate").value;
       const end = document.getElementById("endDate").value;
       if (!start || !end) return Swal.fire("Select both start and end dates!","","warning");
-      currentReportType = "custom"; // 🟢 mark as custom range
-      const res = await fetch(`/admin/sales-report?start=${start}&end=${end}`);
+      // currentReportType = "custom"; // 🟢 mark as custom range
+      const res = await fetch(`/admin/sales-report?type=${currentReportType}&start=${start}&end=${end}`);
       const data = await res.json();
-      renderReport(data.report, "custom");
+      console.log("dataaaaaaaa========",data)
+      renderReport(data.report, currentReportType,  data.totalOrdersCount, data.totalIncome, data.totalOfferDiscount, data.totalCouponDiscount);
     }
 
-    function renderReport(report, type) {
+    function renderReport(report, type, totalOrdersCount, totalIncome, totalOfferDiscount, totalCouponDiscount) {
+      document.getElementById('totalOrdersCount').innerHTML=totalOrdersCount;
+      document.getElementById('totalIncome').innerHTML=`Rs.${totalIncome}/-`;
+      document.getElementById('totalOfferDiscount').innerHTML=`Rs.${totalOfferDiscount}/-`;
+      document.getElementById('totalCouponDiscount').innerHTML=`Rs.${totalCouponDiscount}/-`;
+
       const tbody = document.getElementById("reportBody");
       tbody.innerHTML = "";
 
@@ -121,12 +145,43 @@
 
         if (type === "daily") {
           label = `${r._id.day}-${r._id.month}-${r._id.year}`;
+          document.getElementById('dailyBtn').classList.remove('btn-outline-dark')
+          document.getElementById('dailyBtn').classList.add('btn-dark')
+
+          document.getElementById('weeklyBtn').classList.remove('btn-dark')
+          document.getElementById('weeklyBtn').classList.add('btn-outline-dark')
+          document.getElementById('yearlyBtn').classList.remove('btn-dark')
+          document.getElementById('yearlyBtn').classList.add('btn-outline-dark')
         } else if (type === "weekly") {
           label = `Week ${r._id.week}, ${r._id.year}`;
+          document.getElementById('weeklyBtn').classList.remove('btn-outline-dark')
+          document.getElementById('weeklyBtn').classList.add('btn-dark')
+
+          document.getElementById('dailyBtn').classList.remove('btn-dark')
+          document.getElementById('dailyBtn').classList.add('btn-outline-dark')
+          document.getElementById('yearlyBtn').classList.remove('btn-dark')
+          document.getElementById('yearlyBtn').classList.add('btn-outline-dark')
         } else if (type === "yearly") {
           label = `${r._id.year}`;
+          document.getElementById('yearlyBtn').classList.remove('btn-outline-dark')
+          document.getElementById('yearlyBtn').classList.add('btn-dark')
+
+          document.getElementById('dailyBtn').classList.remove('btn-dark')
+          document.getElementById('dailyBtn').classList.add('btn-outline-dark')
+          document.getElementById('weeklyBtn').classList.remove('btn-dark')
+          document.getElementById('weeklyBtn').classList.add('btn-outline-dark')
         } else {
           label = `${document.getElementById("startDate").value} to ${document.getElementById("endDate").value}`;
+
+          document.getElementById('dailyBtn').classList.remove('btn-dark')
+          document.getElementById('weeklyBtn').classList.remove('btn-dark')
+          document.getElementById('yearlyBtn').classList.remove('btn-dark')
+
+          document.getElementById('dailyBtn').classList.add('btn-outline-dark')
+          document.getElementById('weeklyBtn').classList.add('btn-outline-dark')
+          document.getElementById('yearlyBtn').classList.add('btn-outline-dark')
+
+
         }
 
         labels.push(label);
@@ -194,6 +249,22 @@
     fetchReport('daily');
 
 
+    // function downloadFile(format) {
+    //     const start = document.getElementById("startDate").value;
+    //     const end = document.getElementById("endDate").value;
+    //     const currentType = currentReportType || "daily"; // optional tracking
+
+    //     let url = `/admin/sales-report/download/${format}?`;
+
+    //     if (start && end) {
+    //         url += `start=${start}&end=${end}`;
+    //     } else {
+    //         url += `type=${currentType}`;
+    //     }
+
+    //     window.open(url, "_blank"); // opens in new tab, triggers download
+    // }
+
     function downloadFile(format) {
         const start = document.getElementById("startDate").value;
         const end = document.getElementById("endDate").value;
@@ -201,20 +272,23 @@
 
         let url = `/admin/sales-report/download/${format}?`;
 
-        if (start && end) {
-            url += `start=${start}&end=${end}`;
-        } else {
-            url += `type=${currentType}`;
+        // if (start && end) {
+        //     url += `start=${start}&end=${end}`;
+        // } else {
+        //     url += `type=${currentType}`;
+        // }
+
+        if(currentReportType && !start && !end){
+          url += `type=${currentReportType}`;
+        }
+        if(currentReportType && start && end){
+          url += `type=${currentReportType}&start=${start}&end=${end}`;
         }
 
         window.open(url, "_blank"); // opens in new tab, triggers download
     }
 
   </script>
-
-
-
-<%-include ('../../../views/partials/admin/footer')%>
 
 
 

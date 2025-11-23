@@ -1,0 +1,552 @@
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <div>
+        <!-- top 10 products -->
+        <div class="container-fluid" id="topProducts">
+            <h1>Top 10 Best-selling products</h1>
+            <div class="d-flex justify-content-center gap-3">
+                <div class="">
+                    <button class="btn" id="dailyProductReportBtn" onclick="fetchProductReports('daily')">Today</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="weeklyProductReportBtn" onclick="fetchProductReports('weekly')">This Week</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="monthlyProductReportBtn" onclick="fetchProductReports('monthly')">This Month</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="yearlyProductReportBtn" onclick="fetchProductReports('yearly')">This Year</button>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <div>
+                        <input class="form-control" type="date" id="productReportStartDate">
+                    </div>
+                    <div>
+                        <input class="form-control" type="date" id="productReportEndDate">
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="fetchCustomProductReports()">Get Range</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-9">
+                    <h3>Top 10 products Graph</h3>
+                    <canvas id="topTenProductsChart" height="100"></canvas>
+                </div>
+                <div class="col-3">
+                    <h3>Top 10 products List</h3>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Product Name</th>
+                                <th>Total Sold</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topTenProductsTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <script>
+            // let currentProductReportType='daily';
+            let productChartInstance;
+
+            async function fetchProductReports(type) {
+                const productReportBtns=['dailyProductReportBtn','weeklyProductReportBtn','monthlyProductReportBtn','yearlyProductReportBtn']
+                // currentProductReportType=type;
+                const res=await fetch(`/admin/dashboard/top-ten-products?type=${type}`);
+                const data=await res.json();
+
+                document.getElementById("productReportStartDate").value="";
+                document.getElementById("productReportEndDate").value="";
+
+                productReportBtns.forEach((btn)=>{
+                    document.getElementById(btn).classList.remove("btn-dark")
+                    document.getElementById(btn).classList.add("btn-outline-dark")
+                })
+
+                if(type==='daily'){
+                    document.getElementById('dailyProductReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('dailyProductReportBtn').classList.add("btn-dark")
+                }else if(type==='weekly'){
+                    document.getElementById('weeklyProductReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('weeklyProductReportBtn').classList.add("btn-dark")
+                }if(type==='monthly'){
+                    document.getElementById('monthlyProductReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('monthlyProductReportBtn').classList.add("btn-dark")
+                }if(type==='yearly'){
+                    document.getElementById('yearlyProductReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('yearlyProductReportBtn').classList.add("btn-dark")
+                }
+
+                console.log("dataaaaaaaaa",data)
+
+                const productNames=data.map(i=>i.productName);
+                const quantities=data.map(i=>i.totalSold);
+
+                const ctx = document.getElementById('topTenProductsChart').getContext('2d');
+                if(productChartInstance) productChartInstance.destroy();
+
+                productChartInstance= new Chart(ctx,{
+                    type:'bar',
+                    data:{
+                        labels:productNames,
+                        datasets:[{
+                            label:"Units Sold",
+                            data:quantities,
+                            borderWidth:1
+                        }]
+                    },
+                    options:{
+                        responsive:true, 
+                        scales:{
+                            y:{beginAtZero:true}
+                        }
+                    }
+                })
+
+                //update top ten products table
+                const tbody=document.getElementById('topTenProductsTable');
+                tbody.innerHTML='';
+                data.forEach(ele => {
+                    tbody.innerHTML +=`<tr>
+                                            <td>
+                                                <img src=${ele.productImage[0].url} width='100px'>    
+                                            </td>
+                                            <td>${ele.productName}</td>
+                                            <td>${ele.totalSold}</td>
+                                        </tr>`
+                });
+
+
+
+            }
+
+            async function fetchCustomProductReports(){
+                const startDate = document.getElementById('productReportStartDate').value;
+                const endDate = document.getElementById('productReportEndDate').value;
+                if((!startDate || !endDate)){
+                    return Swal.fire({
+                        title:"Select both start date & end date!",
+                        icon:"warning",
+                    })
+                }
+                const res=await fetch(`/admin/dashboard/top-ten-products?type=custom&start=${startDate}&end=${endDate}`)
+                const data=await res.json()
+                const productReportBtns=['dailyProductReportBtn','weeklyProductReportBtn','monthlyProductReportBtn','yearlyProductReportBtn']
+                productReportBtns.forEach((btn)=>{
+                    document.getElementById(btn).classList.remove("btn-dark")
+                    document.getElementById(btn).classList.add("btn-outline-dark")
+                })
+
+                console.log("dataaaaaaaCustom",data)
+
+                const productNames=data.map(i=>i.productName);
+                const quantities=data.map(i=>i.totalSold);
+
+                const ctx = document.getElementById('topTenProductsChart').getContext('2d');
+                if(productChartInstance) productChartInstance.destroy();
+
+                productChartInstance= new Chart(ctx,{
+                    type:'bar',
+                    data:{
+                        labels:productNames,
+                        datasets:[{
+                            label:"Units Sold",
+                            data:quantities,
+                            borderWidth:1
+                        }]
+                    },
+                    options:{
+                        responsive:true, 
+                        scales:{
+                            y:{beginAtZero:true}
+                        }
+                    }
+                })
+
+                //update top ten products table
+                const tbody=document.getElementById('topTenProductsTable');
+                tbody.innerHTML='';
+                data.forEach(ele => {
+                    tbody.innerHTML +=`<tr>
+                                            <td>
+                                                <img src=${ele.productImage[0].url} width='100px'>    
+                                            </td>
+                                            <td>${ele.productName}</td>
+                                            <td>${ele.totalSold}</td>
+                                        </tr>`
+                });
+
+            }
+            fetchProductReports('daily');
+        </script>
+
+        <div class="container-fluid" id="topCategories">
+            <h1>Top 10 Best-selling Categories</h1>
+            <div class="d-flex flex-row justify-content-center gap-3">
+                <div class="">
+                    <button class="btn" id="dailyCategoryReportBtn" onclick="fetchCategoryReports('daily')">Today</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="weeklyCategoryReportBtn" onclick="fetchCategoryReports('weekly')">This Week</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="monthlyCategoryReportBtn" onclick="fetchCategoryReports('monthly')">This Month</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="yearlyCategoryReportBtn" onclick="fetchCategoryReports('yearly')">This Year</button>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <div>
+                        <input class="form-control" type="date" id="categoryReportStartDate">
+                    </div>
+                    <div>
+                        <input class="form-control" type="date" id="categoryReportEndDate">
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="fetchCustomCategoryReports()">Get Range</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-9">
+                    <h3>Top 10 products Graph</h3>
+                    <canvas id="topTenCategoriesChart" height="100"></canvas>
+                </div>
+                <div class="col-3">
+                    <h3>Top 10 Categories List</h3>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Total Sold Items</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topTenCategoriesTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let categoryChartInstance;
+            async function fetchCategoryReports(type) {
+                const categoryReportBtns=['dailyCategoryReportBtn','weeklyCategoryReportBtn','monthlyCategoryReportBtn','yearlyCategoryReportBtn']
+                const res=await fetch(`/admin/dashboard/top-ten-categories?type=${type}`);
+                const data=await res.json();
+                console.log("cat dataaaaaa",data)
+
+                document.getElementById("categoryReportStartDate").value="";
+                document.getElementById("categoryReportEndDate").value="";
+
+                categoryReportBtns.forEach((btn)=>{
+                    document.getElementById(btn).classList.remove('btn-dark')
+                    document.getElementById(btn).classList.add('btn-outline-dark')
+                })
+
+                if(type==='daily'){
+                    document.getElementById('dailyCategoryReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('dailyCategoryReportBtn').classList.add("btn-dark")
+                }else if(type==='weekly'){
+                    document.getElementById('weeklyCategoryReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('weeklyCategoryReportBtn').classList.add("btn-dark")
+                }if(type==='monthly'){
+                    document.getElementById('monthlyCategoryReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('monthlyCategoryReportBtn').classList.add("btn-dark")
+                }if(type==='yearly'){
+                    document.getElementById('yearlyCategoryReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('yearlyCategoryReportBtn').classList.add("btn-dark")
+                }
+
+                const categoryNames=data.map(i=>i.categoryName);
+                const soldQuantities=data.map(i=>i.totalSold);
+
+                const ctx=document.getElementById('topTenCategoriesChart').getContext('2d')
+                if(categoryChartInstance) categoryChartInstance.destroy();
+
+                categoryChartInstance=new Chart(ctx,{
+                    type:'bar',
+                    data:{
+                        labels:categoryNames,
+                        datasets:[{
+                            label:"Units Sold",
+                            data:soldQuantities,
+                            borderWidth:1
+                        }]
+                    },
+                    options:{
+                        indexAxis:'y',
+                        responsive:true,
+                        scales:{
+                            x:{
+                                beginAtZero:true
+                            }
+                        }
+                    }
+                })
+
+                //update top ten categories table
+                const tbody=document.getElementById('topTenCategoriesTable');
+                tbody.innerHTML='';
+                data.forEach(ele => {
+                    tbody.innerHTML +=`<tr>
+                                            <td>${ele.categoryName}</td>
+                                            <td>${ele.totalSold}</td>
+                                        </tr>`
+                });
+
+            }
+
+            async function fetchCustomCategoryReports() {
+                const startDate = document.getElementById('categoryReportStartDate').value;
+                const endDate = document.getElementById('categoryReportEndDate').value;
+                if((!startDate || !endDate)){
+                    return Swal.fire({
+                        title:"Select both start date & end date!",
+                        icon:"warning",
+                    })
+                }
+
+                const res=await fetch(`/admin/dashboard/top-ten-categories?type=custom&start=${startDate}&end=${endDate}`)
+                const data=await res.json()
+
+
+                const categoryReportBtns=['dailyCategoryReportBtn','weeklyCategoryReportBtn','monthlyCategoryReportBtn','yearlyCategoryReportBtn']
+
+                categoryReportBtns.forEach((btn)=>{
+                    document.getElementById(btn).classList.remove('btn-dark')
+                    document.getElementById(btn).classList.add('btn-outline-dark')
+                })
+
+                const categoryNames=data.map(i=>i.categoryName);
+                const soldQuantities=data.map(i=>i.totalSold);
+
+                const ctx=document.getElementById('topTenCategoriesChart').getContext('2d')
+                if(categoryChartInstance) categoryChartInstance.destroy();
+
+                categoryChartInstance=new Chart(ctx,{
+                    type:'bar',
+                    data:{
+                        labels:categoryNames,
+                        datasets:[{
+                            label:"Units Sold",
+                            data:soldQuantities,
+                            borderWidth:1
+                        }]
+                    },
+                    options:{
+                        indexAxis:'y',
+                        responsive:true,
+                        scales:{
+                            x:{
+                                beginAtZero:true
+                            }
+                        }
+                    }
+                })
+
+                //update top ten categories table
+                const tbody=document.getElementById('topTenCategoriesTable');
+                tbody.innerHTML='';
+                data.forEach(ele => {
+                    tbody.innerHTML +=`<tr>
+                                            <td>${ele.categoryName}</td>
+                                            <td>${ele.totalSold}</td>
+                                        </tr>`
+                });
+            }
+
+            fetchCategoryReports('daily');
+        </script>
+
+        <div class="container-fluid" id="topBrands">
+            <h1>Top 10 Best-selling Brands</h1>
+            <div class="d-flex flex-row justify-content-center gap-3">
+                <div class="">
+                    <button class="btn" id="dailyBrandReportBtn" onclick="fetchBrandReports('daily')">Today</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="weeklyBrandReportBtn" onclick="fetchBrandReports('weekly')">This Week</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="monthlyBrandReportBtn" onclick="fetchBrandReports('monthly')">This Month</button>
+                </div>
+                <div class="">
+                    <button class="btn" id="yearlyBrandReportBtn" onclick="fetchBrandReports('yearly')">This Year</button>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <div>
+                        <input class="form-control" type="date" id="brandReportStartDate">
+                    </div>
+                    <div>
+                        <input class="form-control" type="date" id="brandReportEndDate">
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="fetchCustomBrandReports()">Get Range</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-9">
+                    <h3>Top 10 Brands Chart</h3>
+                    <canvas id="topTenBrandsChart" height="100"></canvas>
+                </div>
+                <div class="col-3">
+                    <h3>Top 10 Brands List</h3>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Brand Name</th>
+                                <th>Total Sold Items</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topTenBrandsTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let brandChartInstance;
+            async function fetchBrandReports(type) {
+                const res=await fetch(`/admin/dashboard/top-ten-brands?type=${type}`);
+                const data=await res.json();
+                console.log("brand dataaaaaa",data)
+
+                const brandReportBtns=['dailyBrandReportBtn','weeklyBrandReportBtn','monthlyBrandReportBtn','yearlyBrandReportBtn']
+
+                document.getElementById("brandReportStartDate").value="";
+                document.getElementById("brandReportEndDate").value="";
+
+                brandReportBtns.forEach((btn)=>{
+                    document.getElementById(btn).classList.remove("btn-dark")
+                    document.getElementById(btn).classList.add("btn-outline-dark")
+                })
+
+                 if(type==='daily'){
+                    document.getElementById('dailyBrandReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('dailyBrandReportBtn').classList.add("btn-dark")
+                }else if(type==='weekly'){
+                    document.getElementById('weeklyBrandReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('weeklyBrandReportBtn').classList.add("btn-dark")
+                }if(type==='monthly'){
+                    document.getElementById('monthlyBrandReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('monthlyBrandReportBtn').classList.add("btn-dark")
+                }if(type==='yearly'){
+                    document.getElementById('yearlyBrandReportBtn').classList.remove("btn-outline-dark")
+                    document.getElementById('yearlyBrandReportBtn').classList.add("btn-dark")
+                }
+
+
+                const brandNames=data.map(i=>i.brandName);
+                const soldQuantities=data.map(i=>i.totalSold);
+
+                const ctx=document.getElementById('topTenBrandsChart').getContext('2d')
+                if(brandChartInstance) brandChartInstance.destroy();
+
+                brandChartInstance=new Chart(ctx,{
+                    type:'bar',
+                    data:{
+                        labels:brandNames,
+                        datasets:[{
+                            label:"Units Sold",
+                            data:soldQuantities,
+                            borderWidth:1
+                        }]
+                    },
+                    options:{
+                        indexAxis:'y',
+                        responsive:true,
+                        scales:{
+                            x:{
+                                beginAtZero:true
+                            }
+                        }
+                    }
+                })
+
+                //update top ten categories table
+                const tbody=document.getElementById('topTenBrandsTable');
+                tbody.innerHTML='';
+                data.forEach(ele => {
+                    tbody.innerHTML +=`<tr>
+                                            <td>${ele.brandName}</td>
+                                            <td>${ele.totalSold}</td>
+                                        </tr>`
+                });
+
+            }
+
+            async function fetchCustomBrandReports() {
+                const startDate = document.getElementById('brandReportStartDate').value;
+                const endDate = document.getElementById('brandReportEndDate').value;
+                if((!startDate || !endDate)){
+                    return Swal.fire({
+                        title:"Select both start date & end date!",
+                        icon:"warning",
+                    })
+                }
+
+                const res=await fetch(`/admin/dashboard/top-ten-brands?type=custom&start=${startDate}&end=${endDate}`)
+                const data=await res.json()
+
+                const brandReportBtns=['dailyBrandReportBtn','weeklyBrandReportBtn','monthlyBrandReportBtn','yearlyBrandReportBtn']
+
+                brandReportBtns.forEach((btn)=>{
+                    document.getElementById(btn).classList.remove("btn-dark")
+                    document.getElementById(btn).classList.add("btn-outline-dark")
+                })
+
+                const brandNames=data.map(i=>i.brandName);
+                const soldQuantities=data.map(i=>i.totalSold);
+
+                const ctx=document.getElementById('topTenBrandsChart').getContext('2d')
+                if(brandChartInstance) brandChartInstance.destroy();
+
+                brandChartInstance=new Chart(ctx,{
+                    type:'bar',
+                    data:{
+                        labels:brandNames,
+                        datasets:[{
+                            label:"Units Sold",
+                            data:soldQuantities,
+                            borderWidth:1
+                        }]
+                    },
+                    options:{
+                        indexAxis:'y',
+                        responsive:true,
+                        scales:{
+                            x:{
+                                beginAtZero:true
+                            }
+                        }
+                    }
+                })
+
+                //update top ten categories table
+                const tbody=document.getElementById('topTenBrandsTable');
+                tbody.innerHTML='';
+                data.forEach(ele => {
+                    tbody.innerHTML +=`<tr>
+                                            <td>${ele.brandName}</td>
+                                            <td>${ele.totalSold}</td>
+                                        </tr>`
+                });
+            }
+
+            fetchBrandReports('daily');
+        </script>
+        
+    </div>

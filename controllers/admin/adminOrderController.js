@@ -54,6 +54,7 @@ const listAllOrders=async (req,res)=>{
         .lean();
 
         res.render("admin/order/orders", {
+        layout:"adminLayout",
         title: "All Orders",
         orders,
         currentPage: page,
@@ -76,7 +77,7 @@ const getOrderDetails=async (req,res)=>{
       .populate("userId", "name email phone")
       .lean();
 
-    res.render("admin/order/order-details", { order, title: "Order Details" });
+    res.render("admin/order/order-details", {layout:"adminLayout", order, title: "Order Details" });
     } catch (error) {
         console.log("getOrderDetails() error=====>",error);
         res.redirect('/page-error')

@@ -94,10 +94,15 @@ const createRazorPayOrder = async(req,res)=>{
       let totalPrice=0;
       let totalAmount = 0;
       let isCartUpdated = false;//initially set as false.
+      let anyOutOfStockProduct=false;
 
 
       // Check each item quantity vs stock
       for (const item of userCart.items) {
+         //checking if any product is out of stock
+          if(item.productId.quantity===0){
+            anyOutOfStockProduct=true;
+          }
         if (item.productId && item.quantity > item.productId.quantity) {
           item.quantity = item.productId.quantity; // reduce to available stock
           isCartUpdated = true;
@@ -115,6 +120,10 @@ const createRazorPayOrder = async(req,res)=>{
 
       if(totalPrice===0){
         return res.status(Status.BAD_REQUEST).json({message:"Your cart is empty,re-check your cart and please try again",reload:true})
+      }
+
+      if(anyOutOfStockProduct){
+        return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove 'out of stock' product(s)",reload:true})
       }
 
       //if any coupon applied, calculate discount and reduce it from total price
@@ -560,12 +569,19 @@ const retryPayment=async (req,res)=>{
         let totalPrice=0;
         let totalAmount = 0;
         let isCartUpdated = false;//initially set as false.
+        let anyOutOfStockProduct=false;
+
 
 
       // Check each item quantity vs stock
       for (const item of userCart.items) {
+        //checking if any product is out of stock
+          if(item.productId.quantity===0){
+            anyOutOfStockProduct=true;
+          }
         if (item.productId && item.quantity > item.productId.quantity) {
           item.quantity = item.productId.quantity; // reduce to available stock
+          
           isCartUpdated = true;
         }
         totalPrice += (item.productId ? item.productId.salePrice : 0) * item.quantity;
@@ -581,6 +597,10 @@ const retryPayment=async (req,res)=>{
 
       if(totalPrice===0){
         return res.status(Status.BAD_REQUEST).json({message:"Your cart is empty,re-check your cart and please try again",redirectToCheckoutPage:true})
+      }
+
+      if(anyOutOfStockProduct){
+        return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove 'out of stock' product(s)",reload:true})
       }
 
       //if any coupon applied, calculate discount and reduce it from total price
@@ -941,12 +961,19 @@ const place_cod_order=async (req,res)=>{
         let totalPrice=0;
         let totalAmount = 0;
         let isCartUpdated = false;//initially set as false.
+        let anyOutOfStockProduct=false;
+
 
 
         // Check each item quantity vs stock
         for (const item of userCart.items) {
+          //checking if any product is out of stock
+            if(item.productId.quantity===0){
+              anyOutOfStockProduct=true;
+            }
           if (item.productId && item.quantity > item.productId.quantity) {
             item.quantity = item.productId.quantity; // reduce to available stock
+            
             isCartUpdated = true;
           }
           totalPrice += (item.productId ? item.productId.salePrice : 0) * item.quantity;
@@ -962,6 +989,10 @@ const place_cod_order=async (req,res)=>{
 
         if(totalPrice===0){
           return res.status(Status.BAD_REQUEST).json({message:"Your cart is empty,re-check your cart and please try again",reload:true})
+        }
+
+        if(anyOutOfStockProduct){
+          return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove the 'out of stock' product(s)",reload:true})
         }
 
         if(userCart.appliedCoupons.length === 0 && totalAmount>1000){
@@ -1330,12 +1361,19 @@ const placeWalletPaidOrder = async (req,res)=>{
       let totalPrice=0;
       let totalAmount = 0;
       let isCartUpdated = false;//initially set as false.
+      let anyOutOfStockProduct=false;
 
 
       // Check each item quantity vs stock
       for (const item of userCart.items) {
+        //checking if any product is out of stock
+          if(item.productId.quantity===0){
+            anyOutOfStockProduct=true;
+          }
+
         if (item.productId && item.quantity > item.productId.quantity) {
           item.quantity = item.productId.quantity; // reduce to available stock
+  
           isCartUpdated = true;
         }
         totalPrice += (item.productId ? item.productId.salePrice : 0) * item.quantity;
@@ -1351,6 +1389,10 @@ const placeWalletPaidOrder = async (req,res)=>{
 
       if(totalPrice===0){
         return res.status(Status.BAD_REQUEST).json({message:"Your cart is empty,re-check your cart and please try again",reload:true})
+      }
+
+      if(anyOutOfStockProduct){
+        return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove 'out of stock' product(s)",reload:true})
       }
 
       if(userCart.appliedCoupons.length > 0){
@@ -1715,7 +1757,7 @@ const showOrders = async (req, res) => {
 
         // Pagination
         const page = parseInt(req.query.page) || 1;  
-        const limit = 1;  // orders per page
+        const limit = 2;  // orders per page
         const skip = (page - 1) * limit;
 
         // Search

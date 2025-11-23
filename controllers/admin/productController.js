@@ -18,6 +18,7 @@ const loadAddProductPage = async (req,res)=>{
         const brand=await Brand.find({isBlocked:false})
 
         res.render('./admin/products/2add-product',{
+            layout:"adminLayout",
             title:"Add Product",
             brand:brand,
             category:category
@@ -182,6 +183,7 @@ const loadAllProductsPage = async (req, res) => {
         // console.log("producttttttt:", product);
 
         res.render("./admin/products/product", {
+        layout:"adminLayout",
         title: "Products",
         product,
         search,
@@ -320,6 +322,7 @@ const loadEditProductPage = async (req,res)=>{
         const brand = await Brand.find({})
 
         res.render('./admin/products/3edit-product',{
+            layout:"adminLayout",
             title:"Edit Product",
             product:product,
             category:category,

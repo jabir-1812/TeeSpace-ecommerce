@@ -18,6 +18,7 @@ const getBannerPage=async (req,res)=>{
         .limit(ITEMS_PER_PAGE)
 
         res.render('./admin/banner/2banner',{
+            layout:"adminLayout",
             title:"Banner Management",
             banners,
             totalBanners,
@@ -34,6 +35,7 @@ const getBannerPage=async (req,res)=>{
 const loadAddBannerPage=async (req,res)=>{
     try {
         res.render('./admin/banner/2add-banner',{
+            layout:"adminLayout",
             title:"Add Banner"
         })
     } catch (error) {
@@ -73,6 +75,7 @@ const loadEditBannerPage=async (req,res)=>{
 
         if(!banner) return res.redirect('/admin/page-error');
         res.render("./admin/banner/2edit-banner",{
+            layout:"adminLayout",
             title:"Edit Banner",
             banner,
         })
