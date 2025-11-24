@@ -356,18 +356,29 @@ const loadHomepage=async (req,res)=>{
 
 
 
+// const logout=async (req,res)=>{
+//     try {
+//         // console.log("session before logout:",req.session);
+        
+//         req.session.destroy((err)=>{
+//             if(err){
+//                 console.log("Session destruction error:",err.message);
+//                 return res.redirect('/page-not-found')
+//             }
+//             // console.log("session after logout:",req.session)
+//             return res.redirect('/login')
+//         })
+//     } catch (error) {
+//         console.log("logout() error:",error)
+//         res.redirect('/page-not-found')
+//     }
+// }
+
+
 const logout=async (req,res)=>{
     try {
-        // console.log("session before logout:",req.session);
-        
-        req.session.destroy((err)=>{
-            if(err){
-                console.log("Session destruction error:",err.message);
-                return res.redirect('/page-not-found')
-            }
-            // console.log("session after logout:",req.session)
-            return res.redirect('/login')
-        })
+        delete req.session.user;
+        res.redirect('/login')
     } catch (error) {
         console.log("logout() error:",error)
         res.redirect('/page-not-found')
