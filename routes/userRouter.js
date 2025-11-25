@@ -163,6 +163,7 @@ router.get('/cart',userAuth,cartController.loadCart);
 router.post('/add-to-cart',userAuth,cartController.addToCart);
 router.post('/change-cart-quantity',userAuth,cartController.changeCartQuantity)
 router.delete("/delete-cart-item/:id", userAuth, cartController.deleteCartItem)
+router.get('/check-cart-before-checkout',userAuth,cartController.checkCartBeforeCheckout)
 
 
 

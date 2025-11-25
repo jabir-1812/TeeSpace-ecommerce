@@ -501,7 +501,7 @@ input[name="paymentMethod"] {
         Swal.fire({
             title:"Cart quantity is decreased",
             text:"Some products are only few left",
-            timer:5000,
+            timer:30000,
             showConfirmButton:true,
             icon:"warning"
         })
@@ -709,7 +709,7 @@ input[name="paymentMethod"] {
             return Swal.fire({
                 title:"Maximum limit is 3",
                 icon:'warning',
-                timer:3000
+                timer:10000
             })
         }
         if(parseInt(currentQty)+count <1 || parseInt(currentQty)+count <0){
@@ -734,7 +734,7 @@ input[name="paymentMethod"] {
                 Swal.fire({
                     title:data.message,
                     icon:"success",
-                    timer:5000,
+                    timer:30000,
                     showConfirmButton:true
                 }).then(()=>{
                     location.reload();
@@ -744,7 +744,7 @@ input[name="paymentMethod"] {
                 Swal.fire({
                     title:data.message,
                     icon:"success",
-                    timer:5000,
+                    timer:30000,
                     showConfirmButton:true
                 })
             }
@@ -753,7 +753,7 @@ input[name="paymentMethod"] {
                 Swal.fire({
                     title:data.message,
                     icon:"error",
-                    timer:5000,
+                    timer:30000,
                     showConfirmButton:true
                 }).then(()=>{
                     location.reload();
@@ -763,7 +763,7 @@ input[name="paymentMethod"] {
                 Swal.fire({
                     title:data.message,
                     icon:"error",
-                    timer:5000,
+                    timer:30000,
                     showConfirmButton:true
                 })
             }
@@ -1007,7 +1007,7 @@ input[name="paymentMethod"] {
                     Swal.fire({
                         title:"Order Placed Successfully!",
                         icon:"success",
-                        timer:10000,
+                        timer:5000,
                         showConfirmButton:true
                     }).then(() => {
                         window.location.href=`/order-success/${res.orderId}`;
@@ -1017,7 +1017,7 @@ input[name="paymentMethod"] {
                         title: "Order Failed",
                         text: res.message,
                         icon: "error",
-                        timer:5000,
+                        timer:30000,
                         showConfirmButton:true
                     }).then(() => {
                         location.reload();
@@ -1054,7 +1054,7 @@ input[name="paymentMethod"] {
         //             text:razorpayOrder.message, 
         //             icon:"error",
         //             showConfirmButton:true,
-        //             timer:10000
+        //             timer:30000
         //         }).then(()=>{
         //             location.reload();
         //         })
@@ -1154,7 +1154,7 @@ input[name="paymentMethod"] {
                     text:razorpayOrder.message, 
                     icon:"error",
                     showConfirmButton:true,
-                    timer:10000
+                    timer:30000
                 }).then(()=>{
                     location.reload();
                 })

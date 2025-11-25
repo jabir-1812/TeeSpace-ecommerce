@@ -95,6 +95,7 @@ const createRazorPayOrder = async(req,res)=>{
       let totalAmount = 0;
       let isCartUpdated = false;//initially set as false.
       let anyOutOfStockProduct=false;
+      let anyZeroCountProduct=false;
 
 
       // Check each item quantity vs stock
@@ -102,6 +103,9 @@ const createRazorPayOrder = async(req,res)=>{
          //checking if any product is out of stock
           if(item.productId.quantity===0){
             anyOutOfStockProduct=true;
+          }
+          if(item.quantity===0){
+            anyZeroCountProduct=true;
           }
         if (item.productId && item.quantity > item.productId.quantity) {
           item.quantity = item.productId.quantity; // reduce to available stock
@@ -123,7 +127,11 @@ const createRazorPayOrder = async(req,res)=>{
       }
 
       if(anyOutOfStockProduct){
-        return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove 'out of stock' product(s)",reload:true})
+        return res.status(Status.BAD_REQUEST).json({message:"'Out of stock' product(s) in your cart, Please remove 'out of stock' product(s)",reload:true})
+      }
+
+      if(anyZeroCountProduct){
+        return res.status(Status.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
       }
 
       //if any coupon applied, calculate discount and reduce it from total price
@@ -570,6 +578,7 @@ const retryPayment=async (req,res)=>{
         let totalAmount = 0;
         let isCartUpdated = false;//initially set as false.
         let anyOutOfStockProduct=false;
+        let anyZeroCountProduct=false;
 
 
 
@@ -579,6 +588,11 @@ const retryPayment=async (req,res)=>{
           if(item.productId.quantity===0){
             anyOutOfStockProduct=true;
           }
+          //checkin if any product has zero buying quantity
+          if(item.quantity===0){
+            anyZeroCountProduct=true;
+          }
+
         if (item.productId && item.quantity > item.productId.quantity) {
           item.quantity = item.productId.quantity; // reduce to available stock
           
@@ -601,6 +615,10 @@ const retryPayment=async (req,res)=>{
 
       if(anyOutOfStockProduct){
         return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove 'out of stock' product(s)",reload:true})
+      }
+
+      if(anyZeroCountProduct){
+        return res.status(Status.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
       }
 
       //if any coupon applied, calculate discount and reduce it from total price
@@ -962,6 +980,8 @@ const place_cod_order=async (req,res)=>{
         let totalAmount = 0;
         let isCartUpdated = false;//initially set as false.
         let anyOutOfStockProduct=false;
+        let anyZeroCountProduct=false;
+
 
 
 
@@ -970,6 +990,10 @@ const place_cod_order=async (req,res)=>{
           //checking if any product is out of stock
             if(item.productId.quantity===0){
               anyOutOfStockProduct=true;
+            }
+            //checking if any products buying count is zero
+            if(item.quantity===0){
+                anyZeroCountProduct=true;
             }
           if (item.productId && item.quantity > item.productId.quantity) {
             item.quantity = item.productId.quantity; // reduce to available stock
@@ -993,6 +1017,10 @@ const place_cod_order=async (req,res)=>{
 
         if(anyOutOfStockProduct){
           return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove the 'out of stock' product(s)",reload:true})
+        }
+
+        if(anyZeroCountProduct){
+          return res.status(Status.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
         }
 
         if(userCart.appliedCoupons.length === 0 && totalAmount>1000){
@@ -1362,6 +1390,8 @@ const placeWalletPaidOrder = async (req,res)=>{
       let totalAmount = 0;
       let isCartUpdated = false;//initially set as false.
       let anyOutOfStockProduct=false;
+      let anyZeroCountProduct=false;
+
 
 
       // Check each item quantity vs stock
@@ -1369,6 +1399,11 @@ const placeWalletPaidOrder = async (req,res)=>{
         //checking if any product is out of stock
           if(item.productId.quantity===0){
             anyOutOfStockProduct=true;
+          }
+
+          //checking if any product buying count is zero
+           if(item.quantity===0){
+            anyZeroCountProduct=true;
           }
 
         if (item.productId && item.quantity > item.productId.quantity) {
@@ -1393,6 +1428,10 @@ const placeWalletPaidOrder = async (req,res)=>{
 
       if(anyOutOfStockProduct){
         return res.status(Status.BAD_REQUEST).json({message:"There is 'out of stock' products, Please remove 'out of stock' product(s)",reload:true})
+      }
+
+      if(anyZeroCountProduct){
+        return res.status(Status.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
       }
 
       if(userCart.appliedCoupons.length > 0){

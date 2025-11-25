@@ -268,7 +268,7 @@ body {
                             </td>
 
                             <td class="action" data-title="Remove">
-                              <a class="btn btn-sm" href="#"
+                              <a class="btn btn-sm text-white" href="#"
                                 onclick="removeItem('<%= userCart.items[i].productId._id %>')">
                                 <i class="fi-rs-trash"></i>🗑️Remove
                               </a>
@@ -320,7 +320,7 @@ body {
                   </tbody>
                 </table>
               </div>
-              <a id="checkouPageLink" href="/checkout" class="btn "> <i class="fi-rs-box-alt mr-10"></i>
+              <a id="checkouPageLink" class="btn "> <i class="fi-rs-box-alt mr-10"></i>
                 Proceed To CheckOut</a>
             </div>
           </div>
@@ -438,22 +438,156 @@ body {
 
     document.addEventListener('DOMContentLoaded',()=>{
       const checkouPageLinkElement=document.getElementById('checkouPageLink');
-      checkouPageLinkElement.addEventListener('click',(e)=>{
-        const totalAmountElement=document.getElementById('totalAmount');
-        const totalAmount=parseFloat (totalAmountElement.dataset.totalAmount);
-        console.log("totalAmount======>",totalAmount);
-        if(totalAmount===0){
-          e.preventDefault();
-          Swal.fire({
-            title:"Add products in the cart",
-            icon:"warning"
-          })
+      checkouPageLinkElement.addEventListener('click', async (e)=>{
+
+
+        // const totalAmountElement=document.getElementById('totalAmount');
+        // const totalAmount=parseFloat (totalAmountElement.dataset.totalAmount);
+        // console.log("totalAmount======>",totalAmount);
+        // if(totalAmount===0){
+        //   return Swal.fire({
+        //     title:"Add product in the cart",
+        //     icon:"warning"
+        //   })
+        // }
+
+        const response=await fetch('/check-cart-before-checkout')
+        const result=await response.json()
+        console.log("resultttttttt",result)
+
+
+        if(!result.success){
+
+          if(result.isCartEmpty){
+            return Swal.fire({
+              title:"Your cart is empty",
+              text:"Add products in your cart",
+              icon:"warning"
+            })
+          }
+          
+          if(result.blockedProductsData.length > 0){
+            const html=result.blockedProductsData.map((product)=>{
+              return `<div class="d-flex gap-5 justify-content-center border-bottom">
+                        <div class="d-flex flex-column">
+                          <div>
+                            <img src="${product.productId.productImage[0].url}" alt="${product.productId.productName}" style="width:75px;">
+                          </div>
+                          <div>${product.productId.productName}</div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <h5 class="text-danger">Unavailable</h5>
+                        </div>
+                    </div>`
+            })
+
+            console.log("html========",html.join(''))
+
+            return Swal.fire({
+              title:" Please remove the unavailable item(s) from your cart.",
+              html:html.join(''),
+              icon:'warning'
+            })
+          }
+
+          if(result.outOfStockProducts.length > 0){
+            const html=result.outOfStockProducts.map((product)=>{
+              return `<div class="d-flex gap-5 justify-content-center border-bottom">
+                        <div class="d-flex flex-column">
+                          <div>
+                            <img src="${product.productId.productImage[0].url}" alt="${product.productId.productName}" style="width:75px;">
+                          </div>
+                          <div>${product.productId.productName}</div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <h5 class="text-danger">Out of Stock</h5>
+                        </div>
+                    </div>`
+            })
+
+            console.log("html========",html.join(''))
+
+            return Swal.fire({
+              title:"Out of stock Product(s) in your cart!",
+              text:"Please remove to proceed to checkout.",
+              html:html.join(''),
+              icon:'warning'
+            }).then(()=>{
+              location.reload();
+            })
+          }
+
+          if(result.qtyMismatchItems.length > 0){
+            const html=result.qtyMismatchItems.map((item)=>{
+              return `<div class="d-flex mb-3 gap-3 justify-content-center border-bottom">
+                          <div class="d-flex flex-column">
+                              <div>
+                                <img src="${item.productId.productImage[0].url}" alt="${item.productId.productName}" style="width:75px;">
+                              </div>
+                              <div>${item.productId.productName}</div>
+                          </div>
+                          <div class="d-flex flex-column gap-3">
+                              <div>
+                                  <span class="fw-bold">You are asking: </span><span> ${item.quantity}</span>
+                              </div>
+                              <div>
+                                  <span class="fw-bold">Available Quantity:</span><span>${item.productId.quantity}</span>
+                              </div>
+                          </div>
+                      </div>`
+            })
+
+            const confirm=await Swal.fire({
+              title:"Product(s) only few left!",
+              html:html.join(''),
+              icon:"warning",
+              confirmButtonText:"Proceed to Checkout",
+              showCancelButton:true,
+            })
+            console.log("confirmmmmmm==",confirm)
+
+            if(confirm.isConfirmed){
+              return window.location.href="/checkout"
+            }else{
+              return location.reload();
+            }
+          }
+
+
+          if(result.zeroQtyCartItems.length > 0){
+            const html=result.zeroQtyCartItems.map((product)=>{
+              return `<div class="d-flex gap-5 justify-content-center border-bottom">
+                        <div class="d-flex flex-column">
+                          <div>
+                            <img src="${product.productId.productImage[0].url}" alt="${product.productId.productName}" style="width:75px;">
+                          </div>
+                          <div>${product.productId.productName}</div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <span class="fw-bold">Your current buying count : </span><span> ${product.quantity} </span>
+                        </div>
+                    </div>`
+            })
+
+            console.log("html========",html.join(''))
+
+            return Swal.fire({
+              title:"Please, Increase the buying count",
+              text:"You cannot buy with zero buying count.",
+              html:html.join(''),
+              icon:'warning'
+            }).then(()=>{
+              location.reload();
+            })
+          }
+
+        }else{
+            window.location.href="/checkout"
         }
+
       })
     })
 
 
 
   </script>
-  
-  <%- include("../../views/partials/user/footer") %>

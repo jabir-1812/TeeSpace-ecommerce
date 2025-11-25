@@ -245,10 +245,85 @@ const deleteCartItem =async (req,res)=>{
 
 
 
+
+
+
+
+
+const checkCartBeforeCheckout=async(req,res)=>{
+  try {
+    const userId = req.session.user || req.session.passport?.user;
+    const userCart=await Cart.findOne({userId})
+      .populate({
+        path:"items.productId",
+        select:"productName productImage quantity isBlocked",
+      })
+
+      if(!userCart){
+        return res.status(Status.NOT_FOUND).json({message:"Cart not found"})
+      }
+
+      if(userCart.items.length===0){
+        return res.status(Status.BAD_REQUEST).json({isCartEmpty:true,message:"Add product in the cart"})
+      }
+
+      const outOfStockProducts=[]
+
+      for(let i=0;i<userCart.items.length;i++){
+        let item=userCart.items[i];
+        if(item.productId.quantity===0){
+          outOfStockProducts.push(item)
+        }
+      }
+
+      const zeroQtyCartItems=[]
+
+      for(let i=0;i<userCart.items.length;i++){
+        let item=userCart.items[i];
+        if(item.quantity===0){
+          zeroQtyCartItems.push(item)
+        }
+      }
+
+      const blockedProductsData=[]
+
+      for(let i=0;i<userCart.items.length;i++){
+        let item=userCart.items[i];
+        if(item.productId.isBlocked){
+          blockedProductsData.push(item)
+        }
+      }
+
+      const qtyMismatchItems=[]
+      //check each cart item quantity vs product qty
+      for(let i=0;i<userCart.items.length;i++){
+        let item=userCart.items[i];
+        if(item.productId && item.quantity > item.productId.quantity){
+          qtyMismatchItems.push(item)
+        }
+      }
+
+
+      if(blockedProductsData.length > 0||qtyMismatchItems.length > 0  || outOfStockProducts.length > 0 || zeroQtyCartItems.length > 0){
+        return res.json({success:false,blockedProductsData,qtyMismatchItems,outOfStockProducts,zeroQtyCartItems})
+      }
+      return res.json({success:true})
+
+  } catch (error) {
+    console.log("checkCartBeforeCheckout() error:======",error)
+    res.status(Status.INTERNAL_ERROR).json({message:"Something went wrong"})
+  }
+}
+
+
+
+
+
 module.exports = {
   loadCart,
   addToCart,
   changeCartQuantity,
-  deleteCartItem
+  deleteCartItem,
+  checkCartBeforeCheckout
 };
 
