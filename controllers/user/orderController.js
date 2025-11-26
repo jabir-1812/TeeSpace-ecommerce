@@ -1943,7 +1943,11 @@ const cancelOrderItem = async (req, res) => {
 
     //  Update item refund status (only if paid & online or wallet)
     if(order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid"){
-      const userWallet=await Wallet.findOne({userId})
+
+      let userWallet=await Wallet.findOne({userId})
+      if(!userWallet){
+          userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+      }
       userWallet.balance+=item.price;
       userWallet.transactions.push({
         amount:item.price,
@@ -2098,7 +2102,10 @@ const cancelWholeOrder = async (req, res) => {
 
     // Refund wallet if needed
     if (totalWalletRefund > 0) {
-      const userWallet = await Wallet.findOne({ userId });
+      let userWallet = await Wallet.findOne({ userId });
+      if(!userWallet){
+          userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+      }
       if (userWallet) {
         userWallet.balance += totalWalletRefund;
         userWallet.transactions.push({
