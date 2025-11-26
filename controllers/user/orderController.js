@@ -1936,12 +1936,13 @@ const cancelOrderItem = async (req, res) => {
     await restoreStock([item],reason);
 
     //  Update item refund status (only if paid & online)
-    if (order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
-      item.refundStatus = "Refunded";
-      item.refundedOn=new Date();
-    }
+    // if (order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
+    //   item.refundStatus = "Refunded";
+    //   item.refundedOn=new Date();
+    // }
 
-    if(order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid"){
+    //  Update item refund status (only if paid & online or wallet)
+    if(order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid"){
       const userWallet=await Wallet.findOne({userId})
       userWallet.balance+=item.price;
       userWallet.transactions.push({
@@ -2083,12 +2084,9 @@ const cancelWholeOrder = async (req, res) => {
     // Loop through each item
     order.orderItems.forEach(item => {
       if (item.itemStatus === "Cancelled") {
-        if (order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
-          item.refundStatus = "Refunded";
-          item.refundedOn = new Date();
-        } else if (order.paymentMethod === "Cash on Delivery") {
+       if (order.paymentMethod === "Cash on Delivery") {
           item.refundStatus = "Not Initiated";
-        } else if (order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid") {
+        } else if (order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
           if (item.refundStatus !== "Refunded") {
             totalWalletRefund += item.price;
             item.refundStatus = "Refunded";
