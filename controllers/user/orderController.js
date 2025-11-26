@@ -203,60 +203,126 @@ const createRazorPayOrder = async(req,res)=>{
 
         //all set
         //calculate coupon discount
+        
+
         const itemPriceDetails=[] //to store every product's total amount and total discount
+        const appliedCouponsMap=new Map()
+        
 
         for(const item of userCart.items){
-          const itemTotalMrp=item.productId.regularPrice * item.quantity;
-          const itemTotalPrice=item.productId.salePrice * item.quantity;
-          let itemTotalCouponDiscount=0;
-          for(const coupon of coupons){
-            if(coupon.isCategoryBased){
-              //if the product is other category, skip this coupon application for that product
-              if(
-                !coupon.applicableCategories
-                  .some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
-                ){
-                  continue;
-                }
+            const itemTotalMrp=item.productId.regularPrice * item.quantity;
+            const itemTotalPrice=item.productId.salePrice * item.quantity;
+            let itemTotalCouponDiscount=0;
+            for(const coupon of coupons){
+                if(coupon.isCategoryBased){
+                    //if the product is other category, skip this coupon application for that product
+                    if(
+                      !coupon.applicableCategories
+                        .some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
+                      ){
+                        continue;
+                      }
 
-                let discount=0;
-                if(coupon.discountType==="percentage"){
-                  discount=(itemTotalPrice*coupon.discountValue)/100
-                }else{
-                  //if fixed discount
-                  discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                }
+                      let discount=0;
+                      if(coupon.discountType==="percentage"){
+                        discount=(itemTotalPrice*coupon.discountValue)/100
+                      }else{
+                        //if fixed discount
+                        discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+                      }
 
-                //cap max discount
-                if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                  discount=coupon.maxDiscountAmount;
-                }
+                      //cap max discount
+                      if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+                        discount=coupon.maxDiscountAmount;
+                      }
 
-                itemTotalCouponDiscount+=discount;
-            }else{//if coupon is not category based
-                let discount=0;
-              
-                if(coupon.discountType==="percentage"){
-                  discount=(itemTotalPrice*coupon.discountValue)/100
-                }else{
-                  //if fixed discount
-                  discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                }
+                      itemTotalCouponDiscount+=discount;
 
-                //cap max discount
-                if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                  discount=coupon.maxDiscountAmount;
+                      if(!appliedCouponsMap.has(coupon.couponCode)){
+                            appliedCouponsMap.set(
+                                coupon.couponCode,
+                                {
+                                  discountType:coupon.discountType,
+                                  discountValue:coupon.discountValue,
+                                  minPurchase:coupon.minPurchase,
+                                  maxDiscountAmount:coupon.maxDiscountAmount,
+                                  isCategoryBased:coupon.isCategoryBased,
+                                  applicableCategories:coupon.applicableCategories,
+                                  excludeCategories:coupon.excludedCategories
+                                }
+                          )
+                      }
+
+                      // appliedCoupons.push({
+                      //   discountType:coupon.discountType,
+                      //   discountValue:coupon.discountValue,
+                      //   minPurchase:coupon.minPurchase,
+                      //   maxDiscountAmount:coupon.maxDiscountAmount,
+                      //   isCategoryBased:coupon.isCategoryBased,
+                      //   applicableCategories:coupon.applicableCategories,
+                      //   excludeCategories:coupon.excludedCategories
+
+                      // })
+                }else{//if coupon is not category based
+                      let discount=0;
+                    
+                      if(coupon.discountType==="percentage"){
+                        discount=(itemTotalPrice*coupon.discountValue)/100
+                      }else{
+                        //if fixed discount
+                        discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+                      }
+
+                      //cap max discount
+                      if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+                        discount=coupon.maxDiscountAmount;
+                      }
+                      itemTotalCouponDiscount+=discount;
+
+                      if(!appliedCouponsMap.has(coupon.couponCode)){
+                            appliedCouponsMap.set(
+                                coupon.couponCode,
+                                {
+                                  discountType:coupon.discountType,
+                                  discountValue:coupon.discountValue,
+                                  minPurchase:coupon.minPurchase,
+                                  maxDiscountAmount:coupon.maxDiscountAmount,
+                                  isCategoryBased:coupon.isCategoryBased,
+                                  applicableCategories:coupon.applicableCategories,
+                                  excludeCategories:coupon.excludedCategories
+                                }
+                          )
+                      }
+
+                      // appliedCoupons.push({
+                      //   discountType:coupon.discountType,
+                      //   discountValue:coupon.discountValue,
+                      //   minPurchase:coupon.minPurchase,
+                      //   maxDiscountAmount:coupon.maxDiscountAmount,
+                      //   isCategoryBased:coupon.isCategoryBased,
+                      //   applicableCategories:coupon.applicableCategories,
+                      //   excludeCategories:coupon.excludedCategories
+
+                      // })
                 }
-                itemTotalCouponDiscount+=discount;
             }
-          }
-          itemPriceDetails.push({
-            productId:item.productId._id.toString(),
-            itemTotalMrp:itemTotalMrp,
-            itemTotalPrice:itemTotalPrice,
-            itemTotalCouponDiscount:itemTotalCouponDiscount,
-            itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
-          })
+            itemPriceDetails.push({
+              productId:item.productId._id.toString(),
+              itemTotalMrp:itemTotalMrp,
+              itemTotalPrice:itemTotalPrice,
+              itemTotalCouponDiscount:itemTotalCouponDiscount,
+              itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
+            })
+        }
+
+
+        //appliedCoupons=req.body.appliedCoupons , which contians coupon codes and coupon IDs.
+        //from now on, appliedCoupons[] will be filled with :applied coupon discount, discount type, discountValue, minimumPurchase amount
+        // for managing the refund calculation when user cancelling the order, and returning the order in the future
+        appliedCoupons.length=0;
+
+        for(const [key,value] of appliedCouponsMap){
+          appliedCoupons.push(value)
         }
 
         //prepare order items obj with coupon discount
@@ -303,6 +369,8 @@ const createRazorPayOrder = async(req,res)=>{
         //generate custom order ID
         const customOrderId = await getNextOrderId();
 
+
+
         // 5. Create order
         const newOrder = new Order({
             orderId: customOrderId,
@@ -315,6 +383,7 @@ const createRazorPayOrder = async(req,res)=>{
             totalMrp,
             totalOfferDiscount,
             totalCouponDiscount,
+            appliedCoupons,
             totalPrice,
             totalAmount
         });
@@ -617,171 +686,211 @@ const retryPayment=async (req,res)=>{
 
       //if any coupon applied, calculate discount and reduce it from total price
       if(userCart.appliedCoupons.length > 0){
-        //checking coupons are valid, and available
-        const appliedCouponIds=userCart.appliedCoupons.map((appliedCoupon)=>{
-            return appliedCoupon.couponId;
-        })
+          //checking coupons are valid, and available
+          const appliedCouponIds=userCart.appliedCoupons.map((appliedCoupon)=>{
+              return appliedCoupon.couponId;
+          })
 
-        //fetching all applied coupon's original doc with the coupon ids
-        const now = new Date();
-        const coupons = await Coupon.find({
-            _id: { $in: appliedCouponIds },
-            isActive: true,
-            expiryDate: { $gt: now },
-            startDate: { $lt: now }
-        });
-        if(appliedCouponIds.length !== coupons.length){
-          return res.status(Status.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",redirectToCheckoutPage:true})
-        }
-
-        //re-checking if cart total meeting minPurchase for coupon discount.every coupon has atleast 0 minPurchase
-        const areCouponsMeetMinPurchase=coupons.every((coupon)=>{
-          return coupon.minPurchase <= totalPrice
-        })
-        if(!areCouponsMeetMinPurchase){
-          userCart.appliedCoupons=[];
-          userCart.save()
-          return res.status(Status.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",redirectToCheckoutPage:true})
-        }
-
-        //check if the product is valid category
-        for(const coupon of coupons){
-          if(coupon.isCategoryBased){
-            const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
-            const hasApplicableProduct=userCart.items.some((item)=>{
-              return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
-            })
-            //if there is no applicable products, remove the coupon from user's cart
-              if(!hasApplicableProduct){
-                userCart.appliedCoupons=[]
-                await userCart.save();
-                return res.status(Status.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",redirectToCheckoutPage:true})
-              }
+          //fetching all applied coupon's original doc with the coupon ids
+          const now = new Date();
+          const coupons = await Coupon.find({
+              _id: { $in: appliedCouponIds },
+              isActive: true,
+              expiryDate: { $gt: now },
+              startDate: { $lt: now }
+          });
+          if(appliedCouponIds.length !== coupons.length){
+            return res.status(Status.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",redirectToCheckoutPage:true})
           }
-        }
 
+          //re-checking if cart total meeting minPurchase for coupon discount.every coupon has atleast 0 minPurchase
+          const areCouponsMeetMinPurchase=coupons.every((coupon)=>{
+            return coupon.minPurchase <= totalPrice
+          })
+          if(!areCouponsMeetMinPurchase){
+            userCart.appliedCoupons=[];
+            userCart.save()
+            return res.status(Status.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",redirectToCheckoutPage:true})
+          }
 
-        //all set
-        //calculate coupon discount
-        const itemPriceDetails=[] //to store every product's total amount and total discount
-        for(const item of userCart.items){
-          const itemTotalMrp=item.productId.regularPrice * item.quantity;
-          const itemTotalPrice=item.productId.salePrice * item.quantity;
-          let itemTotalCouponDiscount=0;
+          //check if the product is valid category
           for(const coupon of coupons){
             if(coupon.isCategoryBased){
-              //if the product is other category, skip this coupon application for that product
-              if(
-                !coupon.applicableCategories
-                  .some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
-                ){
-                  continue;
+              const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
+              const hasApplicableProduct=userCart.items.some((item)=>{
+                return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
+              })
+              //if there is no applicable products, remove the coupon from user's cart
+                if(!hasApplicableProduct){
+                  userCart.appliedCoupons=[]
+                  await userCart.save();
+                  return res.status(Status.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",redirectToCheckoutPage:true})
                 }
-
-                let discount=0;
-                if(coupon.discountType==="percentage"){
-                  discount=(itemTotalPrice*coupon.discountValue)/100
-                }else{
-                  //if fixed discount
-                  discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                }
-
-                //cap max discount
-                if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                  discount=coupon.maxDiscountAmount;
-                }
-
-                itemTotalCouponDiscount+=discount;
-            }else{//if coupon is not category based
-                let discount=0;
-              
-                if(coupon.discountType==="percentage"){
-                  discount=(itemTotalPrice*coupon.discountValue)/100
-                }else{
-                  //if fixed discount
-                  discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                }
-
-                //cap max discount
-                if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                  discount=coupon.maxDiscountAmount;
-                }
-                itemTotalCouponDiscount+=discount;
             }
           }
-          itemPriceDetails.push({
-            productId:item.productId._id.toString(),
-            itemTotalMrp:itemTotalMrp,
-            itemTotalPrice:itemTotalPrice,
-            itemTotalCouponDiscount:itemTotalCouponDiscount,
-            itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
-          })
-        }
 
-        //prepare order items obj with coupon discount
-        const orderItems=userCart.items.map((item)=>{
-          return {
-            productId:item.productId._id.toString(),
-            productName:item.productId.productName,
-            productImage:item.productId.productImage[0].url,
-            quantity:item.quantity,
-            itemStatus:DELIVERY_STATUS.PENDING
+
+          //all set
+          //calculate coupon discount
+
+
+          const itemPriceDetails=[] //to store every product's total amount and total discount
+          const appliedCouponsMap=new Map()
+
+
+          for(const item of userCart.items){
+            const itemTotalMrp=item.productId.regularPrice * item.quantity;
+            const itemTotalPrice=item.productId.salePrice * item.quantity;
+            let itemTotalCouponDiscount=0;
+            for(const coupon of coupons){
+                if(coupon.isCategoryBased){
+                  //if the product is other category, skip this coupon application for that product
+                  if(
+                    !coupon.applicableCategories
+                      .some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
+                    ){
+                      continue;
+                    }
+
+                    let discount=0;
+                    if(coupon.discountType==="percentage"){
+                      discount=(itemTotalPrice*coupon.discountValue)/100
+                    }else{
+                      //if fixed discount
+                      discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+                    }
+
+                    //cap max discount
+                    if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+                      discount=coupon.maxDiscountAmount;
+                    }
+
+                    itemTotalCouponDiscount+=discount;
+
+
+                    if(!appliedCouponsMap.has(coupon.couponCode)){
+                          appliedCouponsMap.set(
+                              coupon.couponCode,
+                              {
+                                discountType:coupon.discountType,
+                                discountValue:coupon.discountValue,
+                                minPurchase:coupon.minPurchase,
+                                maxDiscountAmount:coupon.maxDiscountAmount,
+                                isCategoryBased:coupon.isCategoryBased,
+                                applicableCategories:coupon.applicableCategories,
+                                excludeCategories:coupon.excludedCategories
+                              }
+                        )
+                    }
+
+                }else{//if coupon is not category based
+                    let discount=0;
+                  
+                    if(coupon.discountType==="percentage"){
+                      discount=(itemTotalPrice*coupon.discountValue)/100
+                    }else{
+                      //if fixed discount
+                      discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+                    }
+
+                    //cap max discount
+                    if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+                      discount=coupon.maxDiscountAmount;
+                    }
+                    itemTotalCouponDiscount+=discount;
+
+                    if(!appliedCouponsMap.has(coupon.couponCode)){
+                          appliedCouponsMap.set(
+                              coupon.couponCode,
+                              {
+                                discountType:coupon.discountType,
+                                discountValue:coupon.discountValue,
+                                minPurchase:coupon.minPurchase,
+                                maxDiscountAmount:coupon.maxDiscountAmount,
+                                isCategoryBased:coupon.isCategoryBased,
+                                applicableCategories:coupon.applicableCategories,
+                                excludeCategories:coupon.excludedCategories
+                              }
+                        )
+                    }
+
+                }
+            }
+              itemPriceDetails.push({
+                productId:item.productId._id.toString(),
+                itemTotalMrp:itemTotalMrp,
+                itemTotalPrice:itemTotalPrice,
+                itemTotalCouponDiscount:itemTotalCouponDiscount,
+                itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
+              })
           }
-        })
-
-         orderItems.forEach((o)=>{
-          const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
-          o.mrp=itemPrices.itemTotalMrp;
-          o.couponDiscount=itemPrices.itemTotalCouponDiscount;
-          o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
-          o.price=itemPrices.itemTotalAmount;
-
-        })
 
 
-        const totalMrp=itemPriceDetails.reduce((sum,curr)=>{
-          return sum+curr.itemTotalMrp
-        },0)
+          //prepare order items obj with coupon discount
+          const orderItems=userCart.items.map((item)=>{
+            return {
+              productId:item.productId._id.toString(),
+              productName:item.productId.productName,
+              productImage:item.productId.productImage[0].url,
+              quantity:item.quantity,
+              itemStatus:DELIVERY_STATUS.PENDING
+            }
+          })
 
-        const totalCouponDiscount=itemPriceDetails.reduce((sum,curr)=>{
-          return sum+curr.itemTotalCouponDiscount
-        },0)
+          orderItems.forEach((o)=>{
+            const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
+            o.mrp=itemPrices.itemTotalMrp;
+            o.couponDiscount=itemPrices.itemTotalCouponDiscount;
+            o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
+            o.price=itemPrices.itemTotalAmount;
 
-        // const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
-        //   return sum+curr.itemTotalPrice
-        // },0)
+          })
 
-        const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
-          return sum+curr.itemTotalAmount
-        },0)
 
-        const totalOfferDiscount=totalMrp-totalPrice;
+          const totalMrp=itemPriceDetails.reduce((sum,curr)=>{
+            return sum+curr.itemTotalMrp
+          },0)
 
-        // 5. Create order
-        order.orderId=orderId;
-        order.userId=userId;
-        order.paymentMethod="Online Payment";
-        order.paymentStatus="Pending";
-        order.orderStatus=DELIVERY_STATUS.PENDING;
-        order.orderItems=orderItems;
-        order.totalMrp=totalMrp;
-        order.totalCouponDiscount=totalCouponDiscount;
-        order.totalOfferDiscount=totalOfferDiscount;
-        order.totalPrice=totalPrice;
-        order.totalAmount=totalAmount;
+          const totalCouponDiscount=itemPriceDetails.reduce((sum,curr)=>{
+            return sum+curr.itemTotalCouponDiscount
+          },0)
 
-        await order.save();
+          // const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
+          //   return sum+curr.itemTotalPrice
+          // },0)
 
-        
+          const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
+            return sum+curr.itemTotalAmount
+          },0)
 
-         const options={
-          amount:totalAmount*100,
-          currency:"INR",
-          receipt:orderId
-        }
+          const totalOfferDiscount=totalMrp-totalPrice;
 
-        const razorpayOrder =await razorpay.orders.create(options);
-		    return res.json({razorpayOrder,teeSpaceOrderId:orderId});
+          // 5. Create order
+          order.orderId=orderId;
+          order.userId=userId;
+          order.paymentMethod="Online Payment";
+          order.paymentStatus="Pending";
+          order.orderStatus=DELIVERY_STATUS.PENDING;
+          order.orderItems=orderItems;
+          order.totalMrp=totalMrp;
+          order.totalCouponDiscount=totalCouponDiscount;
+          order.appliedCoupons=[...appliedCouponsMap.values()]
+          order.totalOfferDiscount=totalOfferDiscount;
+          order.totalPrice=totalPrice;
+          order.totalAmount=totalAmount;
+
+          await order.save();
+
+          
+
+          const options={
+            amount:totalAmount*100,
+            currency:"INR",
+            receipt:orderId
+          }
+
+          const razorpayOrder =await razorpay.orders.create(options);
+          return res.json({razorpayOrder,teeSpaceOrderId:orderId});
         
       }
       
@@ -1080,6 +1189,9 @@ const place_cod_order=async (req,res)=>{
 
             //calculate coupon discount
             const itemPriceDetails=[] //to store every products total amount and total discount
+            const appliedCouponsMap=new Map()
+
+
             for(const item of userCart.items){
               const itemTotalMrp=item.productId.regularPrice * item.quantity;
               const itemTotalPrice=item.productId.salePrice * item.quantity;
@@ -1108,6 +1220,22 @@ const place_cod_order=async (req,res)=>{
                     }
 
                     itemTotalCouponDiscount+=discount;
+
+                    if(!appliedCouponsMap.has(coupon.couponCode)){
+                          appliedCouponsMap.set(
+                              coupon.couponCode,
+                              {
+                                discountType:coupon.discountType,
+                                discountValue:coupon.discountValue,
+                                minPurchase:coupon.minPurchase,
+                                maxDiscountAmount:coupon.maxDiscountAmount,
+                                isCategoryBased:coupon.isCategoryBased,
+                                applicableCategories:coupon.applicableCategories,
+                                excludeCategories:coupon.excludedCategories
+                              }
+                        )
+                    }
+
                 }else{//if coupon is not category based
                     let discount=0;
                   
@@ -1123,6 +1251,22 @@ const place_cod_order=async (req,res)=>{
                       discount=coupon.maxDiscountAmount;
                     }
                     itemTotalCouponDiscount+=discount;
+
+
+                    if(!appliedCouponsMap.has(coupon.couponCode)){
+                          appliedCouponsMap.set(
+                              coupon.couponCode,
+                              {
+                                discountType:coupon.discountType,
+                                discountValue:coupon.discountValue,
+                                minPurchase:coupon.minPurchase,
+                                maxDiscountAmount:coupon.maxDiscountAmount,
+                                isCategoryBased:coupon.isCategoryBased,
+                                applicableCategories:coupon.applicableCategories,
+                                excludeCategories:coupon.excludedCategories
+                              }
+                        )
+                    }
                 }
               }
               itemPriceDetails.push({
@@ -1132,6 +1276,16 @@ const place_cod_order=async (req,res)=>{
                 itemTotalCouponDiscount:itemTotalCouponDiscount,
                 itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
               })
+            }
+
+
+            //appliedCoupons=req.body.appliedCoupons , which contians coupon codes and coupon IDs.
+            //from now on, appliedCoupons[] will be filled with :applied coupon discount, discount type, discountValue, minimumPurchase amount
+            // for managing the refund calculation when user cancelling the order, and returning the order in the future
+            appliedCoupons.length=0;
+
+            for(const [key,value] of appliedCouponsMap){
+              appliedCoupons.push(value)
             }
 
             //prepare order items obj with coupon discount
@@ -1196,6 +1350,7 @@ const place_cod_order=async (req,res)=>{
                 totalMrp,
                 totalOfferDiscount,
                 totalCouponDiscount,
+                appliedCoupons,
                 totalPrice,
                 totalAmount
             });
@@ -1488,6 +1643,9 @@ const placeWalletPaidOrder = async (req,res)=>{
 
             //calculate coupon discount
             const itemPriceDetails=[] //to store every products total amount and total discount
+            const appliedCouponsMap=new Map()
+
+
             for(const item of userCart.items){
               const itemTotalMrp=item.productId.regularPrice * item.quantity;
               const itemTotalPrice=item.productId.salePrice * item.quantity;
@@ -1518,6 +1676,22 @@ const placeWalletPaidOrder = async (req,res)=>{
                     }
 
                     itemTotalCouponDiscount+=discount;
+
+
+                    if(!appliedCouponsMap.has(coupon.couponCode)){
+                          appliedCouponsMap.set(
+                              coupon.couponCode,
+                              {
+                                discountType:coupon.discountType,
+                                discountValue:coupon.discountValue,
+                                minPurchase:coupon.minPurchase,
+                                maxDiscountAmount:coupon.maxDiscountAmount,
+                                isCategoryBased:coupon.isCategoryBased,
+                                applicableCategories:coupon.applicableCategories,
+                                excludeCategories:coupon.excludedCategories
+                              }
+                        )
+                    }
                 }else{//if coupon is not category based
                     let discount=0;
                   
@@ -1533,6 +1707,21 @@ const placeWalletPaidOrder = async (req,res)=>{
                       discount=coupon.maxDiscountAmount;
                     }
                     itemTotalCouponDiscount+=discount;
+
+                    if(!appliedCouponsMap.has(coupon.couponCode)){
+                          appliedCouponsMap.set(
+                              coupon.couponCode,
+                              {
+                                discountType:coupon.discountType,
+                                discountValue:coupon.discountValue,
+                                minPurchase:coupon.minPurchase,
+                                maxDiscountAmount:coupon.maxDiscountAmount,
+                                isCategoryBased:coupon.isCategoryBased,
+                                applicableCategories:coupon.applicableCategories,
+                                excludeCategories:coupon.excludedCategories
+                              }
+                        )
+                    }
                 }
               }
               itemPriceDetails.push({
@@ -1542,6 +1731,16 @@ const placeWalletPaidOrder = async (req,res)=>{
                 itemTotalCouponDiscount:itemTotalCouponDiscount,
                 itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
               })
+            }
+
+
+            //appliedCoupons=req.body.appliedCoupons , which contians coupon codes and coupon IDs.
+            //from now on, appliedCoupons[] will be filled with :applied coupon discount, discount type, discountValue, minimumPurchase amount
+            // for managing the refund calculation when user cancelling the order, and returning the order in the future
+            appliedCoupons.length=0;
+
+            for(const [key,value] of appliedCouponsMap){
+              appliedCoupons.push(value)
             }
 
             //prepare order items obj with coupon discount
@@ -1610,6 +1809,7 @@ const placeWalletPaidOrder = async (req,res)=>{
                 totalMrp,
                 totalOfferDiscount,
                 totalCouponDiscount,
+                appliedCoupons,
                 totalPrice,
                 totalAmount
             });

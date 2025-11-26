@@ -65,6 +65,17 @@ const orderSchema = new Schema(
     ],
     totalMrp:{type:Number,required:true},
     totalOfferDiscount:{type:Number,required:true,default:0},
+    appliedCoupons:[
+      {
+        discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
+        discountValue: { type: Number, required: true },
+        minPurchase: { type: Number, default: 0 },
+        maxDiscountAmount:{type:Number,default:1000}, // 🟢 category-based coupon fields
+        isCategoryBased: { type: Boolean, default: false },
+        applicableCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
+        excludedCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
+      }
+    ],
     totalCouponDiscount:{type:Number,default:0},
     totalPrice:{type:Number,required:true},
     totalAmount: { type: Number, required: true },

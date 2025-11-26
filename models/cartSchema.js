@@ -23,8 +23,8 @@ const cartSchema=new Schema({
     appliedCoupons: [
         {
             couponId: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
-            code: String,
-            discountAmount: Number,
+            code: {type:String},
+            discountAmount: {type:Number},
         },  
     ],
 
