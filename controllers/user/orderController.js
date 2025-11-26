@@ -204,6 +204,7 @@ const createRazorPayOrder = async(req,res)=>{
         //all set
         //calculate coupon discount
         const itemPriceDetails=[] //to store every product's total amount and total discount
+
         for(const item of userCart.items){
           const itemTotalMrp=item.productId.regularPrice * item.quantity;
           const itemTotalPrice=item.productId.salePrice * item.quantity;
@@ -320,12 +321,12 @@ const createRazorPayOrder = async(req,res)=>{
 
         await newOrder.save();
 
-        // Reduce stock
-        for (let item of userCart.items) {
-            await Product.findByIdAndUpdate(item.productId._id, {
-                $inc: { quantity: -item.quantity }
-            });
-        }
+        // // Reduce stock
+        // for (let item of userCart.items) {
+        //     await Product.findByIdAndUpdate(item.productId._id, {
+        //         $inc: { quantity: -item.quantity }
+        //     });
+        // }
 
         //  Clear cart
         // const result = await Cart.updateOne({userId}, { $set: { items: [],appliedCoupons:[] } });
@@ -383,12 +384,12 @@ const createRazorPayOrder = async(req,res)=>{
 
       await newOrder.save();
 
-      // 6. Reduce stock
-      for (let item of userCart.items) {
-          await Product.findByIdAndUpdate(item.productId._id, {
-              $inc: { quantity: -item.quantity }
-          });
-      }
+      // // 6. Reduce stock
+      // for (let item of userCart.items) {
+      //     await Product.findByIdAndUpdate(item.productId._id, {
+      //         $inc: { quantity: -item.quantity }
+      //     });
+      // }
 
       // 7. Clear cart
       // await Cart.updateOne({userId}, { $set: { items: [] ,appliedCoupons:[]} });
@@ -498,14 +499,7 @@ const cancelFailedOrder=async(req,res)=>{
         arrayFilters: [{ "elem": { $exists: true } }]
       }
     );
-    // Reverse stock
-    const userId=req.session.user || req.session.passport?.user;
-    const userCart=await Cart.findOne({userId})
-      for (let item of userCart.items) {
-          await Product.findByIdAndUpdate(item.productId._id, {
-              $inc: { quantity: item.quantity }
-          });
-      }
+    
 
     return res.json({success:true})
   } catch (error) {
@@ -778,12 +772,7 @@ const retryPayment=async (req,res)=>{
 
         await order.save();
 
-        // Reduce stock
-        for (let item of userCart.items) {
-            await Product.findByIdAndUpdate(item.productId._id, {
-                $inc: { quantity: -item.quantity }
-            });
-        }
+        
 
          const options={
           amount:totalAmount*100,
@@ -816,12 +805,7 @@ const retryPayment=async (req,res)=>{
 
         await order.save();
 
-        // Reduce stock
-        for (let item of userCart.items) {
-            await Product.findByIdAndUpdate(item.productId._id, {
-                $inc: { quantity: -item.quantity }
-            });
-        }
+       
 
          const options={
           amount:totalAmount*100,
@@ -870,14 +854,7 @@ const verifyRazorpayPayment = async (req,res)=>{
       );
 
 		if (!isValid) {
-      const userCart=await Cart.findOne({userId}).populate("items.productId")
-
-      // Reverse stock
-      for (let item of userCart.items) {
-          await Product.findByIdAndUpdate(item.productId._id, {
-              $inc: { quantity: item.quantity }
-          });
-      }
+      
       return res.status(Status.BAD_REQUEST).json({ success: false, message: "Payment verification failed." });
     }
 
@@ -885,7 +862,15 @@ const verifyRazorpayPayment = async (req,res)=>{
     order.paymentStatus = "Paid";
     await order.save();
 
-    const userCart=await Cart.findOne({userId})
+    //reduce stock
+    const userCart=await Cart.findOne({userId}).populate('items.productId')
+    for(let item of userCart.items){
+        await Product.findByIdAndUpdate(item.productId._id,{
+          $inc:{quantity:-item.quantity}
+        })
+    }
+
+    
 
     //check if any referral coupons
     //if yes, it should be removed, referral coupons are one time usable

@@ -1215,29 +1215,32 @@ input[name="paymentMethod"] {
             // Step 5: Open Razorpay checkout
             const rzp1 = new Razorpay(options);
 
-            rzp1.on("payment.failed",function(response){
-                Swal.fire({
-                    title:"Payment Failed!",
-                    text:response.error.description,
-                    icon:"error",
-                    showConfirmButton:true,
-                    timer:15000
-                }).then(async()=>{
-                    await fetch('/razorpay/payment-failure',{
-                        method:"POST",
-                        headers:{
-                            "Content-Type":"application/json"
-                        },
-                        body:JSON.stringify({
-                            razorpay_order_id:response.error.metadata.order_id,
-                            razorpay_payment_id:response.error.metadata.payment_id,
-                            error_reason:response.error.description,
-                            appOrderId:razorpayOrder.teeSpaceOrderId
+            rzp1.on("payment.failed",function (response){
+                // rzp1.close();
+                setTimeout(()=>{
+                    Swal.fire({
+                        title:"Payment Failed!",
+                        text:response.error.description,
+                        icon:"error",
+                        showConfirmButton:true,
+                    }).then(async()=>{
+                        await fetch('/razorpay/payment-failure',{
+                            method:"POST",
+                            headers:{
+                                "Content-Type":"application/json"
+                            },
+                            body:JSON.stringify({
+                                razorpay_order_id:response.error.metadata.order_id,
+                                razorpay_payment_id:response.error.metadata.payment_id,
+                                error_reason:response.error.description,
+                                appOrderId:razorpayOrder.teeSpaceOrderId
+                            })
                         })
-                    })
 
-                    window.location.href = `/razorpay/order-failure/${razorpayOrder.teeSpaceOrderId}`
-                })
+                        window.location.href = `/razorpay/order-failure/${razorpayOrder.teeSpaceOrderId}`
+                    })
+                },200)
+                
             })
 
             rzp1.open();
