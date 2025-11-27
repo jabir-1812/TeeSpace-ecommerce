@@ -184,22 +184,29 @@ router.delete('/checkout/remove-coupon',userAuth,checkoutController.removeCoupon
 
 
 
-//order
+//order management
+//razorpay order
 router.post('/create-razorpay-order',userAuth,orderController.createRazorPayOrder);
 router.post('/verify-razorpay-payment',userAuth,orderController.verifyRazorpayPayment)
 router.post('/razorpay/payment-failure',userAuth,orderController.razorpayPaymentFailure);
 router.get('/razorpay/order-failure/:orderId',userAuth,orderController.showOrderFailurePage)
 router.patch('/razorpay/order-failure/cancel-order',userAuth,orderController.cancelFailedOrder)
 router.patch('/razorpay/order-failure/retry-order',userAuth,orderController.retryPayment)
+//COD order
 router.post('/place-cod-order',userAuth,orderController.place_cod_order);
+//Wallet order
 router.post('/place-wallet-paid-order',userAuth,orderController.placeWalletPaidOrder)
+//orders
 router.get('/orders',userAuth,orderController.showOrders);
 router.get('/order-success/:orderId',userAuth,orderController.showOrderSuccessPage);
 router.get('/user-profile/orders',userAuth,orderController.showOrders);
 router.get('/user-profile/orders/order-details/:orderId',userAuth,orderController.showOrderDetails)
+//cancel order
 router.post('/user-profile/orders/order-details/cancel-item',userAuth,orderController.cancelOrderItem)
 router.post('/user-profile/orders/order-details/cancel-orders',userAuth,orderController.cancelWholeOrder)
+//order invoice
 router.get('/orders/:id/invoice',userAuth,orderController.getInvoice);
+//return order
 router.post('/user-profile/orders/order-details/return-item',userAuth,orderController.returnOrderItem)
 
 
