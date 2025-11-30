@@ -395,6 +395,7 @@ const createRazorPayOrder = async(req,res)=>{
 				totalCouponDiscount,
 				finalTotalCouponDiscount:totalCouponDiscount,
 				appliedCoupons,
+				isCouponApplied:appliedCoupons.length > 0 ? true:false,
 				totalPrice,
 				finalTotalPrice:totalPrice,
 				totalAmount,
@@ -899,6 +900,7 @@ const retryPayment=async (req,res)=>{
 			order.totalCouponDiscount=totalCouponDiscount;
 			order.finalTotalCouponDiscount=totalCouponDiscount;
 			order.appliedCoupons=[...appliedCouponsMap.values()]
+			order.isCouponApplied=[...appliedCouponsMap.values()].length > 0 ? true : false;
 			order.totalOfferDiscount=totalOfferDiscount;
 			order.finalTotalOfferDiscount=totalOfferDiscount;
 			order.totalPrice=totalPrice;
@@ -1392,6 +1394,7 @@ const place_cod_order=async (req,res)=>{
                 totalCouponDiscount,
 				finalTotalCouponDiscount:totalCouponDiscount,
                 appliedCoupons,
+				isCouponApplied:appliedCoupons.length>0?true:false,
                 totalPrice,
 				finalTotalPrice:totalPrice,
                 totalAmount,
@@ -1870,6 +1873,7 @@ const placeWalletPaidOrder = async (req,res)=>{
                 totalCouponDiscount,
 				finalTotalCouponDiscount:totalCouponDiscount,
                 appliedCoupons,
+				isCouponApplied:appliedCoupons.length>0?true:false,
                 totalPrice,
 				finalTotalPrice:totalPrice,
                 totalAmount,

@@ -224,6 +224,7 @@
         margin-bottom: 20px;
     }
 </style>
+<% console.log("isCouponApplied==============",order.isCouponApplied) %>
 
 <div class="main-content">
     <div class="order-details">
@@ -281,7 +282,9 @@
                     <p class="fw-bold"><strong>₹<%= item.price.toFixed(2) %>/-</strong></p>
                     <p class="text-body-tertiary"><strong>Total Price:</strong> Rs.<%= item.totalSalePrice %>/- | <strong>Quantity:</strong><%= item.quantity %></p>
                     <p class="text-body-tertiary fw-bold">Rs.<%= item.salePrice %>/- per item</p>
-                    <p><strong>Coupon Discount:</strong><span  class="text-success">Rs.<%= item.couponDiscount %>/-</span></p>
+                    <% if(item.couponDiscount){ %>
+                        <p><strong>Coupon Discount:</strong><span  class="text-success">Rs.<%= item.couponDiscount %>/-</span></p>
+                    <% } %>
                     <p>
                         <strong>Delivery Status:</strong>
                         <span class="<%= 
@@ -405,6 +408,21 @@
         form.addEventListener("submit", async (e) => {
                 e.preventDefault();
 
+                if(<%=order.isCouponApplied %>){
+                    const warning=await Swal.fire({
+                        title:"You may lose your coupon discounts!",
+                        text:"Since this order includes a coupon discount, cancelling or returning it may result in losing the discount benefits. Please confirm before proceeding",
+                        icon:"warning",
+                        showCancelButton:true,
+                        confirmButtonText:"Proceed"
+                    })
+
+                    if(!warning.isConfirmed){
+                        return;
+                    }
+                }
+                
+
                 const confirmResult=await Swal.fire({
                     title:"Are you sure, Cancel this order?",
                     icon:'question',
@@ -487,6 +505,20 @@
     const cancelOrderForm=document.getElementById('cancelOrderForm');
     cancelOrderForm.addEventListener('submit',async (e)=>{
         e.preventDefault()
+
+        if(<%=order.isCouponApplied %>){
+            const warning=await Swal.fire({
+                title:"You may lose your coupon discounts!",
+                text:"Since this order includes a coupon discount, cancelling or returning whole order may result in losing the discount benefits. Please confirm before proceeding",
+                icon:"warning",
+                showCancelButton:true,
+                confirmButtonText:"Proceed"
+            })
+
+            if(!warning.isConfirmed){
+                return;
+            }
+        }
         // console.log("form prevented")
         const confirmResult=await Swal.fire({
             title:"Are you sure, Cancel Whole order ?",
@@ -568,6 +600,20 @@
     document.querySelectorAll(".return-form").forEach(form => {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            if(<%=order.isCouponApplied %>){
+                const warning=await Swal.fire({
+                    title:"You may lose your coupon discounts!",
+                    text:"Since this order includes a coupon discount, cancelling or returning it may result in losing the discount benefits. Please confirm before proceeding",
+                    icon:"warning",
+                    showCancelButton:true,
+                    confirmButtonText:"Proceed"
+                })
+
+                if(!warning.isConfirmed){
+                    return;
+                }
+            }
 
             const confirmResult = await Swal.fire({
                 title: "Why are you returning this item?",

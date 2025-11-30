@@ -75,7 +75,6 @@ const orderSchema = new Schema(
     ],
     totalMrp:{type:Number,required:true},
     totalOfferDiscount:{type:Number,required:true,default:0},
-    finalTotalOfferDiscount:{type:Number,required:true,default:0},
     appliedCoupons:[
       {
         discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
@@ -88,11 +87,13 @@ const orderSchema = new Schema(
       }
     ],
     totalCouponDiscount:{type:Number,default:0},
+    isCouponApplied:{type: Boolean, default:false},
     totalPrice:{type:Number,required:true},
     totalAmount: { type: Number, required: true },
     //for sales report we need actually given coupon discount, actual paid amount, actual total price of order
     //also these show the actual current order's price details after any item cancelled.
     //every time any item cancelled, these fields will be recalculate and store the actual amounts.
+    finalTotalOfferDiscount:{type:Number,required:true,default:0},
     finalTotalCouponDiscount:{type:Number,default:0},
     finalTotalPrice:{type:Number,required:true},
     finalTotalAmount: { type: Number, required: true },

@@ -55,7 +55,7 @@
                         <td>₹<%= coupon.maxDiscountAmount || "--" %></td>
                         <td><%= new Date(coupon.startDate).toLocaleDateString() %></td>
                         <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
-                        <td>
+                        <td class="<%= coupon.isActive ?'text-success' : 'text-danger' %>">
                             <%= coupon.isActive ? 'Active' : 'Inactive' %>
                         </td>
                         <td>

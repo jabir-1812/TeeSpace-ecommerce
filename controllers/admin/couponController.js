@@ -10,6 +10,15 @@ const getCouponsPage = async (req,res)=>{
         const limit = 10; // items per page
         const search = req.query.search || '';
 
+        // Auto-update expired coupons
+        await Coupon.updateMany(
+            {
+                expiryDate: { $lt: new Date() },
+                isActive: { $ne: false }
+            },
+            { $set: { isActive: false } }
+        );
+
         const query = search
             ? { couponCode: { $regex: search, $options: 'i' } } // case-insensitive search
             : {};

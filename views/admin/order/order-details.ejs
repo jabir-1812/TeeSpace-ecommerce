@@ -43,7 +43,7 @@
 
   <div class="row mb-3">
 	<div class="col">
-		<table class="table table-bordered table-hove align-middle">
+		<table class="table table-bordered table-hover align-middle">
 			<thead class="table-dark text-center">
 				<tr>
 				<th>Product</th>
@@ -66,7 +66,7 @@
 					<td class="text-center">₹<%= item.price %></td>
 
 					<!-- Item Status with Update -->
-					<% if(item.itemStatus!=='Delivered'){ %>
+					<% if(item.itemStatus!=='Delivered' && item.itemStatus!== 'Cancelled'){ %>
 					<td class="text-center">
 					<div class="d-flex justify-content-center align-items-center gap-2">
 						<select class="form-select form-select-sm w-auto status-select" 
@@ -88,38 +88,40 @@
 					</td>
 					<% }else if(item.itemStatus==='Cancelled'){ %>
 					<td class="text-center">
-						<span class="badge text-bg-danger">Delivered</span>
+						<span class="badge text-bg-danger">Cancelled</span>
 					</td>
 					<% } %>
 
 					<td class="text-center" data-cell-id="<%= item._id %>">
-					<% if (item.returnStatus === "Requested") { %>
-					<span class="badge bg-warning text-dark">Requested</span><br>
-					<small class="text-muted">Reason: <%= item.returnReason || "-" %></small><br>
-					<div class="mt-1 d-flex justify-content-center gap-2">
-						<button class="btn btn-sm btn-success approve-return-btn" 
-						data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Approve</button>
-						<button class="btn btn-sm btn-danger reject-return-btn" 
-						data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Reject</button>
-					</div>
-					<% } else if (item.returnStatus === "Rejected") { %>
-					<span class="badge bg-danger">Rejected</span>
-					<% } else if (["Approved", "Pickup Scheduled", "Picked Up", "In Transit", "Received", "Refunded", "Replacement Shipped"].includes(item.returnStatus)) { %>
-					<div class="d-flex justify-content-center align-items-center gap-2">
-						<select class="form-select form-select-sm w-auto return-status-select" 
-						data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">
-						<option value="Approved" <%= item.returnStatus === 'Approved' ? 'selected' : '' %>>Approved</option>
-						<option value="Pickup Scheduled" <%= item.returnStatus === 'Pickup Scheduled' ? 'selected' : '' %>>Pickup Scheduled</option>
-						<option value="Picked Up" <%= item.returnStatus === 'Picked Up' ? 'selected' : '' %>>Picked Up</option>
-						<option value="In Transit" <%= item.returnStatus === 'In Transit' ? 'selected' : '' %>>In Transit</option>
-						<option value="Received" <%= item.returnStatus === 'Received' ? 'selected' : '' %>>Received</option>
-						<option value="Refunded" <%= item.returnStatus === 'Refunded' ? 'selected' : '' %>>Refunded</option>
-						<option value="Replacement Shipped" <%= item.returnStatus === 'Replacement Shipped' ? 'selected' : '' %>>Replacement Shipped</option>
-						</select>
-						<button class="btn btn-sm btn-primary update-return-status-btn">Update</button>
-					</div>
-					<% } else { %>
-					<span>-</span>
+              <% if (item.returnStatus === "Requested") { %>
+              <span class="badge bg-warning text-dark">Requested</span><br>
+              <small class="text-muted">Reason: <%= item.returnReason || "-" %></small><br>
+              <div class="mt-1 d-flex justify-content-center gap-2">
+                    <button class="btn btn-sm btn-success approve-return-btn" 
+                    data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Approve</button>
+                    <button class="btn btn-sm btn-danger reject-return-btn" 
+                    data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">Reject</button>
+              </div>
+              <% } else if (item.returnStatus === "Rejected") { %>
+              <span class="badge bg-danger">Rejected</span>
+              <% }else if(item.returnStatus === "Refunded"){ %>
+              <span class="badge bg-success">Refunded</span>
+              <% } else if (["Approved", "Pickup Scheduled", "Picked Up", "In Transit", "Received", "Refunded", "Replacement Shipped"].includes(item.returnStatus)) { %>
+              <div class="d-flex justify-content-center align-items-center gap-2">
+                    <select class="form-select form-select-sm w-auto return-status-select" 
+                    data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>">
+                    <option value="Approved" <%= item.returnStatus === 'Approved' ? 'selected' : '' %>>Approved</option>
+                    <option value="Pickup Scheduled" <%= item.returnStatus === 'Pickup Scheduled' ? 'selected' : '' %>>Pickup Scheduled</option>
+                    <option value="Picked Up" <%= item.returnStatus === 'Picked Up' ? 'selected' : '' %>>Picked Up</option>
+                    <option value="In Transit" <%= item.returnStatus === 'In Transit' ? 'selected' : '' %>>In Transit</option>
+                    <option value="Received" <%= item.returnStatus === 'Received' ? 'selected' : '' %>>Received</option>
+                    <option value="Refunded" <%= item.returnStatus === 'Refunded' ? 'selected' : '' %>>Refunded</option>
+                    <option value="Replacement Shipped" <%= item.returnStatus === 'Replacement Shipped' ? 'selected' : '' %>>Replacement Shipped</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary update-return-status-btn">Update</button>
+              </div>
+              <% } else { %>
+              <span>-</span>
 					<% } %>
 				</td>
 
@@ -150,15 +152,16 @@ document.querySelectorAll(".update-status-btn").forEach(btn => {
 
       if (result.success) {
         // alert("Status updated successfully!");
-        Swal.fire({
+        await Swal.fire({
           timer:1500,
           icon:'success',
           title:"Status updated"
+        }).then(()=>{
+          location.reload()
         })
         // document.getElementById("order-status").innerText = result.orderStatus;
-        location.reload()
       } else {
-        Swal.fire(result.message || "Failed to update","","error");
+        await Swal.fire(result.message || "Failed to update","","error");
       }
     } catch (err) {
       console.error("Error:", err);
@@ -202,9 +205,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
 
         if (data.success) {
-          Swal.fire("Updated!", "Return status updated successfully.", "success");
+          await Swal.fire("Updated!", "Return status updated successfully.", "success")
+            .then(()=>{
+              location.reload();
+            })
         } else {
-          Swal.fire("Error", data.message || "Failed to update", "error");
+          await Swal.fire("Error", data.message || "Failed to update", "error")
+              then(()=>{
+                location.reload();
+              })
         }
       } catch (err) {
         console.error("Error:", err);
@@ -259,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!otherText) return;
-            finalReason = otherText;
+                finalReason = otherText;
             }
             // ✅ Now send reject request + reason to backend
             const res = await fetch(`/admin/orders/${orderId}/return/${itemId}/reject`, {
@@ -271,13 +280,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             if (data.success) {
-            Swal.fire("Rejected", "Return request has been rejected.", "success");
+                await Swal.fire("Rejected", "Return request has been rejected.", "success")
+                  .then(()=>{
+                    location.reload();
+                  })
+                
 
-            const cell = document.querySelector(`[data-cell-id="${itemId}"]`);
-            if (cell) {
-                cell.innerHTML = `<span class="badge bg-danger">Rejected</span><br>
-                <small class="text-muted">Reason: ${finalReason}</small>`;
-            }
+            // const cell = document.querySelector(`[data-cell-id="${itemId}"]`);
+            // if (cell) {
+            //     cell.innerHTML = `<span class="badge bg-danger">Rejected</span><br>
+            //     <small class="text-muted">Reason: ${finalReason}</small>`;
+            // }
             } else {
             Swal.fire("Error", data.message || "Something went wrong", "error");
             }
@@ -295,38 +308,40 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       if (data.success) {
-        Swal.fire({
+        await Swal.fire({
           title: `Return approved`,
           icon: "success",
           timer: 1500,
           showConfirmButton: false
-        });
+        }).then(()=>{
+          location.reload();
+        })
 
-        // Update the return cell UI
-        const cell = document.querySelector(`[data-cell-id="${itemId}"]`);
-        if (cell) {
-          cell.innerHTML = ""; // clear old content
+        // // Update the return cell UI
+        // const cell = document.querySelector(`[data-cell-id="${itemId}"]`);
+        // if (cell) {
+        //   cell.innerHTML = ""; // clear old content
 
-        // Insert dropdown + update button
-        const select = document.createElement("select");
-        select.className = "form-select return-status-select";
-        select.dataset.orderId = orderId;
-        select.dataset.itemId = itemId;
-        ["Approved","Pickup Scheduled", "Picked Up","In Transist","Received", "Refunded"].forEach(opt => {
-            const option = document.createElement("option");
-            option.value = opt;
-            option.textContent = opt;
-            select.appendChild(option);
-        });
+        // // Insert dropdown + update button
+        // const select = document.createElement("select");
+        // select.className = "form-select return-status-select";
+        // select.dataset.orderId = orderId;
+        // select.dataset.itemId = itemId;
+        // ["Approved","Pickup Scheduled", "Picked Up","In Transist","Received", "Refunded"].forEach(opt => {
+        //     const option = document.createElement("option");
+        //     option.value = opt;
+        //     option.textContent = opt;
+        //     select.appendChild(option);
+        // });
 
-        const btn = document.createElement("button");
-        btn.className = "btn btn-sm btn-primary update-return-status-btn mt-2";
-        btn.textContent = "Update";
+        // const btn = document.createElement("button");
+        // btn.className = "btn btn-sm btn-primary update-return-status-btn mt-2";
+        // btn.textContent = "Update";
 
-        cell.appendChild(select);
-        cell.appendChild(btn);
+        // cell.appendChild(select);
+        // cell.appendChild(btn);
         
-        }
+        // }
       } else {
         Swal.fire("Error", "Something went wrong", "error");
       }
