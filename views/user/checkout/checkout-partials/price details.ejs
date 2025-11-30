@@ -11,11 +11,11 @@
     <div class="col-6 text-end">
         <% if(totalDiscountFromAllCoupons){ %>
             <div class="row">
-                <span id="couponDiscount" class="text-success" data-coupon-code="">₹ (-<%= totalDiscountFromAllCoupons %>/-)</span>
+                <span id="couponDiscount" class="text-success" data-coupon-code="">₹ (-<%= totalDiscountFromAllCoupons.toFixed(2) %>/-)</span>
             </div>
             <% appliedCoupons.forEach((coupon)=>{ %>
             <div class="row">
-                <span class="text-success"><%= coupon.code %> ₹(-<%= coupon.discountAmount %>/-)</span>
+                <span class="text-success"><%= coupon.code %> ₹(-<%= coupon.discountAmount.toFixed(2) %>/-)</span>
             </div>
             <% }) %>
         

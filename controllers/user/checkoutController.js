@@ -317,7 +317,7 @@ const loadCheckoutPage = async (req, res) => {
           userCart:cartObj,
           cartLength: cartObj.items.length,
           totalPrice,
-          totalAmount,
+          totalAmount:Math.round(totalAmount),
           razorPayKeyId:process.env.RAZORPAY_KEY_ID,
           userWallet,
           appliedCoupons:appliedCouponsObj,
@@ -360,7 +360,7 @@ const loadCheckoutPage = async (req, res) => {
         userCart:cartObj,
         cartLength: cartObj.items.length,
         totalPrice,
-        totalAmount,
+        totalAmount:Math.round(totalAmount),
         razorPayKeyId:process.env.RAZORPAY_KEY_ID,
         userWallet,
         appliedCoupons:"",
@@ -887,7 +887,7 @@ const applyCoupon= async(req,res)=>{
             const [cartHtml,couponHtml, priceDetailsHtml] = await Promise.all([
                 ejs.renderFile(
                 path.join(__dirname, "../../views/user/checkout/checkout-partials/2cart-items.ejs"),
-                { userCart, totalAmount},
+                { userCart, totalAmount:Math.round(totalAmount)},
                 { async: true }
                 ),
                 ejs.renderFile(
@@ -897,7 +897,7 @@ const applyCoupon= async(req,res)=>{
                 ),
                 ejs.renderFile(
                 path.join(__dirname, "../../views/user/checkout/checkout-partials/price details.ejs"),
-                { totalPrice, totalAmount ,razorPayKeyId:process.env.RAZORPAY_KEY_ID},
+                { totalPrice, totalAmount:Math.round(totalAmount) ,razorPayKeyId:process.env.RAZORPAY_KEY_ID},
                 { async: true }
                 )
             ]);
@@ -1079,7 +1079,7 @@ const applyCoupon= async(req,res)=>{
     const [cartHtml,couponHtml, priceDetailsHtml] = await Promise.all([
             ejs.renderFile(
             path.join(__dirname, "../../views/user/checkout/checkout-partials/2cart-items.ejs"),
-            { userCart:cartObj, totalAmount},
+            { userCart:cartObj, totalAmount:Math.round(totalAmount)},
             { async: true }
             ),
             ejs.renderFile(
@@ -1096,7 +1096,7 @@ const applyCoupon= async(req,res)=>{
             { 
                 razorPayKeyId:process.env.RAZORPAY_KEY_ID,
                 totalPrice,
-                totalAmount, 
+                totalAmount:Math.round(totalAmount), 
                 totalDiscountFromAllCoupons,
                 appliedCoupons:allCoupons.map((coupon)=>({
                     code:coupon.code,
@@ -1112,7 +1112,7 @@ const applyCoupon= async(req,res)=>{
       message: "Coupon applied successfully",
       totalPrice,
       totalDiscountFromAllCoupons,
-      totalAmount,
+      totalAmount:Math.round(totalAmount),
       appliedCoupons: allCoupons.map((c) => ({
         code: c.code,
         discountAmount: c.discountAmount,

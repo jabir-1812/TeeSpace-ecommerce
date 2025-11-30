@@ -253,7 +253,7 @@
             <% if(order.refundStatus==="Refunded" || order.refundStatus==="Refunded to your wallet"){ %>
             <p><strong>Refund Status:</strong> <%= order.refundStatus %></p>
             <% } %>
-            <p><strong style="color: white;">Total:</strong><strong style="font-size: x-large; color: white;">₹<%= order.totalAmount %>/-</strong></p>
+            <p><strong style="color: white;">Total:</strong><strong style="font-size: x-large; color: white;">₹<%= order.totalAmount.toFixed(2) %>/-</strong></p>
         </div>
 
         <h3>📍 Shipping Address</h3>
@@ -315,7 +315,7 @@
                             <% } %>
                         <% } %>
 
-                        <% if(item.refundStatus==="Refunded"){ %>
+                        <% if(item.refundStatus){ %>
                         <p><strong>Refund Status:</strong> <%= item.refundStatus %></p>
                         <p><strong>Refunded On:</strong> <%= new Date(item.refundedOn).toDateString().slice(4) %></p>
                         <% } %>

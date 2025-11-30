@@ -136,290 +136,302 @@ const createRazorPayOrder = async(req,res)=>{
 
       //if any coupon applied, calculate discount and reduce it from total price
       if(userCart.appliedCoupons.length > 0){
-        if(appliedCoupons.length === userCart.appliedCoupons.length){
-          //we have
-          //appliedCoupon=[{},{}] from req.body
-          //userCart.appliedCoupon=[{},{}]
-          //checking both are matching and same
-            const areCouponsMatch=userCart.appliedCoupons.every((userCartCoupon)=>{
-              return appliedCoupons.some((formDataCoupon)=>{
-                return (userCartCoupon.couponId.toString()===formDataCoupon.couponId &&
-                userCartCoupon.code===formDataCoupon.couponCode)
-              })
-            })
-            if(!areCouponsMatch){
-              userCart.appliedCoupons=[];
-              await userCart.save()
-              return res.status(Status.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
-            }
-        }else{
-          userCart.appliedCoupons=[];
-          await userCart.save()
-          return res.status(Status.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
-        }
-        
-        //checking coupons are valid, and available
-        const appliedCouponIds=userCart.appliedCoupons.map((appliedCoupon)=>{
-            return appliedCoupon.couponId;
-        })
+			if(appliedCoupons.length === userCart.appliedCoupons.length){
+			//we have
+			//appliedCoupon=[{},{}] from req.body
+			//userCart.appliedCoupon=[{},{}]
+			//checking both are matching and same
+				const areCouponsMatch=userCart.appliedCoupons.every((userCartCoupon)=>{
+				return appliedCoupons.some((formDataCoupon)=>{
+					return (userCartCoupon.couponId.toString()===formDataCoupon.couponId &&
+					userCartCoupon.code===formDataCoupon.couponCode)
+				})
+				})
+				if(!areCouponsMatch){
+				userCart.appliedCoupons=[];
+				await userCart.save()
+				return res.status(Status.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
+				}
+			}else{
+			userCart.appliedCoupons=[];
+			await userCart.save()
+			return res.status(Status.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
+			}
+			
+			//checking coupons are valid, and available
+			const appliedCouponIds=userCart.appliedCoupons.map((appliedCoupon)=>{
+				return appliedCoupon.couponId;
+			})
 
-        //fetching all applied coupon's original doc with the coupon ids
-        const now = new Date();
-        const coupons = await Coupon.find({
-            _id: { $in: appliedCouponIds },
-            isActive: true,
-            expiryDate: { $gt: now },
-            startDate: { $lt: now }
-        });
-        if(appliedCouponIds.length !== coupons.length){
-          return res.status(Status.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",reload:true})
-        }
+			//fetching all applied coupon's original doc with the coupon ids
+			const now = new Date();
+			const coupons = await Coupon.find({
+				_id: { $in: appliedCouponIds },
+				isActive: true,
+				expiryDate: { $gt: now },
+				startDate: { $lt: now }
+			});
+			if(appliedCouponIds.length !== coupons.length){
+			return res.status(Status.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",reload:true})
+			}
 
-        //re-checking if cart total meeting minPurchase for coupon discount.every coupon has atleast 0 minPurchase
-        const areCouponsMeetMinPurchase=coupons.every((coupon)=>{
-          return coupon.minPurchase <= totalPrice
-        })
-        if(!areCouponsMeetMinPurchase){
-          userCart.appliedCoupons=[];
-          userCart.save()
-          return res.status(Status.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",reload:true})
-        }
+			//re-checking if cart total meeting minPurchase for coupon discount.every coupon has atleast 0 minPurchase
+			const areCouponsMeetMinPurchase=coupons.every((coupon)=>{
+			return coupon.minPurchase <= totalPrice
+			})
+			if(!areCouponsMeetMinPurchase){
+			userCart.appliedCoupons=[];
+			userCart.save()
+			return res.status(Status.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",reload:true})
+			}
 
-        //check if the product is valid category
-        for(const coupon of coupons){
-          if(coupon.isCategoryBased){
-            const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
-            const hasApplicableProduct=userCart.items.some((item)=>{
-              return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
-            })
-            //if there is no applicable products, remove the coupon from user's cart
-              if(!hasApplicableProduct){
-                userCart.appliedCoupons=[]
-                await userCart.save();
-                return res.status(Status.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",reload:true})
-              }
-          }
-        }
+			//check if the product is valid category
+			for(const coupon of coupons){
+			if(coupon.isCategoryBased){
+				const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
+				const hasApplicableProduct=userCart.items.some((item)=>{
+				return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
+				})
+				//if there is no applicable products, remove the coupon from user's cart
+				if(!hasApplicableProduct){
+					userCart.appliedCoupons=[]
+					await userCart.save();
+					return res.status(Status.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",reload:true})
+				}
+			}
+			}
 
-        //all set
-        //calculate coupon discount
-        
+			//all set
+			//calculate coupon discount
+			
 
-        const itemPriceDetails=[] //to store every product's total amount and total discount
-        const appliedCouponsMap=new Map()
-        
+			const itemPriceDetails=[] //to store every product's total amount and total discount
+			const appliedCouponsMap=new Map()
+			
 
-        for(const item of userCart.items){
-            const itemTotalMrp=item.productId.regularPrice * item.quantity;
-            const itemTotalPrice=item.productId.salePrice * item.quantity;
-            let itemTotalCouponDiscount=0;
-            for(const coupon of coupons){
-                if(coupon.isCategoryBased){
-                    //if the product is other category, skip this coupon application for that product
-                    if(
-                      !coupon.applicableCategories
-                        .some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
-                      ){
-                        continue;
-                      }
+			for(const item of userCart.items){
+				const itemTotalMrp=item.productId.regularPrice * item.quantity;
+				const itemTotalPrice=item.productId.salePrice * item.quantity;
+				let itemTotalCouponDiscount=0;
+				for(const coupon of coupons){
+					if(coupon.isCategoryBased){
+						//if the product is other category, skip this coupon application for that product
+						if(
+						!coupon.applicableCategories
+							.some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
+						){
+							continue;
+						}
 
-                      let discount=0;
-                      if(coupon.discountType==="percentage"){
-                        discount=(itemTotalPrice*coupon.discountValue)/100
-                      }else{
-                        //if fixed discount
-                        discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                      }
+						let discount=0;
+						if(coupon.discountType==="percentage"){
+							discount=(itemTotalPrice*coupon.discountValue)/100
+						}else{
+							//if fixed discount
+							discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+						}
 
-                      //cap max discount
-                      if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                        discount=coupon.maxDiscountAmount;
-                      }
+						//cap max discount
+						if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+							discount=coupon.maxDiscountAmount;
+						}
 
-                      itemTotalCouponDiscount+=discount;
+						itemTotalCouponDiscount+=discount;
 
-                      if(!appliedCouponsMap.has(coupon.couponCode)){
-                            appliedCouponsMap.set(
-                                coupon.couponCode,
-                                {
-                                  discountType:coupon.discountType,
-                                  discountValue:coupon.discountValue,
-                                  minPurchase:coupon.minPurchase,
-                                  maxDiscountAmount:coupon.maxDiscountAmount,
-                                  isCategoryBased:coupon.isCategoryBased,
-                                  applicableCategories:coupon.applicableCategories,
-                                  excludeCategories:coupon.excludedCategories
-                                }
-                          )
-                      }
+						if(!appliedCouponsMap.has(coupon.couponCode)){
+								appliedCouponsMap.set(
+									coupon.couponCode,
+									{
+									discountType:coupon.discountType,
+									discountValue:coupon.discountValue,
+									minPurchase:coupon.minPurchase,
+									maxDiscountAmount:coupon.maxDiscountAmount,
+									isCategoryBased:coupon.isCategoryBased,
+									applicableCategories:coupon.applicableCategories,
+									excludeCategories:coupon.excludedCategories
+									}
+							)
+						}
 
-                      // appliedCoupons.push({
-                      //   discountType:coupon.discountType,
-                      //   discountValue:coupon.discountValue,
-                      //   minPurchase:coupon.minPurchase,
-                      //   maxDiscountAmount:coupon.maxDiscountAmount,
-                      //   isCategoryBased:coupon.isCategoryBased,
-                      //   applicableCategories:coupon.applicableCategories,
-                      //   excludeCategories:coupon.excludedCategories
+						// appliedCoupons.push({
+						//   discountType:coupon.discountType,
+						//   discountValue:coupon.discountValue,
+						//   minPurchase:coupon.minPurchase,
+						//   maxDiscountAmount:coupon.maxDiscountAmount,
+						//   isCategoryBased:coupon.isCategoryBased,
+						//   applicableCategories:coupon.applicableCategories,
+						//   excludeCategories:coupon.excludedCategories
 
-                      // })
-                }else{//if coupon is not category based
-                      let discount=0;
-                    
-                      if(coupon.discountType==="percentage"){
-                        discount=(itemTotalPrice*coupon.discountValue)/100
-                      }else{
-                        //if fixed discount
-                        discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                      }
+						// })
+					}else{//if coupon is not category based
+						let discount=0;
+						
+						if(coupon.discountType==="percentage"){
+							discount=(itemTotalPrice*coupon.discountValue)/100
+						}else{
+							//if fixed discount
+							discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+						}
 
-                      //cap max discount
-                      if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                        discount=coupon.maxDiscountAmount;
-                      }
-                      itemTotalCouponDiscount+=discount;
+						//cap max discount
+						if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+							discount=coupon.maxDiscountAmount;
+						}
+						itemTotalCouponDiscount+=discount;
 
-                      if(!appliedCouponsMap.has(coupon.couponCode)){
-                            appliedCouponsMap.set(
-                                coupon.couponCode,
-                                {
-                                  discountType:coupon.discountType,
-                                  discountValue:coupon.discountValue,
-                                  minPurchase:coupon.minPurchase,
-                                  maxDiscountAmount:coupon.maxDiscountAmount,
-                                  isCategoryBased:coupon.isCategoryBased,
-                                  applicableCategories:coupon.applicableCategories,
-                                  excludeCategories:coupon.excludedCategories
-                                }
-                          )
-                      }
+						if(!appliedCouponsMap.has(coupon.couponCode)){
+								appliedCouponsMap.set(
+									coupon.couponCode,
+									{
+									discountType:coupon.discountType,
+									discountValue:coupon.discountValue,
+									minPurchase:coupon.minPurchase,
+									maxDiscountAmount:coupon.maxDiscountAmount,
+									isCategoryBased:coupon.isCategoryBased,
+									applicableCategories:coupon.applicableCategories,
+									excludeCategories:coupon.excludedCategories
+									}
+							)
+						}
 
-                      // appliedCoupons.push({
-                      //   discountType:coupon.discountType,
-                      //   discountValue:coupon.discountValue,
-                      //   minPurchase:coupon.minPurchase,
-                      //   maxDiscountAmount:coupon.maxDiscountAmount,
-                      //   isCategoryBased:coupon.isCategoryBased,
-                      //   applicableCategories:coupon.applicableCategories,
-                      //   excludeCategories:coupon.excludedCategories
+						// appliedCoupons.push({
+						//   discountType:coupon.discountType,
+						//   discountValue:coupon.discountValue,
+						//   minPurchase:coupon.minPurchase,
+						//   maxDiscountAmount:coupon.maxDiscountAmount,
+						//   isCategoryBased:coupon.isCategoryBased,
+						//   applicableCategories:coupon.applicableCategories,
+						//   excludeCategories:coupon.excludedCategories
 
-                      // })
-                }
-            }
-            itemPriceDetails.push({
-              productId:item.productId._id.toString(),
-              itemTotalMrp:itemTotalMrp,
-              itemTotalPrice:itemTotalPrice,
-              itemTotalCouponDiscount:itemTotalCouponDiscount,
-              itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
-            })
-        }
-
-
-        //appliedCoupons=req.body.appliedCoupons , which contians coupon codes and coupon IDs.
-        //from now on, appliedCoupons[] will be filled with :applied coupon discount, discount type, discountValue, minimumPurchase amount
-        // for managing the refund calculation when user cancelling the order, and returning the order in the future
-        appliedCoupons.length=0;
-
-        for(const [key,value] of appliedCouponsMap){
-          appliedCoupons.push(value)
-        }
-
-        //prepare order items obj with coupon discount
-        const orderItems=userCart.items.map((item)=>{
-          return {
-            productId:item.productId._id.toString(),
-            productName:item.productId.productName,
-            productImage:item.productId.productImage[0].url,
-            quantity:item.quantity,
-            itemStatus:DELIVERY_STATUS.PENDING
-          }
-        })
-
-        // // console.log("orderItems BEFORE===========>",orderItems)
-
-        orderItems.forEach((o)=>{
-          const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
-          o.mrp=itemPrices.itemTotalMrp;
-          o.couponDiscount=itemPrices.itemTotalCouponDiscount;
-          o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
-          o.price=itemPrices.itemTotalAmount;
-
-        })
+						// })
+					}
+				}
+				itemPriceDetails.push({
+					productId:item.productId._id.toString(),
+					itemMrp:item.productId.regularPrice,
+					itemTotalMrp:itemTotalMrp,
+					itemPrice:item.productId.salePrice,
+					itemTotalPrice:itemTotalPrice,
+					itemTotalCouponDiscount:itemTotalCouponDiscount,
+					itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
+				})
+			}
 
 
-        const totalMrp=itemPriceDetails.reduce((sum,curr)=>{
-          return sum+curr.itemTotalMrp
-        },0)
+			//appliedCoupons=req.body.appliedCoupons , which contians coupon codes and coupon IDs.
+			//from now on, appliedCoupons[] will be filled with :applied coupon discount, discount type, discountValue, minimumPurchase amount
+			// for managing the refund calculation when user cancelling the order, and returning the order in the future
+			appliedCoupons.length=0;
 
-        const totalCouponDiscount=itemPriceDetails.reduce((sum,curr)=>{
-          return sum+curr.itemTotalCouponDiscount
-        },0)
+			for(const [key,value] of appliedCouponsMap){
+			appliedCoupons.push(value)
+			}
 
-        // const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
-        //   return sum+curr.itemTotalPrice
-        // },0)
+			//prepare order items obj with coupon discount
+			const orderItems=userCart.items.map((item)=>{
+			// console.log("item===============",item)
+			return {
+				productId:item.productId._id.toString(),
+				categoryId:item.productId.category._id.toString(),
+				productName:item.productId.productName,
+				productImage:item.productId.productImage[0].url,
+				quantity:item.quantity,
+				itemStatus:DELIVERY_STATUS.PENDING
+			}
+			})
 
-        const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
-          return sum+curr.itemTotalAmount
-        },0)
+			// // console.log("orderItems BEFORE===========>",orderItems)
 
-        const totalOfferDiscount=totalMrp-totalPrice;
+			orderItems.forEach((o)=>{
+				const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
+				o.mrp=itemPrices.itemMrp;
+				o.totalMrp=itemPrices.itemTotalMrp;
+				o.couponDiscount=itemPrices.itemTotalCouponDiscount;
+				o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
+				o.salePrice=itemPrices.itemPrice,
+				o.totalSalePrice=itemPrices.itemTotalPrice;
+				o.price=itemPrices.itemTotalAmount;
+				o.finalPaidAmount=itemPrices.itemTotalAmount;
+				o.finalCouponDiscount=itemPrices.itemTotalCouponDiscount
 
-        //generate custom order ID
-        const customOrderId = await getNextOrderId();
+			})
+
+
+			const totalMrp=itemPriceDetails.reduce((sum,curr)=>{
+			return sum+curr.itemTotalMrp
+			},0)
+
+			const totalCouponDiscount=itemPriceDetails.reduce((sum,curr)=>{
+			return sum+curr.itemTotalCouponDiscount
+			},0)
+
+			// const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
+			//   return sum+curr.itemTotalPrice
+			// },0)
+
+			const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
+			return sum+curr.itemTotalAmount
+			},0)
+
+			const totalOfferDiscount=totalMrp-totalPrice;
+
+			//generate custom order ID
+			const customOrderId = await getNextOrderId();
 
 
 
-        // 5. Create order
-        const newOrder = new Order({
-            orderId: customOrderId,
-            userId,
-            shippingAddress: selectedAddress.toObject(),
-            paymentMethod:"Online Payment",
-            paymentStatus: "Pending", // update after payment success
-            orderStatus: DELIVERY_STATUS.PENDING,
-            orderItems,
-            totalMrp,
-            totalOfferDiscount,
-            totalCouponDiscount,
-            appliedCoupons,
-            totalPrice,
-            totalAmount
-        });
+			// 5. Create order
+			const newOrder = new Order({
+				orderId: customOrderId,
+				userId,
+				shippingAddress: selectedAddress.toObject(),
+				paymentMethod:"Online Payment",
+				paymentStatus: "Pending", // update after payment success
+				orderStatus: DELIVERY_STATUS.PENDING,
+				orderItems,
+				totalMrp,
+				totalOfferDiscount,
+				finalTotalOfferDiscount:totalOfferDiscount,
+				totalCouponDiscount,
+				finalTotalCouponDiscount:totalCouponDiscount,
+				appliedCoupons,
+				totalPrice,
+				finalTotalPrice:totalPrice,
+				totalAmount,
+				finalTotalAmount:totalAmount
+			});
 
-        await newOrder.save();
+			await newOrder.save();
 
-        // // Reduce stock
-        // for (let item of userCart.items) {
-        //     await Product.findByIdAndUpdate(item.productId._id, {
-        //         $inc: { quantity: -item.quantity }
-        //     });
-        // }
+			
+			console.log("totalAmount============",totalAmount)
 
-        //  Clear cart
-        // const result = await Cart.updateOne({userId}, { $set: { items: [],appliedCoupons:[] } });
+			const options={
+			amount:Math.round(totalAmount) * 100,
+			currency:"INR",
+			receipt:customOrderId
+			}
 
-        const options={
-          amount:totalAmount*100,
-          currency:"INR",
-          receipt:customOrderId
-        }
+			const order =await razorpay.orders.create(options);
+			return res.json({order,teeSpaceOrderId:customOrderId});
+      	}
 
-        const order =await razorpay.orders.create(options);
-		    return res.json({order,teeSpaceOrderId:customOrderId});
-      }
-
+		//if there is no applied coupon
       // Prepare order items with itemStatus
       const orderItems = userCart.items.map(item => ({
-        productId: item.productId._id,
-        productName: item.productId.productName,
-        productImage: item.productId.productImage[0].url,
-        quantity: item.quantity,
-        mrp:item.productId.regularPrice * item.quantity,
-        price: item.productId.salePrice*item.quantity,
-        offerDiscount:(item.productId.regularPrice * item.quantity)-(item.productId.salePrice * item.quantity),
-        itemStatus: DELIVERY_STATUS.PENDING // 👈 every product starts as "Pending"
+			productId: item.productId._id,
+			categoryId:item.productId.category._id.toString(),
+			productName: item.productId.productName,
+			productImage: item.productId.productImage[0].url,
+			quantity: item.quantity,
+			mrp:item.productId.regularPrice,
+			totalMrp:item.productId.regularPrice * item.quantity,
+			salePrice:item.productId.salePrice,
+			totalSalePrice:item.productId.salePrice * item.quantity,
+			price: item.productId.salePrice*item.quantity,
+			finalPaidAmount:item.productId.salePrice*item.quantity,
+			offerDiscount:(item.productId.regularPrice * item.quantity)-(item.productId.salePrice * item.quantity),
+			itemStatus: DELIVERY_STATUS.PENDING // 👈 every product starts as "Pending"
       }));
 
 
@@ -447,8 +459,11 @@ const createRazorPayOrder = async(req,res)=>{
           orderItems,
           totalMrp,
           totalPrice,
+		  finalTotalPrice:totalPrice,
           totalOfferDiscount,
+		  finalTotalOfferDiscount:totalOfferDiscount,
           totalAmount,
+		  finalTotalAmount:totalAmount
       });
 
       await newOrder.save();
@@ -465,7 +480,7 @@ const createRazorPayOrder = async(req,res)=>{
       // console.log("newOrder===>orderId====>",newOrder);
 
       const options={
-        amount:totalAmount*100,
+        amount:Math.round(totalAmount) * 100,
         currency:"INR",
         receipt:customOrderId
       }
@@ -594,7 +609,7 @@ const retryPayment=async (req,res)=>{
       return res.status(Status.BAD_REQUEST).json({message:"Order not found",redirectToCheckoutPage:true})
     }
 
-		const userId=req.session.user || req.session.passport?.user;
+	const userId=req.session.user || req.session.passport?.user;
     const order=await Order.findOne({orderId})
     if(!order){
       return res.status(Status.BAD_REQUEST).json({message:"Order not found",redirectToCheckoutPage:true})
@@ -686,248 +701,264 @@ const retryPayment=async (req,res)=>{
 
       //if any coupon applied, calculate discount and reduce it from total price
       if(userCart.appliedCoupons.length > 0){
-          //checking coupons are valid, and available
-          const appliedCouponIds=userCart.appliedCoupons.map((appliedCoupon)=>{
-              return appliedCoupon.couponId;
-          })
+			//checking coupons are valid, and available
+			const appliedCouponIds=userCart.appliedCoupons.map((appliedCoupon)=>{
+				return appliedCoupon.couponId;
+			})
 
-          //fetching all applied coupon's original doc with the coupon ids
-          const now = new Date();
-          const coupons = await Coupon.find({
-              _id: { $in: appliedCouponIds },
-              isActive: true,
-              expiryDate: { $gt: now },
-              startDate: { $lt: now }
-          });
-          if(appliedCouponIds.length !== coupons.length){
-            return res.status(Status.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",redirectToCheckoutPage:true})
-          }
+			//fetching all applied coupon's original doc with the coupon ids
+			const now = new Date();
+			const coupons = await Coupon.find({
+				_id: { $in: appliedCouponIds },
+				isActive: true,
+				expiryDate: { $gt: now },
+				startDate: { $lt: now }
+			});
+			if(appliedCouponIds.length !== coupons.length){
+			return res.status(Status.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",redirectToCheckoutPage:true})
+			}
 
-          //re-checking if cart total meeting minPurchase for coupon discount.every coupon has atleast 0 minPurchase
-          const areCouponsMeetMinPurchase=coupons.every((coupon)=>{
-            return coupon.minPurchase <= totalPrice
-          })
-          if(!areCouponsMeetMinPurchase){
-            userCart.appliedCoupons=[];
-            userCart.save()
-            return res.status(Status.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",redirectToCheckoutPage:true})
-          }
+			//re-checking if cart total meeting minPurchase for coupon discount.every coupon has atleast 0 minPurchase
+			const areCouponsMeetMinPurchase=coupons.every((coupon)=>{
+			return coupon.minPurchase <= totalPrice
+			})
+			if(!areCouponsMeetMinPurchase){
+			userCart.appliedCoupons=[];
+			userCart.save()
+			return res.status(Status.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",redirectToCheckoutPage:true})
+			}
 
-          //check if the product is valid category
-          for(const coupon of coupons){
-            if(coupon.isCategoryBased){
-              const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
-              const hasApplicableProduct=userCart.items.some((item)=>{
-                return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
-              })
-              //if there is no applicable products, remove the coupon from user's cart
-                if(!hasApplicableProduct){
-                  userCart.appliedCoupons=[]
-                  await userCart.save();
-                  return res.status(Status.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",redirectToCheckoutPage:true})
-                }
-            }
-          }
-
-
-          //all set
-          //calculate coupon discount
+			//check if the product is valid category
+			for(const coupon of coupons){
+			if(coupon.isCategoryBased){
+				const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
+				const hasApplicableProduct=userCart.items.some((item)=>{
+				return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
+				})
+				//if there is no applicable products, remove the coupon from user's cart
+				if(!hasApplicableProduct){
+					userCart.appliedCoupons=[]
+					await userCart.save();
+					return res.status(Status.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",redirectToCheckoutPage:true})
+				}
+			}
+			}
 
 
-          const itemPriceDetails=[] //to store every product's total amount and total discount
-          const appliedCouponsMap=new Map()
+			//all set
+			//calculate coupon discount
 
 
-          for(const item of userCart.items){
-            const itemTotalMrp=item.productId.regularPrice * item.quantity;
-            const itemTotalPrice=item.productId.salePrice * item.quantity;
-            let itemTotalCouponDiscount=0;
-            for(const coupon of coupons){
-                if(coupon.isCategoryBased){
-                  //if the product is other category, skip this coupon application for that product
-                  if(
-                    !coupon.applicableCategories
-                      .some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
-                    ){
-                      continue;
-                    }
-
-                    let discount=0;
-                    if(coupon.discountType==="percentage"){
-                      discount=(itemTotalPrice*coupon.discountValue)/100
-                    }else{
-                      //if fixed discount
-                      discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                    }
-
-                    //cap max discount
-                    if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                      discount=coupon.maxDiscountAmount;
-                    }
-
-                    itemTotalCouponDiscount+=discount;
+			const itemPriceDetails=[] //to store every product's total amount and total discount
+			const appliedCouponsMap=new Map()
 
 
-                    if(!appliedCouponsMap.has(coupon.couponCode)){
-                          appliedCouponsMap.set(
-                              coupon.couponCode,
-                              {
-                                discountType:coupon.discountType,
-                                discountValue:coupon.discountValue,
-                                minPurchase:coupon.minPurchase,
-                                maxDiscountAmount:coupon.maxDiscountAmount,
-                                isCategoryBased:coupon.isCategoryBased,
-                                applicableCategories:coupon.applicableCategories,
-                                excludeCategories:coupon.excludedCategories
-                              }
-                        )
-                    }
+			for(const item of userCart.items){
+			const itemTotalMrp=item.productId.regularPrice * item.quantity;
+			const itemTotalPrice=item.productId.salePrice * item.quantity;
+			let itemTotalCouponDiscount=0;
+			for(const coupon of coupons){
+				if(coupon.isCategoryBased){
+					//if the product is other category, skip this coupon application for that product
+					if(
+					!coupon.applicableCategories
+						.some((catId)=>{return catId.toString()=== item.productId.category._id.toString()})
+					){
+						continue;
+					}
 
-                }else{//if coupon is not category based
-                    let discount=0;
-                  
-                    if(coupon.discountType==="percentage"){
-                      discount=(itemTotalPrice*coupon.discountValue)/100
-                    }else{
-                      //if fixed discount
-                      discount=(itemTotalPrice/totalPrice)*coupon.discountValue
-                    }
+					let discount=0;
+					if(coupon.discountType==="percentage"){
+						discount=(itemTotalPrice*coupon.discountValue)/100
+					}else{
+						//if fixed discount
+						discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+					}
 
-                    //cap max discount
-                    if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
-                      discount=coupon.maxDiscountAmount;
-                    }
-                    itemTotalCouponDiscount+=discount;
+					//cap max discount
+					if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+						discount=coupon.maxDiscountAmount;
+					}
 
-                    if(!appliedCouponsMap.has(coupon.couponCode)){
-                          appliedCouponsMap.set(
-                              coupon.couponCode,
-                              {
-                                discountType:coupon.discountType,
-                                discountValue:coupon.discountValue,
-                                minPurchase:coupon.minPurchase,
-                                maxDiscountAmount:coupon.maxDiscountAmount,
-                                isCategoryBased:coupon.isCategoryBased,
-                                applicableCategories:coupon.applicableCategories,
-                                excludeCategories:coupon.excludedCategories
-                              }
-                        )
-                    }
-
-                }
-            }
-              itemPriceDetails.push({
-                productId:item.productId._id.toString(),
-                itemTotalMrp:itemTotalMrp,
-                itemTotalPrice:itemTotalPrice,
-                itemTotalCouponDiscount:itemTotalCouponDiscount,
-                itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
-              })
-          }
+					itemTotalCouponDiscount+=discount;
 
 
-          //prepare order items obj with coupon discount
-          const orderItems=userCart.items.map((item)=>{
-            return {
-              productId:item.productId._id.toString(),
-              productName:item.productId.productName,
-              productImage:item.productId.productImage[0].url,
-              quantity:item.quantity,
-              itemStatus:DELIVERY_STATUS.PENDING
-            }
-          })
+					if(!appliedCouponsMap.has(coupon.couponCode)){
+							appliedCouponsMap.set(
+								coupon.couponCode,
+								{
+								discountType:coupon.discountType,
+								discountValue:coupon.discountValue,
+								minPurchase:coupon.minPurchase,
+								maxDiscountAmount:coupon.maxDiscountAmount,
+								isCategoryBased:coupon.isCategoryBased,
+								applicableCategories:coupon.applicableCategories,
+								excludeCategories:coupon.excludedCategories
+								}
+						)
+					}
 
-          orderItems.forEach((o)=>{
-            const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
-            o.mrp=itemPrices.itemTotalMrp;
-            o.couponDiscount=itemPrices.itemTotalCouponDiscount;
-            o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
-            o.price=itemPrices.itemTotalAmount;
+				}else{//if coupon is not category based
+					let discount=0;
+					
+					if(coupon.discountType==="percentage"){
+						discount=(itemTotalPrice*coupon.discountValue)/100
+					}else{
+						//if fixed discount
+						discount=(itemTotalPrice/totalPrice)*coupon.discountValue
+					}
 
-          })
+					//cap max discount
+					if(coupon.maxDiscountAmount && discount> coupon.maxDiscountAmount){
+						discount=coupon.maxDiscountAmount;
+					}
+					itemTotalCouponDiscount+=discount;
+
+					if(!appliedCouponsMap.has(coupon.couponCode)){
+							appliedCouponsMap.set(
+								coupon.couponCode,
+								{
+								discountType:coupon.discountType,
+								discountValue:coupon.discountValue,
+								minPurchase:coupon.minPurchase,
+								maxDiscountAmount:coupon.maxDiscountAmount,
+								isCategoryBased:coupon.isCategoryBased,
+								applicableCategories:coupon.applicableCategories,
+								excludeCategories:coupon.excludedCategories
+								}
+						)
+					}
+
+				}
+			}
+				itemPriceDetails.push({
+					productId:item.productId._id.toString(),
+					itemMrp:item.productId.regularPrice,
+					itemTotalMrp:itemTotalMrp,
+					itemPrice:item.productId.salePrice,
+					itemTotalPrice:itemTotalPrice,
+					itemTotalCouponDiscount:itemTotalCouponDiscount,
+					itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
+				})
+			}
 
 
-          const totalMrp=itemPriceDetails.reduce((sum,curr)=>{
-            return sum+curr.itemTotalMrp
-          },0)
+			//prepare order items obj with coupon discount
+			const orderItems=userCart.items.map((item)=>{
+			return {
+				productId:item.productId._id.toString(),
+				categoryId:item.productId.category._id.toString(),
+				productName:item.productId.productName,
+				productImage:item.productId.productImage[0].url,
+				quantity:item.quantity,
+				itemStatus:DELIVERY_STATUS.PENDING
+			}
+			})
 
-          const totalCouponDiscount=itemPriceDetails.reduce((sum,curr)=>{
-            return sum+curr.itemTotalCouponDiscount
-          },0)
+			orderItems.forEach((o)=>{
+				const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
+				o.mrp=itemPrices.itemMrp;
+				o.totalMrp=itemPrices.itemTotalMrp;
+				o.couponDiscount=itemPrices.itemTotalCouponDiscount;
+				o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
+				o.salePrice=itemPrices.itemPrice
+				o.totalSalePrice=itemPrices.itemTotalPrice;
+				o.price=itemPrices.itemTotalAmount;
+				o.finalPaidAmount=itemPrices.itemTotalAmount;
+				o.finalCouponDiscount=itemPrices.itemTotalCouponDiscount
 
-          // const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
-          //   return sum+curr.itemTotalPrice
-          // },0)
+			})
 
-          const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
-            return sum+curr.itemTotalAmount
-          },0)
 
-          const totalOfferDiscount=totalMrp-totalPrice;
+			const totalMrp=itemPriceDetails.reduce((sum,curr)=>{
+			return sum+curr.itemTotalMrp
+			},0)
 
-          // 5. Create order
-          order.orderId=orderId;
-          order.userId=userId;
-          order.paymentMethod="Online Payment";
-          order.paymentStatus="Pending";
-          order.orderStatus=DELIVERY_STATUS.PENDING;
-          order.orderItems=orderItems;
-          order.totalMrp=totalMrp;
-          order.totalCouponDiscount=totalCouponDiscount;
-          order.appliedCoupons=[...appliedCouponsMap.values()]
-          order.totalOfferDiscount=totalOfferDiscount;
-          order.totalPrice=totalPrice;
-          order.totalAmount=totalAmount;
+			const totalCouponDiscount=itemPriceDetails.reduce((sum,curr)=>{
+			return sum+curr.itemTotalCouponDiscount
+			},0)
 
-          await order.save();
+			// const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
+			//   return sum+curr.itemTotalPrice
+			// },0)
 
-          
+			const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
+			return sum+curr.itemTotalAmount
+			},0)
 
-          const options={
-            amount:totalAmount*100,
-            currency:"INR",
-            receipt:orderId
-          }
+			const totalOfferDiscount=totalMrp-totalPrice;
 
-          const razorpayOrder =await razorpay.orders.create(options);
-          return res.json({razorpayOrder,teeSpaceOrderId:orderId});
+			// 5. Create order
+			order.orderId=orderId;
+			order.userId=userId;
+			order.paymentMethod="Online Payment";
+			order.paymentStatus="Pending";
+			order.orderStatus=DELIVERY_STATUS.PENDING;
+			order.orderItems=orderItems;
+			order.totalMrp=totalMrp;
+			order.totalCouponDiscount=totalCouponDiscount;
+			order.finalTotalCouponDiscount=totalCouponDiscount;
+			order.appliedCoupons=[...appliedCouponsMap.values()]
+			order.totalOfferDiscount=totalOfferDiscount;
+			order.finalTotalOfferDiscount=totalOfferDiscount;
+			order.totalPrice=totalPrice;
+			order.finalTotalPrice=totalPrice;
+			order.totalAmount=totalAmount;
+			order.finalTotalAmount=totalAmount
+
+			await order.save();
+
+			
+
+			const options={
+			amount:Math.round(totalAmount) * 100,
+			currency:"INR",
+			receipt:orderId
+			}
+
+			const razorpayOrder =await razorpay.orders.create(options);
+			return res.json({razorpayOrder,teeSpaceOrderId:orderId});
         
-      }
+    	}
+	  ////////////////////////////////
       
 
-      const totalMrp=userCart.items.reduce((sum,item)=>{
-        return sum+item.productId.regularPrice*item.quantity
-      },0)
+		//if there is no applied coupons
+		const totalMrp=userCart.items.reduce((sum,item)=>{
+			return sum+item.productId.regularPrice*item.quantity
+		},0)
 
-      const totalOfferDiscount=totalMrp-totalPrice;
+		const totalOfferDiscount=totalMrp-totalPrice;
 
-       order.orderId=orderId;
-        order.userId=userId;
-        order.paymentMethod="Online Payment";
-        order.paymentStatus="Pending";
-        order.orderStatus=DELIVERY_STATUS.PENDING;
-        order.totalMrp=totalMrp;
-        // order.totalCouponDiscount=totalCouponDiscount;
-        order.totalOfferDiscount=totalOfferDiscount;
-        order.totalPrice=totalPrice;
-        order.totalAmount=totalAmount;
+    	order.orderId=orderId;
+		order.userId=userId;
+		order.paymentMethod="Online Payment";
+		order.paymentStatus="Pending";
+		order.orderStatus=DELIVERY_STATUS.PENDING;
+		order.totalMrp=totalMrp;
+		order.totalOfferDiscount=totalOfferDiscount;
+		order.finalTotalOfferDiscount=totalOfferDiscount;
+		order.totalPrice=totalPrice;
+		order.finalTotalPrice=totalPrice;
+		order.totalAmount=totalAmount;
+		order.finalTotalAmount=totalAmount;
 
-        await order.save();
+		await order.save();
 
        
 
          const options={
-          amount:totalAmount*100,
-          currency:"INR",
-          receipt:orderId
+			amount:Math.round(totalAmount) * 100,
+			currency:"INR",
+			receipt:orderId
         }
 
         const razorpayOrder =await razorpay.orders.create(options);
-		    return res.json({razorpayOrder,teeSpaceOrderId:orderId});
-  } catch (error) {
-    console.error("retryPayment() error=======",error)
-    return res.status(Status.INTERNAL_ERROR).json({message:"Something went wrong"})
-  }
+		return res.json({razorpayOrder,teeSpaceOrderId:orderId});
+	} catch (error) {
+			console.error("retryPayment() error=======",error)
+			return res.status(Status.INTERNAL_ERROR).json({message:"Something went wrong"})
+	}
 }
 
 
@@ -1271,7 +1302,9 @@ const place_cod_order=async (req,res)=>{
               }
               itemPriceDetails.push({
                 productId:item.productId._id.toString(),
+				itemMrp:item.productId.regularPrice,
                 itemTotalMrp:itemTotalMrp,
+				itemPrice:item.productId.salePrice,
                 itemTotalPrice:itemTotalPrice,
                 itemTotalCouponDiscount:itemTotalCouponDiscount,
                 itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
@@ -1292,6 +1325,7 @@ const place_cod_order=async (req,res)=>{
             const orderItems=userCart.items.map((item)=>{
               return {
                 productId:item.productId._id.toString(),
+                categoryId:item.productId.category._id.toString(),
                 productName:item.productId.productName,
                 productImage:item.productId.productImage[0].url,
                 quantity:item.quantity,
@@ -1303,10 +1337,15 @@ const place_cod_order=async (req,res)=>{
 
             orderItems.forEach((o)=>{
               const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
-              o.mrp=itemPrices.itemTotalMrp;
+              o.mrp=itemPrices.itemMrp;
+			  o.totalMrp=itemPrices.itemTotalMrp;
               o.couponDiscount=itemPrices.itemTotalCouponDiscount;
               o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
-              o.price=itemPrices.itemTotalAmount
+			  o.salePrice=itemPrices.itemPrice
+			  o.totalSalePrice=itemPrices.itemTotalPrice
+              o.price=itemPrices.itemTotalAmount;
+			  o.finalPaidAmount=itemPrices.itemTotalAmount;
+			  o.finalCouponDiscount=itemPrices.itemTotalCouponDiscount;
             })
 
             // const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
@@ -1349,10 +1388,14 @@ const place_cod_order=async (req,res)=>{
                 orderItems,
                 totalMrp,
                 totalOfferDiscount,
+				finalTotalOfferDiscount:totalOfferDiscount,
                 totalCouponDiscount,
+				finalTotalCouponDiscount:totalCouponDiscount,
                 appliedCoupons,
                 totalPrice,
-                totalAmount
+				finalTotalPrice:totalPrice,
+                totalAmount,
+				finalTotalAmount:totalAmount
             });
 
             // console.log("orderItems AFTER===========>",orderItems)
@@ -1399,10 +1442,14 @@ const place_cod_order=async (req,res)=>{
         // Prepare order items with itemStatus
         const orderItems = userCart.items.map(item => ({
           productId: item.productId._id,
+          categoryId:item.productId.category._id.toString(),
           productName: item.productId.productName,
           productImage: item.productId.productImage[0].url,
           quantity: item.quantity,
-          mrp:item.productId.regularPrice * item.quantity,
+          mrp:item.productId.regularPrice,
+		  totalMrp:item.productId.regularPrice * item.quantity,
+		  salePrice:item.productId.salePrice,
+		  totalSalePrice:item.productId.salePrice*item.quantity,
           price: item.productId.salePrice*item.quantity,
           offerDiscount:(item.productId.regularPrice * item.quantity)-(item.productId.salePrice * item.quantity),
           itemStatus: "Pending" // 👈 every product starts as "Pending"
@@ -1429,8 +1476,11 @@ const place_cod_order=async (req,res)=>{
             orderItems,
             totalMrp,
             totalPrice,
+			finalTotalPrice:totalPrice,
             totalOfferDiscount,
-            totalAmount
+			finalTotalOfferDiscount:totalOfferDiscount,
+            totalAmount,
+			finalTotalAmount:totalAmount
         });
 
         await newOrder.save();
@@ -1726,7 +1776,9 @@ const placeWalletPaidOrder = async (req,res)=>{
               }
               itemPriceDetails.push({
                 productId:item.productId._id.toString(),
+				itemMrp:item.productId.regularPrice,
                 itemTotalMrp:itemTotalMrp,
+				itemPrice:item.productId.salePrice,
                 itemTotalPrice:itemTotalPrice,
                 itemTotalCouponDiscount:itemTotalCouponDiscount,
                 itemTotalAmount:itemTotalPrice-itemTotalCouponDiscount
@@ -1747,6 +1799,7 @@ const placeWalletPaidOrder = async (req,res)=>{
             const orderItems=userCart.items.map((item)=>{
               return {
                 productId:item.productId._id.toString(),
+                categoryId:item.productId.category._id.toString(),
                 productName:item.productId.productName,
                 productImage:item.productId.productImage[0].url,
                 quantity:item.quantity,
@@ -1758,10 +1811,15 @@ const placeWalletPaidOrder = async (req,res)=>{
 
             orderItems.forEach((o)=>{
               const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
-              o.mrp=itemPrices.itemTotalMrp;
+              o.mrp=itemPrices.itemMrp;
+			  o.totalMrp=itemPrices.itemTotalMrp;
               o.couponDiscount=itemPrices.itemTotalCouponDiscount;
               o.offerDiscount=itemPrices.itemTotalMrp-itemPrices.itemTotalPrice;
+			  o.salePrice=itemPrices.itemPrice;
+			  o.totalSalePrice=itemPrices.itemTotalPrice;
               o.price=itemPrices.itemTotalAmount;
+			  o.finalPaidAmount=itemPrices.itemTotalAmount;
+			  o.finalCouponDiscount=itemPrices.itemTotalCouponDiscount
             })
 
             const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
@@ -1808,10 +1866,14 @@ const placeWalletPaidOrder = async (req,res)=>{
                 orderItems,
                 totalMrp,
                 totalOfferDiscount,
+				finalTotalOfferDiscount:totalOfferDiscount,
                 totalCouponDiscount,
+				finalTotalCouponDiscount:totalCouponDiscount,
                 appliedCoupons,
                 totalPrice,
-                totalAmount
+				finalTotalPrice:totalPrice,
+                totalAmount,
+				finalTotalAmount:totalAmount
             });
 
             // console.log("orderItems AFTER===========>",orderItems)
@@ -1866,10 +1928,14 @@ const placeWalletPaidOrder = async (req,res)=>{
       // Prepare order items with itemStatus
         const orderItems = userCart.items.map(item => ({
           productId: item.productId._id,
+          categoryId:item.productId.category._id.toString(),
           productName: item.productId.productName,
           productImage: item.productId.productImage[0].url,
           quantity: item.quantity,
-          mrp:item.productId.regularPrice * item.quantity,
+		  mrp:item.productId.regularPrice,
+          totalMrp:item.productId.regularPrice * item.quantity,
+		  salePrice:item.productId.salePrice,
+          totalSalePrice: item.productId.salePrice*item.quantity,
           price: item.productId.salePrice*item.quantity,
           offerDiscount:(item.productId.regularPrice * item.quantity)-(item.productId.salePrice * item.quantity),
           itemStatus: "Pending" // 👈 every product starts as "Pending"
@@ -1904,8 +1970,11 @@ const placeWalletPaidOrder = async (req,res)=>{
           orderItems,
           totalMrp,
           totalPrice,
+		  finalTotalPrice:totalPrice,
           totalOfferDiscount,
-          totalAmount
+		  finalTotalOfferDiscount:totalOfferDiscount,
+          totalAmount,
+		  finalTotalAmount:totalAmount
       });
 
       await newOrder.save();
@@ -2108,125 +2177,1009 @@ async function restoreStock(orderItems,reason) {
 
 
 
+// // Cancel a single product in an order
+// const cancelOrderItem = async (req, res) => {
+//     try {
+//         const userId = req.session.user || req.session.passport?.user;
+//         if (!userId) {
+//         return res.status(401).json({ success: false, message: "Login required" });
+//         }
+
+//         const { orderId, itemId, reason } = req.body;
+
+//         const order = await Order.findOne({ orderId, userId });
+//         if (!order) {
+//         return res.status(404).json({ success: false, message: "Order not found" });
+//         }
+
+//         const cancellingItem = order.orderItems.id(itemId); // find subdocument
+//         if (!cancellingItem) {
+//         return res.status(404).json({ success: false, message: "Item not found" });
+//         }
+
+//         if (cancellingItem.itemStatus !== "Pending") {
+//         return res.status(Status.BAD_REQUEST).json({ success: false, message: "Item cannot be cancelled at this stage" });
+//         }
+
+
+
+//         //  Restore stock
+//         await restoreStock([cancellingItem],reason);
+
+//         //  Update item refund status (only if paid & online)
+//         // if (order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
+//         //   item.refundStatus = "Refunded";
+//         //   item.refundedOn=new Date();
+//         // }
+
+//         //  Update item refund status (only if paid & online or wallet)
+//         if(order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid"){
+
+//             //if coupon applied, recalculate the coupon discounts for other products
+//             if(order.appliedCoupons.length > 0){  
+                
+//                 //calculating the old total price
+//                 const oldOrderTotalPrice=order.orderItems.reduce((itemPrice,item)=>{
+//                     return itemPrice+item.price;
+//                 },0) 
+
+//                 const oldOrderTotalPrice=order.orderItems
+//                     .filter((item)=>{
+//                         return item.refundStatus!=="Refunded to your wallet"
+//                     })
+//                     .reduce((itemPrice,item)=>{
+//                         return itemPrice+item.price;
+//                     },0)
+
+
+//                 //caluculating the current order total price excluding the cancelling the order.
+//                 const currentOrderTotalPrice = order.orderItems
+//                         .filter((item)=>{
+//                             return item._id.toString() !== cancellingItem._id.toString()
+//                         })
+//                         .reduce((total,item)=>{
+//                             return total+item.price+item.couponDiscount
+//                         },0)
+
+//                 //now checking new order total price is meeting mininmum purchase amount for coupon discount
+//                 const applicableCoupons=order.appliedCoupons.filter((appliedCoupon)=>{
+//                     return appliedCoupon.minPurchase <= currentOrderTotalPrice
+//                 })
+
+//                 //checking if there is applicable coupons after decreasing the price of the cancelling order
+//                 if(applicableCoupons.length>0){
+//                     //calculate the discount for current products
+//                     for(const item of order.orderItems){
+//                         //prevent coupon calculation for cancelling item.
+//                         if(item._id.toString() === cancellingItem._id.toString()){
+//                             // item.price=item.price+item.couponDiscount;
+//                             // item.couponDiscount=0;
+//                             await order.save();
+//                             continue;
+//                         }
+
+//                         const itemTotalPrice=item.price+item.couponDiscount;
+//                         let itemTotalCouponDiscount=0
+//                         for(const coupon of applicableCoupons){
+//                             if(coupon.isCategoryBased){
+//                                 //if the product is other category, skip this coupon application for that product
+//                                 if(
+//                                     !coupon.applicableCategories
+//                                     .some((catId)=>{return catId.toString()=== item.categoryId.toString()})
+//                                     ){
+//                                         continue;
+//                                 }
+
+//                                 let discount=0;
+//                                 if(coupon.discountType === "percentage"){
+//                                     discount=(itemTotalPrice * coupon.discountValue)/100;
+//                                 }
+
+//                                 if(coupon.discountType === "fixed"){
+//                                     discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue;
+//                                 }
+
+//                                 //cap max discount
+//                                 if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+//                                     discount=coupon.maxDiscountAmount;
+//                                 }
+
+//                                 itemTotalCouponDiscount+=discount;
+//                             }
+
+//                             if(!coupon.isCategoryBased){
+//                                 let discount=0;
+
+//                                 if(coupon.discountType === "percentage"){
+//                                     discount=(itemTotalPrice * coupon.discountValue)/100;
+//                                 }
+
+//                                 if(coupon.discountType === "fixed"){
+//                                     discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue
+//                                 }
+
+//                                 //cap max discount
+//                                 if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+//                                     discount=coupon.maxDiscountAmount;
+//                                 }
+
+//                                 itemTotalCouponDiscount+=discount;
+
+//                             }
+//                         }
+
+//                         //updating item level new coupon discount & price
+//                         item.couponDiscount=itemTotalCouponDiscount;
+//                         item.price=itemTotalPrice - itemTotalCouponDiscount;
+
+//                         await order.save()
+//                     }
+
+
+                    
+
+//                     //caluculating the new total price
+//                     const newOrderTotalPrice=order.orderItems
+//                         .filter((item)=>{
+//                             return item._id.toString() !== cancellingItem._id.toString()
+//                         })
+//                         .reduce((totalPrice,item)=>{
+//                             return totalPrice + item.price
+//                         },0)
+
+
+//                     //keeping current total, and refunding the rest
+//                     const refundAmount=oldOrderTotalPrice-newOrderTotalPrice;
+
+//                     let userWallet=await Wallet.findOne({userId})
+//                     if(!userWallet){
+//                         userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+//                     }
+
+//                     userWallet.balance+=refundAmount;
+//                     userWallet.transactions.push({
+//                         amount:refundAmount,
+//                         type:"credit",
+//                         description:`Refund for ${cancellingItem.productName} (Order ${order.orderId})`
+//                     })
+//                     await userWallet.save();
+//                     cancellingItem.refundStatus = "Refunded to your wallet";
+//                     cancellingItem.refundedOn = new Date();
+//                 }
+
+//                 if(applicableCoupons.length===0){
+//                     //which means no product will have coupon discount
+//                     //every product will be bought on saleprice
+//                     //update order prices and coupon discounts
+//                     for(const item of order.orderItems){
+//                         item.price=item.price+item.couponDiscount
+//                         item.couponDiscount=0;
+//                         await order.save();
+//                     }
+
+//                     //caluculating the new total price
+//                     const newOrderTotalPrice=order.orderItems
+//                         .filter((item)=>{
+//                             return item._id.toString() !== cancellingItem._id.toString()
+//                         })
+//                         .reduce((totalPrice,item)=>{
+//                             return totalPrice + item.price
+//                         },0)
+
+//                     //keeping current total, and refunding the rest
+//                     const refundAmount=oldOrderTotalPrice-newOrderTotalPrice;
+
+//                     let userWallet=await Wallet.findOne({userId})
+//                     if(!userWallet){
+//                         userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+//                     }
+
+//                     userWallet.balance+=refundAmount;
+//                     userWallet.transactions.push({
+//                         amount:refundAmount,
+//                         type:"credit",
+//                         description:`Refund for ${cancellingItem.productName} (Order ${order.orderId})`
+//                     })
+//                     await userWallet.save();
+//                     cancellingItem.refundStatus = "Refunded to your wallet";
+//                     cancellingItem.refundedOn = new Date();
+//                 }
+
+
+
+//             }
+
+//             if(order.appliedCoupons.length === 0){
+//                 //refund the paid amount
+//                 let userWallet=await Wallet.findOne({userId})
+//                 if(!userWallet){
+//                     userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+//                 }
+
+//                 userWallet.balance+=cancellingItem.price;
+//                 userWallet.transactions.push({
+//                     amount:cancellingItem.price,
+//                     type:"credit",
+//                     description:`Refund for ${cancellingItem.productName} (Order ${order.orderId})`
+//                 })
+//                 await userWallet.save();
+//                 cancellingItem.refundStatus = "Refunded to your wallet";
+//                 cancellingItem.refundedOn = new Date();
+//             }
+//         }
+
+//         if(order.paymentMethod === "Cash on Delivery"){
+//             if(order.appliedCoupons.length > 0){
+//                 //calculating the old total price
+//                 const oldOrderTotalPrice=order.orderItems.reduce((itemPrice,item)=>{
+//                     return itemPrice+item.price;
+//                 },0) 
+
+//                 //caluculating the current order total price after the cancelling the order.
+//                 const currentOrderTotalPrice = order.orderItems
+//                         .filter((item)=>{
+//                             return item._id.toString() !== cancellingItem._id.toString()
+//                         })
+//                         .reduce((total,item)=>{
+//                             return total+item.price+item.couponDiscount
+//                         },0)
+                
+//                 //now checking new order total price is meeting mininmum purchase amount for coupon discount
+//                 const applicableCoupons=order.appliedCoupons.filter((appliedCoupon)=>{
+//                     return appliedCoupon.minPurchase <= currentOrderTotalPrice
+//                 })
+
+//                 if(applicableCoupons.length > 0){
+//                     //re-calculate coupon discount for the current products excluding the cancelling product
+//                     for(const item of order.orderItems){
+//                         //prevent coupon discount calculation for cancelling item.
+//                         if(item._id.toString() === cancellingItem._id.toString()){
+//                             item.price=item.price+item.couponDiscount;
+//                             item.couponDiscount=0;
+//                             await order.save();
+//                             continue;
+//                         }
+
+//                         const itemTotalPrice=item.price+item.couponDiscount;
+//                         let itemTotalCouponDiscount=0
+
+//                         for(const coupon of applicableCoupons){
+//                             if(coupon.isCategoryBased){
+//                                 //if the product is other category, skip this coupon application for that product
+//                                 if(
+//                                     !coupon.applicableCategories
+//                                     .some((catId)=>{return catId.toString()=== item.categoryId.toString()})
+//                                     ){
+//                                         continue;
+//                                 }
+
+//                                 let discount=0;
+//                                 if(coupon.discountType === "percentage"){
+//                                     discount=(itemTotalPrice * coupon.discountValue)/100;
+//                                 }
+
+//                                 if(coupon.discountType === "fixed"){
+//                                     discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue;
+//                                 }
+
+//                                 //cap max discount
+//                                 if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+//                                     discount=coupon.maxDiscountAmount;
+//                                 }
+
+//                                 itemTotalCouponDiscount+=discount;
+//                             }
+
+//                             if(!coupon.isCategoryBased){
+//                                 let discount=0;
+
+//                                 if(coupon.discountType === "percentage"){
+//                                     discount=(itemTotalPrice * coupon.discountValue)/100;
+//                                 }
+
+//                                 if(coupon.discountType === "fixed"){
+//                                     discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue
+//                                 }
+
+//                                 //cap max discount
+//                                 if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+//                                     discount=coupon.maxDiscountAmount;
+//                                 }
+
+//                                 itemTotalCouponDiscount+=discount;
+
+//                             }
+//                         }
+
+//                         //new coupon discount & price
+//                         item.couponDiscount=itemTotalCouponDiscount;
+//                         item.price=itemTotalPrice - itemTotalCouponDiscount;
+//                         await order.save()
+
+//                     } 
+//                 }
+                
+//             }
+//         }
+
+//         //updating the order level prices
+//         let totalMrp=0, totalOfferDiscount=0, totalCouponDiscount=0, totalPrice=0, totalAmount=0;
+//         for(const item of order.orderItems){
+//             totalMrp+=item.mrp;
+//             totalOfferDiscount+=item.offerDiscount;
+//             totalCouponDiscount+=item.couponDiscount;
+//             totalPrice+=(item.mrp - item.offerDiscount);
+//             totalAmount+=item.price;
+//         }
+//         order.totalMrp=totalMrp;
+//         order.totalOfferDiscount=totalOfferDiscount;
+//         order.totalCouponDiscount=totalCouponDiscount;
+//         order.totalPrice=totalPrice;
+//         order.totalAmount=totalAmount;
+
+//         await order.save();
+
+
+//         const allStatuses = order.orderItems.map(i => i.itemStatus);
+//         const allStatusSet=new Set(allStatuses)
+
+//         if(allStatusSet.size===1 && allStatusSet.has("Cancelled")){
+//         order.orderStatus = "Cancelled"
+//         }
+//         if(allStatusSet.size===1 && allStatusSet.has("Delivered")){
+//         order.orderStatus = "Delivered";
+//         order.deliveredOn=new Date();
+//         }
+//         if(allStatusSet.size===2 && allStatusSet.has('Delivered') && allStatusSet.has("Cancelled")){
+//         order.orderStatus="Delivered";
+
+//         const deliveredDates=order.orderItems
+//             .map((item)=>item.deliveredOn)
+//             .filter((date)=>date)
+//         deliveredDates.sort((a,b)=>a-b);
+//         const latestDeliveredDate=deliveredDates[deliveredDates.length-1];
+
+//         order.deliveredOn=latestDeliveredDate;
+//         }
+
+
+//         // //  Update order status
+//         // const allCancelled = order.orderItems.every(i => i.itemStatus === "Cancelled");
+//         // const someCancelled = order.orderItems.some(i => i.itemStatus === "Cancelled");
+
+//         // if (allCancelled) {
+//         //   order.orderStatus = "Cancelled";
+//         // } else if (someCancelled) {
+//         //   order.orderStatus = "Partially Cancelled";
+//         // }
+
+//         //  Update order refund summary
+//         const allRefunded = order.orderItems.every(i => i.refundStatus === "Refunded to your wallet");
+//         const someRefunded = order.orderItems.some(i => i.refundStatus === "Refunded to your wallet");
+
+//         if (allRefunded) {
+//         order.refundStatus = "Refunded";
+//         } else if (someRefunded) {
+//         order.refundStatus = "Partially Refunded";
+//         }
+
+//         // const refundAmount = cancellingItem.price;
+//         // const offerDiscount=cancellingItem.offerDiscount;
+//         // const couponDiscount=cancellingItem.couponDiscount;
+
+//         // order.totalMrp-=cancellingItem.mrp;
+//         // order.totalPrice-=(refundAmount+offerDiscount);
+//         // order.totalAmount-=refundAmount;
+//         // order.totalOfferDiscount-=offerDiscount;
+//         // order.totalCouponDiscount-=couponDiscount;
+
+
+//         await order.save();
+
+//         res.json({ success: true, message: "Item cancelled successfully" });
+
+//     } catch (error) {
+//         console.log("cancelOrderItem() error =>", error);
+//         res.status(Status.INTERNAL_ERROR).json({ success: false, message: "Something went wrong" });
+//     }
+// };
+
+
 // Cancel a single product in an order
 const cancelOrderItem = async (req, res) => {
-  try {
-    const userId = req.session.user || req.session.passport?.user;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "Login required" });
+    try {
+        const userId = req.session.user || req.session.passport?.user;
+        if (!userId) {
+        return res.status(401).json({ success: false, message: "Login required" });
+        }
+
+        const { orderId, itemId, reason } = req.body;
+
+        const order = await Order.findOne({ orderId, userId });
+        if (!order) {
+        return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        const cancellingItem = order.orderItems.id(itemId); // find subdocument
+        if (!cancellingItem) {
+        return res.status(404).json({ success: false, message: "Item not found" });
+        }
+
+        if (cancellingItem.itemStatus !== "Pending") {
+        return res.status(Status.BAD_REQUEST).json({ success: false, message: "Item cannot be cancelled at this stage" });
+        }
+
+
+
+        //  Restore stock
+        await restoreStock([cancellingItem],reason);
+
+        //  Update item refund status (only if paid & online)
+        // if (order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
+        //   item.refundStatus = "Refunded";
+        //   item.refundedOn=new Date();
+        // }
+
+        //  Update item refund status (only if paid & online or wallet)
+        if(order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid"){
+
+            //if coupon applied, recalculate the coupon discounts for other products
+            if(order.appliedCoupons.length > 0){  
+                
+                const oldOrderTotalPrice=order.totalAmount
+
+
+                //caluculating the existing items' total price before coupon discount
+                //excluding the cancelling the order & already refunded items
+                const currentOrderTotalPrice = order.orderItems
+                        .filter((item)=>{
+                            return item.refundStatus !== "Refunded to your wallet" && item._id.toString() !== cancellingItem._id.toString()
+                        }).reduce((total,item)=>{
+                            return total + item.price + item.couponDiscount
+                        },0)
+
+                //now checking new order total price is meeting mininmum purchase amount for coupon discount
+                const applicableCoupons=order.appliedCoupons.filter((appliedCoupon)=>{
+                    return appliedCoupon.minPurchase <= currentOrderTotalPrice
+                })
+
+                //checking if there is applicable coupons after decreasing the price of the cancelling order
+                if(applicableCoupons.length>0){
+                    let finalTotalOfferDiscount=0;
+					let finaltotalCouponDiscount=0 
+					let finalTotalPrice=0; 
+					let finalTotalAmount=0;
+                    //calculate the discount for current products
+                    for(const item of order.orderItems){
+                        //prevent coupon calculation for cancelling item.
+                        //also for already refunded item.
+                        if(item._id.toString() === cancellingItem._id.toString() || item.refundStatus === "Refunded to your wallet"){
+                            continue;
+                        }
+
+                        const itemTotalPrice=item.price+item.couponDiscount;
+                        let itemTotalCouponDiscount=0
+                        for(const coupon of applicableCoupons){
+                            if(coupon.isCategoryBased){
+                                //if the product is other category, skip this coupon application for that product
+                                if(
+                                    !coupon.applicableCategories
+                                    .some((catId)=>{return catId.toString()=== item.categoryId.toString()})
+                                    ){
+                                        continue;
+                                }
+
+                                let discount=0;
+                                if(coupon.discountType === "percentage"){
+                                    discount=(itemTotalPrice * coupon.discountValue)/100;
+                                }
+
+                                if(coupon.discountType === "fixed"){
+                                    discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue;
+                                }
+
+                                //cap max discount
+                                if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+                                    discount=coupon.maxDiscountAmount;
+                                }
+
+                                itemTotalCouponDiscount+=discount;
+                            }
+
+                            if(!coupon.isCategoryBased){
+                                let discount=0;
+
+                                if(coupon.discountType === "percentage"){
+                                    discount=(itemTotalPrice * coupon.discountValue)/100;
+                                }
+
+                                if(coupon.discountType === "fixed"){
+                                    discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue
+                                }
+
+                                //cap max discount
+                                if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+                                    discount=coupon.maxDiscountAmount;
+                                }
+
+                                itemTotalCouponDiscount+=discount;
+                            }
+                        }
+						//storing updated price & coupon discount of the item
+						item.finalPaidAmount = itemTotalPrice - itemTotalCouponDiscount
+						item.finalCouponDiscount = itemTotalCouponDiscount;
+
+
+						finalTotalOfferDiscount+=item.offerDiscount;
+						finalTotalPrice+=item.totalSalePrice;
+                        finaltotalCouponDiscount+=itemTotalCouponDiscount;
+						finalTotalAmount+=(item.totalSalePrice - itemTotalCouponDiscount)
+						
+                    }
+					//storing updated price details of the entire order
+					order.finalTotalOfferDiscount=finalTotalOfferDiscount
+					order.finalTotalCouponDiscount = finaltotalCouponDiscount;
+					order.finalTotalPrice=finalTotalPrice;
+					order.finalTotalAmount=finalTotalAmount;
+					await order.save()
+
+                    //after re-calculating the new coupon discount for existing items
+                    //calculating the new total price for the existing items.
+                    //now we need this amount, rest will be refunded
+                    const newOrderTotalPrice=currentOrderTotalPrice - finaltotalCouponDiscount;
+                   
+                    //now, we need the amount for existing items, we keep it,
+                    //also, we decreasing the already refunded amount,
+                    //and refunding the rest
+                    const refundAmount=order.totalAmount-(newOrderTotalPrice + order.refundedAmount);
+                    
+
+                    let userWallet=await Wallet.findOne({userId})
+                    if(!userWallet){
+                        userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+                    }
+
+                    userWallet.balance+=refundAmount;
+                    userWallet.transactions.push({
+                        amount:refundAmount,
+                        type:"credit",
+                        description:`Refund for ${cancellingItem.productName} (Order ${order.orderId})`
+                    })
+                    await userWallet.save();
+                    cancellingItem.refundStatus = "Refunded to your wallet";
+                    cancellingItem.refundedOn = new Date();
+
+                    //updating total refunded amount in DB
+                    order.refundedAmount += refundAmount;
+                    await order.save();
+
+                }
+
+                if(applicableCoupons.length===0){
+                    //which means no product will have coupon discount
+                    //every product will be bought on saleprice
+                    const currentOrderTotalPrice = order.orderItems
+                        .filter((item)=>{
+                            return item.refundStatus !== "Refunded to your wallet" && item._id.toString() !== cancellingItem._id.toString()
+                        }).reduce((total,item)=>{
+                            return total + item.price + item.couponDiscount
+                        },0)
+                    
+
+                    //keeping current total, and refunding the rest
+                    const refundAmount=order.totalAmount - (currentOrderTotalPrice  + order.refundedAmount);
+
+                    let userWallet=await Wallet.findOne({userId})
+                    if(!userWallet){
+                        userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+                    }
+
+                    userWallet.balance+=refundAmount;
+                    userWallet.transactions.push({
+                        amount:refundAmount,
+                        type:"credit",
+                        description:`Refund for ${cancellingItem.productName} (Order ${order.orderId})`
+                    })
+                    await userWallet.save();
+                    cancellingItem.refundStatus = "Refunded to your wallet";
+                    cancellingItem.refundedOn = new Date();
+
+                    order.refundedAmount += refundAmount
+					
+					//removing all coupon discount, because this order has no applicable coupon now.
+					//not eligible for coupon
+					for(const item of order.orderItems){
+						item.finalPaidAmount=item.salePrice;
+						item.finalCouponDiscount = 0;
+					}
+					
+					const finalTotalPrice=order.orderItems
+						.filter((item)=>{
+							return item._id.toString() !== cancellingItem._id.toString() && item.refundStatus !== "Refunded to your wallet"
+						})
+						.reduce((totalPrice,item)=>{
+							return totalPrice + item.totalSalePrice
+						},0)
+
+					
+
+					order.finalTotalCouponDiscount=0;
+					order.finalTotalPrice=finalTotalPrice;
+					order.finalTotalAmount=finalTotalPrice;
+
+					const finalTotalOfferDiscount=order.orderItems
+						.filter((item)=>{
+							return item.refundStatus !== "Refunded to your wallet" && item._id.toString() !== cancellingItem._id.toString()
+						})
+						.reduce((totalOfferDiscount,item)=>{
+							return totalOfferDiscount+item.offerDiscount
+						},0)
+
+					order.finalTotalOfferDiscount=finalTotalOfferDiscount;
+                    await order.save();
+                }
+            }
+
+            if(order.appliedCoupons.length === 0){
+                //refund the paid amount
+                let userWallet=await Wallet.findOne({userId})
+                if(!userWallet){
+                    userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+                }
+
+                userWallet.balance+=cancellingItem.price;
+                userWallet.transactions.push({
+                    amount:cancellingItem.price,
+                    type:"credit",
+                    description:`Refund for ${cancellingItem.productName} (Order ${order.orderId})`
+                })
+                await userWallet.save();
+                cancellingItem.refundStatus = "Refunded to your wallet";
+                cancellingItem.refundedOn = new Date();
+
+                order.refundedAmount += cancellingItem.price;
+
+				const finalTotalPrice=order.orderItems
+					.filter((item)=>{
+						return item._id.toString() !== cancellingItem._id.toString() && item.refundStatus !== "Refunded to your wallet"
+					})
+					.reduce((totalPrice,item)=>{
+						return totalPrice + item.totalSalePrice
+					},0)
+
+				order.finalTotalPrice=finalTotalPrice;
+				order.finalTotalAmount=finalTotalPrice;//because couponDiscount=0 to decrease from the sale price. means sale price is the total amount
+
+				const finalTotalOfferDiscount=order.orderItems
+						.filter((item)=>{
+							return item.refundStatus !== "Refunded to your wallet" && item._id.toString() !== cancellingItem._id.toString()
+						})
+						.reduce((totalOfferDiscount,item)=>{
+							return totalOfferDiscount+item.offerDiscount
+						},0)
+
+				order.finalTotalOfferDiscount=finalTotalOfferDiscount;
+				
+				await order.save()
+            }
+        }
+
+        if(order.paymentMethod === "Cash on Delivery"){
+            if(order.appliedCoupons.length > 0){
+
+                //caluculating the current order total price after the cancelling the order.
+                const currentOrderTotalPrice = order.orderItems
+                        .filter((item)=>{
+                            return item.itemStatus !== DELIVERY_STATUS.CANCELLED && item._id.toString() !== cancellingItem._id.toString()
+                        })
+                        .reduce((total,item)=>{
+                            return total + item.price + item.couponDiscount
+                        },0)
+                
+                //now checking new order total price is meeting mininmum purchase amount for coupon discount
+                const applicableCoupons=order.appliedCoupons.filter((appliedCoupon)=>{
+                    return appliedCoupon.minPurchase <= currentOrderTotalPrice
+                })
+
+                if(applicableCoupons.length > 0){
+                    //re-calculate coupon discount for the current products excluding the cancelling product
+
+                    for(const item of order.orderItems){
+                        //prevent coupon discount calculation for cancelling item,
+                        //and already cancelled item
+                        if(item._id.toString() === cancellingItem._id.toString() || item.itemStatus === DELIVERY_STATUS.CANCELLED){
+                            continue;
+                        }
+
+                        const itemTotalPrice=item.price+item.couponDiscount;
+                        let itemTotalCouponDiscount=0
+
+                        for(const coupon of applicableCoupons){
+                            if(coupon.isCategoryBased){
+                                //if the product is other category, skip this coupon application for that product
+                                if(
+                                    !coupon.applicableCategories
+                                    .some((catId)=>{return catId.toString()=== item.categoryId.toString()})
+                                    ){
+                                        continue;
+                                }
+
+                                let discount=0;
+                                if(coupon.discountType === "percentage"){
+                                    discount=(itemTotalPrice * coupon.discountValue)/100;
+                                }
+
+                                if(coupon.discountType === "fixed"){
+                                    discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue;
+                                }
+
+                                //cap max discount
+                                if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+                                    discount=coupon.maxDiscountAmount;
+                                }
+
+                                itemTotalCouponDiscount+=discount;
+                            }
+
+                            if(!coupon.isCategoryBased){
+                                let discount=0;
+
+                                if(coupon.discountType === "percentage"){
+                                    discount=(itemTotalPrice * coupon.discountValue)/100;
+                                }
+
+                                if(coupon.discountType === "fixed"){
+                                    discount=(itemTotalPrice / currentOrderTotalPrice)/coupon.discountValue
+                                }
+
+                                //cap max discount
+                                if(coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount){
+                                    discount=coupon.maxDiscountAmount;
+                                }
+
+                                itemTotalCouponDiscount+=discount;
+
+                            }
+                        }
+
+                        item.couponDiscount = itemTotalCouponDiscount;
+						item.price = item.totalSalePrice - itemTotalCouponDiscount;
+						item.finalPaidAmount = item.totalSalePrice - itemTotalCouponDiscount;
+						item.finalCouponDiscount = itemTotalCouponDiscount
+                        await order.save();
+                    } 
+                }
+
+                if(applicableCoupons.length === 0){
+                    //which means, no need to calcualte the coupon discount
+                    //all item will be bought by sale price.
+                    //still, we need to set the item price to sale price, and coupon discount to zero
+                    //if there was discount before cancelling the order.
+                    for(const item of order.orderItems){
+                        item.price = item.totalSalePrice;
+                        item.finalPaidAmount = item.totalSalePrice;
+                        item.couponDiscount = 0;
+						item.finalCouponDiscount = 0;
+                        await order.save()
+                    }
+
+
+                }
+                
+            }
+
+            if(order.appliedCoupons.length === 0){
+                //we only needed to make the item status to = "cancelled"
+                //that is already done in the restoreStock() function.
+                //so we don't have anything to do in this block.
+            }
+
+			//updating the order level details
+			//the cancelling item's details will be excluded
+			//eg: in the total amount, the cancelling item's amount will be decreased
+			//we are storing the keeping items' price details only.
+            let totalMrp=0, totalOfferDiscount=0, totalCouponDiscount=0, totalPrice=0, totalAmount=0;
+            for(const item of order.orderItems){
+                if(item._id.toString() !== cancellingItem._id.toString() && item.itemStatus !== "Cancelled"){
+                    totalMrp+=item.totalMrp;
+                    totalOfferDiscount+=item.offerDiscount;
+                    totalCouponDiscount+=item.finalCouponDiscount;
+                    totalPrice+=item.totalSalePrice;
+                    totalAmount+=item.finalPaidAmount;
+                }
+            }
+
+            order.totalMrp=totalMrp;
+
+            order.totalOfferDiscount=totalOfferDiscount;
+            order.finalTotalOfferDiscount=totalOfferDiscount;
+
+            order.totalCouponDiscount=totalCouponDiscount;
+            order.finalTotalCouponDiscount=totalCouponDiscount;
+
+            order.totalPrice=totalPrice;
+			order.finalTotalPrice-totalPrice;
+
+            order.totalAmount=totalAmount;
+			order.finalTotalAmount=totalAmount;
+
+            await order.save();
+
+        }
+
+        const allStatuses = order.orderItems.map(i => i.itemStatus);
+        const allStatusSet=new Set(allStatuses)
+
+        if(allStatusSet.size===1 && allStatusSet.has("Cancelled")){
+            order.orderStatus = "Cancelled"
+        }
+        if(allStatusSet.size===1 && allStatusSet.has("Delivered")){
+            order.orderStatus = "Delivered";
+            order.deliveredOn=new Date();
+        }
+        if(allStatusSet.size===2 && allStatusSet.has('Delivered') && allStatusSet.has("Cancelled")){
+            order.orderStatus="Delivered";
+
+            const deliveredDates=order.orderItems
+                .map((item)=>item.deliveredOn)
+                .filter((date)=>date)
+            deliveredDates.sort((a,b)=>a-b);
+            const latestDeliveredDate=deliveredDates[deliveredDates.length-1];
+
+            order.deliveredOn=latestDeliveredDate;
+        }
+
+
+        //  Update order refund summary
+        const allRefunded = order.orderItems.every(i => i.refundStatus === "Refunded to your wallet");
+        const someRefunded = order.orderItems.some(i => i.refundStatus === "Refunded to your wallet");
+
+        if (allRefunded) {
+            order.refundStatus = "Refunded";
+        } else if (someRefunded) {
+            order.refundStatus = "Partially Refunded";
+        }
+
+        await order.save();
+
+        res.json({ success: true, message: "Item cancelled successfully" });
+
+    } catch (error) {
+        console.log("cancelOrderItem() error =>", error);
+        res.status(Status.INTERNAL_ERROR).json({ success: false, message: "Something went wrong" });
     }
-
-    const { orderId, itemId, reason } = req.body;
-
-    const order = await Order.findOne({ orderId, userId });
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
-
-    const item = order.orderItems.id(itemId); // find subdocument
-    if (!item) {
-      return res.status(404).json({ success: false, message: "Item not found" });
-    }
-
-    if (item.itemStatus !== "Pending") {
-      return res.status(Status.BAD_REQUEST).json({ success: false, message: "Item cannot be cancelled at this stage" });
-    }
-
-    //  Restore stock
-    await restoreStock([item],reason);
-
-    //  Update item refund status (only if paid & online)
-    // if (order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
-    //   item.refundStatus = "Refunded";
-    //   item.refundedOn=new Date();
-    // }
-
-    //  Update item refund status (only if paid & online or wallet)
-    if(order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid"){
-
-      let userWallet=await Wallet.findOne({userId})
-      if(!userWallet){
-          userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
-      }
-      userWallet.balance+=item.price;
-      userWallet.transactions.push({
-        amount:item.price,
-        type:"credit",
-        description:`Refund for ${item.productName} (Order ${order.orderId})`
-      });
-      await userWallet.save();
-      item.refundStatus = "Refunded";
-      item.refundedOn = new Date();
-    }
-
-
-    const allStatuses = order.orderItems.map(i => i.itemStatus);
-    const allStatusSet=new Set(allStatuses)
-
-    if(allStatusSet.size===1 && allStatusSet.has("Cancelled")){
-      order.orderStatus = "Cancelled"
-    }
-    if(allStatusSet.size===1 && allStatusSet.has("Delivered")){
-      order.orderStatus = "Delivered";
-      order.deliveredOn=new Date();
-    }
-    if(allStatusSet.size===2 && allStatusSet.has('Delivered') && allStatusSet.has("Cancelled")){
-      order.orderStatus="Delivered";
-
-      const deliveredDates=order.orderItems
-          .map((item)=>item.deliveredOn)
-          .filter((date)=>date)
-      deliveredDates.sort((a,b)=>a-b);
-      const latestDeliveredDate=deliveredDates[deliveredDates.length-1];
-
-      order.deliveredOn=latestDeliveredDate;
-    }
-
-
-    // //  Update order status
-    // const allCancelled = order.orderItems.every(i => i.itemStatus === "Cancelled");
-    // const someCancelled = order.orderItems.some(i => i.itemStatus === "Cancelled");
-
-    // if (allCancelled) {
-    //   order.orderStatus = "Cancelled";
-    // } else if (someCancelled) {
-    //   order.orderStatus = "Partially Cancelled";
-    // }
-
-    //  Update order refund summary
-    const allRefunded = order.orderItems.every(i => i.refundStatus === "Refunded");
-    const someRefunded = order.orderItems.some(i => i.refundStatus === "Refunded");
-
-    if (allRefunded) {
-      order.refundStatus = "Refunded";
-    } else if (someRefunded) {
-      order.refundStatus = "Partially Refunded";
-    }
-
-    const refundAmount = item.price;
-    const offerDiscount=item.offerDiscount;
-    const couponDiscount=item.couponDiscount;
-
-    order.totalMrp-=item.mrp;
-    order.totalPrice-=(refundAmount+offerDiscount);
-    order.totalAmount-=refundAmount;
-    order.totalOfferDiscount-=offerDiscount;
-    order.totalCouponDiscount-=couponDiscount;
-
-
-    await order.save();
-
-    res.json({ success: true, message: "Item cancelled successfully" });
-
-  } catch (error) {
-    console.log("cancelOrderItem() error =>", error);
-    res.status(Status.INTERNAL_ERROR).json({ success: false, message: "Something went wrong" });
-  }
 };
 
 
 
 
+
+
+
+// // Cancel entire order
+// const cancelWholeOrder = async (req, res) => {
+//   try {
+//     const userId = req.session.user || req.session.passport?.user;
+//     if (!userId) return res.status(401).json({ success: false, message: "Login required" });
+
+//     const { orderId ,reason} = req.body;
+
+//     const order = await Order.findOne({ orderId, userId });
+//     if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+//     // Block cancellation if shipped/delivered items exist
+//     if (order.orderItems.some(i => ["Shipped", "Delivered"].includes(i.itemStatus))) {
+//       return res.status(Status.BAD_REQUEST).json({
+//         success: false,
+//         message: "Some items are already shipped/delivered. Order cannot be cancelled."
+//       });
+//     }
+
+//     // Allow cancel only if order is in these statuses
+//     if (!["Pending", "Partially Cancelled"].includes(order.orderStatus)) {
+//       return res.status(Status.BAD_REQUEST).json({ success: false, message: "Order cannot be cancelled at this stage" });
+//     }
+
+//     const pendingItems=order.orderItems.filter((item)=>{
+//       return item.itemStatus==="Pending"
+//     })
+
+//     let totalMrpOfPendingItems=0;
+//     let totalOfferDiscountOfPendingItems=0;
+//     let totalCouponDiscountOfPendingItems=0;
+//     let totalPriceOfPendingItems=0;
+//     let totalAmountOfPendingItems=0;
+
+//     pendingItems.forEach((item)=>{
+//       totalMrpOfPendingItems+=item.mrp;
+//       totalOfferDiscountOfPendingItems+=item.offerDiscount;
+//       totalCouponDiscountOfPendingItems+=item.couponDiscount;
+//       totalPriceOfPendingItems+=(item.price+item.offerDiscount);
+//       totalAmountOfPendingItems+=item.price;
+//     })
+
+//     order.totalMrp-=totalMrpOfPendingItems;
+//     order.offerDiscount-=totalOfferDiscountOfPendingItems;
+//     order.totalCouponDiscount-=totalCouponDiscountOfPendingItems;
+//     order.totalPrice-=totalPriceOfPendingItems;
+//     order.totalAmount-=totalAmountOfPendingItems;
+
+
+//     // Restore stock and change status to "cancelled" for all Pending items,
+//     await restoreStock(order.orderItems,reason);
+
+//     // Track total refunded (for wallet)
+//     let totalWalletRefund = 0;
+
+//     // Loop through each item
+//     order.orderItems.forEach(item => {
+//       if (item.itemStatus === "Cancelled") {
+//        if (order.paymentMethod === "Cash on Delivery") {
+//           item.refundStatus = "Not Initiated";
+//         } else if (order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
+//           if (item.refundStatus !== "Refunded") {
+//             totalWalletRefund += item.price;
+//             item.refundStatus = "Refunded";
+//             item.refundedOn = new Date();
+//           }
+//         }
+//       }
+//     });
+
+//     // Refund wallet if needed
+//     if (totalWalletRefund > 0) {
+//       let userWallet = await Wallet.findOne({ userId });
+//       if(!userWallet){
+//           userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+//       }
+//       if (userWallet) {
+//         userWallet.balance += totalWalletRefund;
+//         userWallet.transactions.push({
+//           type: "credit",
+//           amount: totalWalletRefund,
+//           description: `Refund for cancelled order ${order.orderId}`,
+//           createdAt: new Date()
+//         });
+//         await userWallet.save();
+//       }
+//     }
+
+
+
+//     // Determine order-level status
+//     const allStatuses = order.orderItems.map(i => i.itemStatus);
+//     const anyRefunded = order.orderItems.some(i => i.refundStatus === "Refunded");
+
+
+//     if (allStatuses.every(s => s === "Cancelled")) {
+//         order.orderStatus = "Cancelled";
+//         order.refundStatus = anyRefunded ? "Refunded" : "Not Initiated";
+//     }
+
+//     if(allStatuses.includes('Delivered')){
+//         order.orderStatus = "Delivered";
+
+//         const deliveredDates=order.orderItems
+//             .map((item)=>item.deliveredOn)
+//             .filter((date)=>date)
+//         deliveredDates.sort((a,b)=>a-b);
+//         const latestDeliveredDate=deliveredDates[latestDeliveredDate.length-1];
+//         order.deliveredOn=latestDeliveredDate;
+//     }
+
+//     await order.save();
+
+//     res.json({
+//       success: true,
+//       message: "Order cancelled successfully",
+//       refundedAmount: totalWalletRefund > 0 ? totalWalletRefund : undefined
+//     });
+
+//   } catch (error) {
+//     console.error("cancelWholeOrder() error =>", error);
+//     res.status(Status.INTERNAL_ERROR).json({ success: false, message: "Something went wrong" });
+//   }
+// };
 
 
 
@@ -2254,80 +3207,66 @@ const cancelWholeOrder = async (req, res) => {
       return res.status(Status.BAD_REQUEST).json({ success: false, message: "Order cannot be cancelled at this stage" });
     }
 
-    const pendingItems=order.orderItems.filter((item)=>{
-      return item.itemStatus==="Pending"
-    })
 
-    let totalMrpOfPendingItems=0;
-    let totalOfferDiscountOfPendingItems=0;
-    let totalCouponDiscountOfPendingItems=0;
-    let totalPriceOfPendingItems=0;
-    let totalAmountOfPendingItems=0;
+    if(order.paymentMethod === "TeeSpace Wallet" || order.paymentMethod === "Online Payment"){
+		const refundAmount=order.totalAmount - order.refundedAmount;
 
-    pendingItems.forEach((item)=>{
-      totalMrpOfPendingItems+=item.mrp;
-      totalOfferDiscountOfPendingItems+=item.offerDiscount;
-      totalCouponDiscountOfPendingItems+=item.couponDiscount;
-      totalPriceOfPendingItems+=(item.price+item.offerDiscount);
-      totalAmountOfPendingItems+=item.price;
-    })
+		let userWallet=await Wallet.findOne({userId})
+		if(!userWallet){
+			userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+		}
 
-    order.totalMrp-=totalMrpOfPendingItems;
-    order.offerDiscount-=totalOfferDiscountOfPendingItems;
-    order.totalCouponDiscount-=totalCouponDiscountOfPendingItems;
-    order.totalPrice-=totalPriceOfPendingItems;
-    order.totalAmount-=totalAmountOfPendingItems;
+		userWallet.balance+=refundAmount;
+		userWallet.transactions.push({
+			amount:refundAmount,
+			type:"credit",
+			description:`Refund for cancelled order: ${order.orderId}`
+		})
+		await userWallet.save();
+
+		//update every "pending" item's return status
+		for(const item of order.orderItems){
+			if(item.itemStatus === "Pending"){
+				item.refundStatus = "Refunded to your wallet";
+				item.refundedOn = new Date();
+			}
+		}
+		await order.save();
+
+    }
+
+    if(order.paymentMethod === "Cash on Delivery"){
+		let totalMrp=0,totalOfferDiscount=0,totalPrice=0,totalAmount=0;
+		for(const item of order.orderItems){
+			totalMrp += item.mrp;
+			totalOfferDiscount+=item.offerDiscount;
+			totalCouponDiscount+=item.couponDiscount;
+			totalPrice+=(item.mrp - item.offerDiscount);
+			totalAmount+=(item.price - item.couponDiscount);
+		}
+
+		order.totalMrp=totalMrp;
+		order.totalOfferDiscount=totalOfferDiscount;
+		order.totalCouponDiscount=totalCouponDiscount;
+		order.totalPrice=totalPrice;
+		order.totalAmount=totalAmount;
+
+		await order.save();
+    }
 
 
     // Restore stock and change status to "cancelled" for all Pending items,
     await restoreStock(order.orderItems,reason);
 
-    // Track total refunded (for wallet)
-    let totalWalletRefund = 0;
-
-    // Loop through each item
-    order.orderItems.forEach(item => {
-      if (item.itemStatus === "Cancelled") {
-       if (order.paymentMethod === "Cash on Delivery") {
-          item.refundStatus = "Not Initiated";
-        } else if (order.paymentMethod === "TeeSpace Wallet" && order.paymentStatus === "Paid" || order.paymentMethod === "Online Payment" && order.paymentStatus === "Paid") {
-          if (item.refundStatus !== "Refunded") {
-            totalWalletRefund += item.price;
-            item.refundStatus = "Refunded";
-            item.refundedOn = new Date();
-          }
-        }
-      }
-    });
-
-    // Refund wallet if needed
-    if (totalWalletRefund > 0) {
-      let userWallet = await Wallet.findOne({ userId });
-      if(!userWallet){
-          userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
-      }
-      if (userWallet) {
-        userWallet.balance += totalWalletRefund;
-        userWallet.transactions.push({
-          type: "credit",
-          amount: totalWalletRefund,
-          description: `Refund for cancelled order ${order.orderId}`,
-          createdAt: new Date()
-        });
-        await userWallet.save();
-      }
-    }
-
-
 
     // Determine order-level status
     const allStatuses = order.orderItems.map(i => i.itemStatus);
-    const anyRefunded = order.orderItems.some(i => i.refundStatus === "Refunded");
+    const anyRefunded = order.orderItems.some(i => i.refundStatus === "Refunded to your wallet");
 
 
     if (allStatuses.every(s => s === "Cancelled")) {
         order.orderStatus = "Cancelled";
-        order.refundStatus = anyRefunded ? "Refunded" : "Not Initiated";
+        order.refundStatus = anyRefunded ? "Refunded to your wallet" : null;
     }
 
     if(allStatuses.includes('Delivered')){
@@ -2345,8 +3284,7 @@ const cancelWholeOrder = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Order cancelled successfully",
-      refundedAmount: totalWalletRefund > 0 ? totalWalletRefund : undefined
+      message: "Order cancelled successfully"
     });
 
   } catch (error) {

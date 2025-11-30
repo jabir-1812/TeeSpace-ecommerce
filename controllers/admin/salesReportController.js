@@ -60,10 +60,10 @@ async function getReportData(type, start, end) {
   }
 
     groupStage.totalOrders = { $sum: 1 };
-    groupStage.totalOfferDiscount = {$sum: "$totalOfferDiscount"}
-    groupStage.totalCouponDiscount ={$sum: "$totalCouponDiscount"};
-    groupStage.totalSales = { $sum: "$totalAmount" };
-    groupStage.avgOrderValue = { $avg: "$totalAmount" };
+    groupStage.totalOfferDiscount = {$sum: "$finalTotalOfferDiscount"}
+    groupStage.totalCouponDiscount ={$sum: "$finalTotalCouponDiscount"};
+    groupStage.totalSales = { $sum: "$finalTotalAmount" };
+    groupStage.avgOrderValue = { $avg: "$finalTotalAmount" };
 
   const report = await Order.aggregate([
     { $match: match },

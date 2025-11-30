@@ -27,11 +27,21 @@ const orderSchema = new Schema(
     orderItems: [
       {
         productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+        categoryId: { type:Schema.Types.ObjectId, ref: "Category", required: true},
         quantity: { type: Number, required: true },
         mrp:{type:Number,required:true},
+        totalMrp:{type:Number,required:true},
         offerDiscount:{type:Number,required:true,default:0},
+        salePrice:{type:Number,required:true,default:0},
+        totalSalePrice:{type:Number,required:true,default:0},
         couponDiscount:{type:Number,required:true, default:0},
+        //total amount
         price: { type: Number, required: true },
+        //if any item cancelled from the order, stroring updated & recalculated paid amount
+        finalPaidAmount: { type: Number},
+        //if any item cancelled from the order, stroring updated & recalculated coupon discount
+        finalCouponDiscount: { type: Number},
+
         productName: { type: String },
         productImage: { type: String },
         itemStatus: { type: String,enum:Object.values(DELIVERY_STATUS), default: DELIVERY_STATUS.PENDING },
@@ -65,6 +75,7 @@ const orderSchema = new Schema(
     ],
     totalMrp:{type:Number,required:true},
     totalOfferDiscount:{type:Number,required:true,default:0},
+    finalTotalOfferDiscount:{type:Number,required:true,default:0},
     appliedCoupons:[
       {
         discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
@@ -79,6 +90,13 @@ const orderSchema = new Schema(
     totalCouponDiscount:{type:Number,default:0},
     totalPrice:{type:Number,required:true},
     totalAmount: { type: Number, required: true },
+    //for sales report we need actually given coupon discount, actual paid amount, actual total price of order
+    //also these show the actual current order's price details after any item cancelled.
+    //every time any item cancelled, these fields will be recalculate and store the actual amounts.
+    finalTotalCouponDiscount:{type:Number,default:0},
+    finalTotalPrice:{type:Number,required:true},
+    finalTotalAmount: { type: Number, required: true },
+    refundedAmount:{type :Number, default:0},
 
     //  Invoice-related fields
     invoice: {
