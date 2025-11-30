@@ -278,7 +278,10 @@
                 <img src="<%= item.productImage %>" alt="<%= item.productName %>">
                 <div class="item-info">
                     <h4><%= item.productName %></h4>
-                    <p><strong>₹<%= item.price.toFixed(2) %>/-</strong> | Qty: <%= item.quantity %></p>
+                    <p class="fw-bold"><strong>₹<%= item.price.toFixed(2) %>/-</strong></p>
+                    <p class="text-body-tertiary"><strong>Total Price:</strong> Rs.<%= item.totalSalePrice %>/- | <strong>Quantity:</strong><%= item.quantity %></p>
+                    <p class="text-body-tertiary fw-bold">Rs.<%= item.salePrice %>/- per item</p>
+                    <p><strong>Coupon Discount:</strong><span  class="text-success">Rs.<%= item.couponDiscount %>/-</span></p>
                     <p>
                         <strong>Delivery Status:</strong>
                         <span class="<%= 
