@@ -7,11 +7,14 @@
         <div class="row my-3 border">
 
             <div class="col-1 my-2">
-                <input id="<%= address._id %>" type="radio" name="addressId" value="<%= address._id %>" %>>
+                <input id="<%= address._id %>" type="radio" name="addressId" value="<%= address._id %>" <%= address.isDefault ? 'checked' : '' %>>
             </div>
             <div class="col-10 my-2">
                 <label for="<%= address._id %>">
-                    <div class="my-2"><%= address.addressType %></div>
+                    <% if(address.isDefault){ %>
+                        <h6><span class="badge text-bg-primary">Default Address</span></h6>
+                    <% } %>
+                    <div class="my-2 fw-bold fs-5"><%= address.addressType %></div>
                     <div class="my-2">
                         <%= address.name %>
                     </div>
