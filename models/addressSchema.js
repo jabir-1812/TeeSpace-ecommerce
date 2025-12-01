@@ -7,8 +7,10 @@ const addressSchema = new Schema({
     ref: "User",
     required: true,
   },
+  hasDefaultAddress:{type:Boolean, default:false},
   address: [
     {
+      isDefault:{type:Boolean,default:false},
       addressType: {
         type: String,
         required: true,

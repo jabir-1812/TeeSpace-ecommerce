@@ -9,6 +9,7 @@ const { response } = require("express");
 const Coupon=require('../../models/couponSchema');
 const sharp=require("sharp");
 const cloudinary = require("../../config/cloudinary");
+const StatusCode = require('../../constants/statusCodes');
 
 function generateOTP() {
   const digits = "1234567890";
@@ -370,23 +371,10 @@ const changePhoneNumber= async (req,res)=>{
 }
 
 
-const showAddresses=async (req,res)=>{
-  try {
-    const userId=req.session.user || req.session.passport?.user;
-    const userData=await User.findById(userId);
-    const addressData=await Address.findOne({userId})
 
-    res.render('./user/profile/address/addresses',{
-      title:"Addresses",
-      user:userData,
-      userAddress:addressData,
-      cartLength:""
-    })
-  } catch (error) {
-    console.log('showAddresses() error===>',error);
-    res.redirect('/page-not-found')
-  }
-}
+
+
+
 
 const loadChangeEmailPage=async (req,res)=>{
   try {
@@ -551,6 +539,32 @@ const loadAddAddressPage =async (req,res)=>{
 }
 
 
+const showAddresses=async (req,res)=>{
+  try {
+    const userId=req.session.user || req.session.passport?.user;
+    const userData=await User.findById(userId);
+    const addressData=await Address.findOne({userId})
+
+    res.render('./user/profile/address/addresses',{
+      title:"Addresses",
+      user:userData,
+      userAddress:addressData,
+      cartLength:""
+    })
+  } catch (error) {
+    console.log('showAddresses() error===>',error);
+    res.redirect('/page-not-found')
+  }
+}
+
+
+
+
+
+
+
+
+
 const addAddress=async (req,res)=>{
   try {
     const userId=req.session.user || req.session.passport?.user;
@@ -577,13 +591,21 @@ const addAddress=async (req,res)=>{
   }
 }
 
+
+
+
+
+
+
+
 const loadEditAddressPage=async (req,res)=>{
   try {
     const addressId=req.query.id;
     const userId=req.session.user || req.session.passport?.user;
     const userData=await User.findOne({_id:userId});
     const currentAddress=await Address.findOne({
-      "address._id":addressId
+        userId,
+        "address._id":addressId
     });
 
     if(!currentAddress){
@@ -610,11 +632,18 @@ const loadEditAddressPage=async (req,res)=>{
   }
 }
 
+
+
+
+
+
+
 const editAddress=async (req,res)=>{
   try {
+    const userId=req.session.user || req.session.passport?.user;
     const {addressId,addressType,name,city,landMark,state,pincode,phone,altPhone}=req.body;
 
-    const findAddress=await Address.findOne({'address._id':addressId});
+    const findAddress=await Address.findOne({userId,'address._id':addressId});
 
     if(!findAddress){
       return res.status(404).json({success:false,message:"Address not found"})
@@ -643,30 +672,84 @@ const editAddress=async (req,res)=>{
   }
 }
 
-const deleteAddress=async (req,res)=>{
-  try {
-    const {addressId}=req.body;
-    const findAddress=await Address.findOne({"address._id":addressId})
-    if(!findAddress){
-      return res.status(404).json({success:false,message:'Address not found'})
-    }
 
-    await Address.updateOne(
-      {"address._id":addressId},
-      {
-        $pull:{
-          address:{
-            _id:addressId,
-          }
+
+
+
+
+
+
+
+
+const deleteAddress=async (req,res)=>{
+    try {
+        const userId=req.session.user || req.session.passport?.user;
+        const {addressId}=req.body;
+        const findAddress=await Address.findOne({userId,"address._id":addressId})
+        if(!findAddress){
+            return res.status(404).json({success:false,message:'Address not found'})
         }
-      }
-    )
-    return res.status(Status.OK).json({success:true,message:"Address has been deleted successfully"})
-  } catch (error) {
-    console.log("deleteAddress() error:",error)
-    res.status(Status.INTERNAL_ERROR).json({success:false,message:"Something went wrong, Please try later"})
-  }
+
+        await Address.updateOne(
+            {"address._id":addressId},
+            {
+                $pull:{
+                    address:{
+                        _id:addressId,
+                    }
+                }
+            }
+        )
+        return res.status(Status.OK).json({success:true,message:"Address has been deleted successfully"})
+    } catch (error) {
+        console.log("deleteAddress() error:",error)
+        res.status(Status.INTERNAL_ERROR).json({success:false,message:"Something went wrong, Please try later"})
+    }
 }
+
+
+
+
+
+
+
+
+
+const markDefaultAddress=async (req,res)=>{
+    try {
+        const userId=req.session.user || req.session.passport?.user;
+        const {addressId}=req.body;
+
+        const userAddress=await Address.findOne({userId})
+        if(!userAddress){
+            return res.status(StatusCode.BAD_REQUEST).json({message:"Address not found"})
+        }
+
+        await Address.updateOne(
+            { userId, "address._id": addressId },
+            { $set: { hasDefaultAddress: true, "address.$.isDefault": true } }
+        );
+
+        await Address.updateOne(
+            { userId },
+            {
+                $set: { "address.$[elem].isDefault": false }
+            },
+            {
+                arrayFilters: [{ "elem._id": { $ne: addressId } }]
+            }
+        );
+
+        
+        return res.json({success:true})
+
+    } catch (error) {
+        console.error("markDefaultAddress() error == ",error)
+        res.status(StatusCode.INTERNAL_ERROR).json({message:"Something went wrong",error})
+    }
+}
+
+
 
 
 
@@ -719,5 +802,6 @@ module.exports = {
   loadEditAddressPage,
   editAddress,
   deleteAddress,
+  markDefaultAddress,
   getReferralCoupons
 };

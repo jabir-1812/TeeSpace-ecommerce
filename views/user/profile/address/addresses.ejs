@@ -100,7 +100,10 @@
     <div class="address-container">
         <% if(userAddress){ %>
             <% userAddress.address.forEach((address)=>{ %>
-                <div class="address-card">
+                <div class="address-card <%= address.isDefault ? 'border border-5 border-primary-subtle' : '' %>">
+                    <% if(address.isDefault){ %>
+                        <h5><span class="badge text-bg-primary">Default</span></h5>
+                    <% } %>
                     <h5><%= address.addressType %></h5>
 
                     <p><strong><%= address.name %></strong></p>
@@ -118,7 +121,11 @@
                             data-id="<%= address._id %>">
                             Delete
                         </a>
-
+                        <% if(!address.isDefault){ %>
+                            <button class="btn btn-success" onclick="markAsDefaultAddress('<%= address._id %>')">
+                                Mark as default
+                            </button>
+                        <% } %>
                     </div>
                 </div>
             <% }) %>
@@ -175,5 +182,34 @@
                 });
             });
         });
+</script>
+
+<script>
+    async function markAsDefaultAddress(addressId) {
+        try {
+            const response=await fetch('/addresses/mark-default-address',{
+                method:"PATCH",
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({addressId})
+            })
+
+            const result=await response.json()
+            if(result.success){
+                Swal.fire("Success","Address marked as Default","success")
+                .then(()=>{
+                    location.reload();
+                })
+            }else{
+                return Swal.fire("Failed","","error")
+            }
+            
+        } catch (error) {
+            console.error("markAsDefaultAddress() error === ",error)
+            Swal.fire("Oops!","Something went wrong, Please try later","error")
+        }
+    }
+    
 </script>
 

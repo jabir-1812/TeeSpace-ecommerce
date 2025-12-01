@@ -128,6 +128,7 @@ router.post('/add-address',userAuth,profileController.addAddress);
 router.get('/edit-address',userAuth,profileController.loadEditAddressPage);
 router.put('/edit-address',userAuth,profileController.editAddress);
 router.delete('/delete-address',userAuth,profileController.deleteAddress);
+router.patch('/addresses/mark-default-address',userAuth,profileController.markDefaultAddress)
 
 
 
