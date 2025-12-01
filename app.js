@@ -12,6 +12,7 @@ const nocache=require('nocache')
 const morgan=require('morgan')
 const logger=require('./config/logger')
 const STATUS_CODES=require('./constants/statusCodes');
+const {invalidRoute}=require('./middlewares/invalidRoute')
 
 
 db();
@@ -59,11 +60,13 @@ app.use('/',userRouter);
 app.use('/admin',adminRouter);
 
 
-app.use((req, res) => {
-  res.render('invalid-route',{
-    title:"Invalid Route"
-  })
-});
+// app.use((req, res) => {
+//   res.render('invalid-route',{
+//     title:"Invalid Route"
+//   })
+// });
+
+app.use(invalidRoute)
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
