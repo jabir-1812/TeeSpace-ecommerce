@@ -11,6 +11,7 @@ const session=require('express-session');
 const nocache=require('nocache')
 const morgan=require('morgan')
 const logger=require('./config/logger')
+const STATUS_CODES=require('./constants/statusCodes');
 
 
 db();
@@ -66,7 +67,7 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).render('error-page', { title: "Server Error" });
+  res.status(STATUS_CODES.INTERNAL_ERROR).render('error-page', { title: "Server Error" });
 });
 
 
