@@ -13,6 +13,7 @@ const morgan=require('morgan')
 const logger=require('./config/logger')
 const STATUS_CODES=require('./constants/statusCodes');
 const {invalidRoute}=require('./middlewares/invalidRoute')
+const {errorHandler}=require('./middlewares/errorHandling')
 
 
 db();
@@ -56,6 +57,7 @@ app.set('layout', 'layout'); // default layout file: views/layout.ejs
 app.use(express.static('public'));
 
 
+
 app.use('/',userRouter);
 app.use('/admin',adminRouter);
 
@@ -66,12 +68,13 @@ app.use('/admin',adminRouter);
 //   })
 // });
 
-app.use(invalidRoute)
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(STATUS_CODES.INTERNAL_ERROR).render('error-page', { title: "Server Error" });
+// });
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(STATUS_CODES.INTERNAL_ERROR).render('error-page', { title: "Server Error" });
-});
+app.use(invalidRoute)
+app.use(errorHandler)
 
 
 app.listen(process.env.PORT,(err)=>{
