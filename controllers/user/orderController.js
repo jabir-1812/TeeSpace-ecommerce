@@ -507,18 +507,40 @@ const createRazorPayOrder = async(req,res)=>{
 
 
 
+// const razorpayPaymentFailure=async (req,res)=>{
+//   try {
+//     const {razorpay_order_id, razorpay_payment_id, error_reason, appOrderId} = req.body;
+//     await Order.updateOne(
+//       {orderId:appOrderId},
+//       {
+//         paymentStatus:"Failed",
+//         razorPayOrderId:razorpay_order_id,
+//         razorPayPaymentId:razorpay_payment_id,
+//         razorPayFailureReason:error_reason
+//       }
+//     )
+//     res.json({success:true})
+//   } catch (error) {
+//     console.error("razorpayPaymentFailure() error========",error);
+//     return res.status(Status.INTERNAL_ERROR).json({message:"Something went wrong"})
+//   }
+// }
 const razorpayPaymentFailure=async (req,res)=>{
   try {
     const {razorpay_order_id, razorpay_payment_id, error_reason, appOrderId} = req.body;
-    await Order.updateOne(
-      {orderId:appOrderId},
-      {
-        paymentStatus:"Failed",
-        razorPayOrderId:razorpay_order_id,
-        razorPayPaymentId:razorpay_payment_id,
-        razorPayFailureReason:error_reason
-      }
-    )
+    const order=await Order.findOne({orderId:appOrderId})
+
+    for(const item of order.orderItems){
+        item.itemStatus=DELIVERY_STATUS.PAYMENT_FAILED;
+    }
+
+    order.paymentStatus="Failed";
+    order.orderStatus=DELIVERY_STATUS.PAYMENT_FAILED;
+    order.razorPayOrderId=razorpay_order_id;
+    order.razorPayPaymentId=razorpay_payment_id;
+    order.razorPayFailureReason=error_reason;
+
+    await order.save();
     res.json({success:true})
   } catch (error) {
     console.error("razorpayPaymentFailure() error========",error);

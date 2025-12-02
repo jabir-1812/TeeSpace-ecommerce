@@ -235,7 +235,8 @@
             <p>
                 <strong>Status:</strong> 
                 <span class="<%= 
-                    order.orderStatus === 'Cancelled' ? 'text-danger' : 
+                    order.orderStatus === 'Cancelled' ? 'text-danger' :
+                    order.orderStatus === 'Payment Failed' ? 'text-danger' : 
                     order.orderStatus === 'Delivered' ? 'text-success' : 
                     order.orderStatus === 'Shipped' ? 'text-primary' : 
                     order.orderStatus === 'Out for Delivery' ? 'text-info' : 
@@ -288,7 +289,8 @@
                     <p>
                         <strong>Delivery Status:</strong>
                         <span class="<%= 
-                            item.itemStatus === 'Cancelled' ? 'text-danger' : 
+                            item.itemStatus === 'Cancelled' ? 'text-danger' :
+                            item.itemStatus === 'Payment Failed' ? 'text-danger' : 
                             item.itemStatus === 'Delivered' ? 'text-success' : 
                             item.itemStatus === 'Shipped' ? 'text-primary' : 
                             item.itemStatus === 'Out for Delivery' ? 'text-info' : 

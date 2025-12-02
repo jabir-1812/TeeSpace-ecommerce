@@ -205,9 +205,9 @@
                     🛒 Go back to checkout
                 </button>
             </a>
-            <button class="btn-details" onclick="gotoOrderDetailsPage('<%= order.orderId %>')">
-                📋 View order details
-            </button>
+            <a href="/user-profile/orders/order-details/<%= order.orderId %>">
+                <button class="btn-details">📋 View order details</button>
+            </a>
         </div>
     </div>
 </div>

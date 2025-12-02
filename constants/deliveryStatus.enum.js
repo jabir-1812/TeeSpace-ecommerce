@@ -6,7 +6,7 @@ module.exports = {
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
   RETURN_REQUESTED: "Return Requested",
+  PAYMENT_FAILED:"Payment Failed",
   RETURNED: "Returned",
   REFUNDED_TO_YOUR_WALLET: "Refunded to your wallet"
-
 };
