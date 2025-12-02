@@ -85,7 +85,8 @@ const loadCheckoutPage = async (req, res) => {
         razorPayKeyId:process.env.RAZORPAY_KEY_ID,
         userWallet,
         appliedCoupons:[],
-        totalDiscountFromAllCoupons:""
+        totalDiscountFromAllCoupons:"",
+        applicableCouponsCodes:null
       });
     }
 
@@ -129,6 +130,7 @@ const loadCheckoutPage = async (req, res) => {
       await userCart.save();
     }
 
+
     //if total===0, no need to calculate coupon discounts, just render the page.
     if (totalPrice===0) {
       return res.render("user/checkout/checkout", {
@@ -143,7 +145,8 @@ const loadCheckoutPage = async (req, res) => {
         razorPayKeyId:process.env.RAZORPAY_KEY_ID,
         userWallet,
         appliedCoupons:[],
-        totalDiscountFromAllCoupons:null
+        totalDiscountFromAllCoupons:null,
+        applicableCouponsCodes:null
       });
     }
     //checking applied coupons
@@ -309,6 +312,8 @@ const loadCheckoutPage = async (req, res) => {
 
         let cartObj=userCart.toObject();
 
+        const applicableCouponsCodes=(await Coupon.find({minPurchase:{$lte:totalPrice}},{couponCode:1,_id:0})).map((coupon)=>coupon.couponCode)
+
         return res.render("user/checkout/checkout", {
           title: "Checkout page",
           isCartUpdated,
@@ -321,7 +326,8 @@ const loadCheckoutPage = async (req, res) => {
           razorPayKeyId:process.env.RAZORPAY_KEY_ID,
           userWallet,
           appliedCoupons:appliedCouponsObj,
-          totalDiscountFromAllCoupons
+          totalDiscountFromAllCoupons,
+          applicableCouponsCodes
         });
       }
 
@@ -351,6 +357,7 @@ const loadCheckoutPage = async (req, res) => {
       }
 
       let cartObj=userCart.toObject();
+      const applicableCouponsCodes=(await Coupon.find({minPurchase:{$lte:totalPrice}},{couponCode:1,_id:0})).map((coupon)=>coupon.couponCode)
 
       res.render("user/checkout/checkout", {
         title: "Checkout page",
@@ -364,7 +371,8 @@ const loadCheckoutPage = async (req, res) => {
         razorPayKeyId:process.env.RAZORPAY_KEY_ID,
         userWallet,
         appliedCoupons:"",
-        totalDiscountFromAllCoupons:""
+        totalDiscountFromAllCoupons:"",
+        applicableCouponsCodes
       });
 
   } catch (error) {
