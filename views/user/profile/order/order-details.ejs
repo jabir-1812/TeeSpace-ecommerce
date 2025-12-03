@@ -343,6 +343,13 @@
                         <button type="submit" class="btn btn-warning">↩️ Return Item</button>
                     </form>
                     <% } %>
+                    <% if (item.itemStatus === "Delivered" && item.returnStatus === "Rejected" && item.rejectionReason === "Invalid Reason") { %>
+                    <form class="return-form">
+                        <input type="hidden" name="orderId" value="<%= order.orderId %>">
+                        <input type="hidden" name="itemId" value="<%= item._id %>">
+                        <button type="submit" class="btn btn-warning">↩️ Return Item</button>
+                    </form>
+                    <% } %>
                 </div>
                 </div>
             <% }) %>
