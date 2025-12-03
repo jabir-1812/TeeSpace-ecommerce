@@ -200,11 +200,13 @@
             <button class="btn-retry" onclick="retryPayment('<%= order.orderId %>')">
                 🔄 Retry Payment
             </button>
-            <a href="/checkout" style="text-decoration: none;">
-                <button class="btn-checkout">
-                    🛒 Go back to checkout
-                </button>
-            </a>
+            <% if(showCheckoutPageLink){ %>
+                <a href="/checkout" style="text-decoration: none;">
+                    <button class="btn-checkout">
+                        🛒 Go back to checkout
+                    </button>
+                </a>
+            <% } %>
             <a href="/user-profile/orders/order-details/<%= order.orderId %>">
                 <button class="btn-details">📋 View order details</button>
             </a>

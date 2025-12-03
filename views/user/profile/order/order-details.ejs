@@ -360,6 +360,153 @@
                 <button type="submit" class="btn btn-danger">❌ Cancel Entire Order</button>
             </form>
             <% } %>
+
+
+            <!-- retry payment option -->
+             <% if(order.orderStatus === "Payment Failed"){ %>
+                <%
+                    const createdAt = new Date(order.createdAt);
+                    const sevenDaysAfter = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    const now = new Date();
+                    const showButton = now <= sevenDaysAfter;
+                %>
+                 <% if (showButton) { %>
+                    <button class="btn btn-info" onclick="retryPayment('<%= order.orderId %>')">Retry Payment</button>
+                <% } %>
+            <% } %>
+
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+            <script>
+                async function retryPayment(orderId='<%=order.orderId %>') {
+                    try {
+
+                        const confirm=await Swal.fire({
+                            text:"Note : Price or discount may change",
+                            icon:"warning",
+                            showCancelButton:true,
+                            showConfirmButton:true,
+                            confirmButtonText:"Proceed"
+                        })
+
+                        if(!confirm.isConfirmed){
+                            console.log("hahahah")
+                            return;
+                        }
+                        console.log("confirm ==== ",confirm)
+                        // Step 1: Create Razorpay order on your server
+                        const response=await fetch('/order-details/retry-order',{
+                            method:"PATCH",
+                            headers:{"Content-Type":"application/json"},
+                            body:JSON.stringify({orderId:orderId})
+                        })
+
+                        const razorpayOrder = await response.json()
+
+                        if(!razorpayOrder || !razorpayOrder.razorpayOrder){
+                            console.log("razorPayyyyyyyy",razorpayOrder)
+                            console.log("razorPayyyyyyyy",razorpayOrder.razorpayOrder)
+
+                            return Swal.fire({
+                                title:"Failed to create order. Please try again.",
+                                text:razorpayOrder.message, 
+                                icon:"error",
+                                showConfirmButton:true,
+                            }).then(()=>{
+                                location.reload();
+                            })
+                        }
+
+                        //step 2: Configure Razorpay checkout
+                        const options={
+                            key:'<%= razorPayKeyId %>',
+                            amount:razorpayOrder.razorpayOrder.amount,
+                            currency:"INR",
+                            name:"TeeSpace",
+                            description:"Test Transaction",
+                            order_id:razorpayOrder.razorpayOrder.id,
+                            handler:async function(response){
+                                try {
+                                    // Step 3: Verify payment with your backend
+                                    const verifyRes=await fetch('/verify-razorpay-payment',{
+                                        method:"POST",
+                                        headers:{"Content-Type":"application/json"},
+                                        body:JSON.stringify({
+                                            ...response,  // contains razorpay_payment_id, razorpay_order_id, razorpay_signature
+                                            teeSpaceOrderId:razorpayOrder.teeSpaceOrderId, //add your internal order ID
+                                            clearCart:false
+                                        })
+                                    })
+
+                                    const result =await verifyRes.json();
+                                    
+                                    // Step 4: Handle response
+                                    if (result.success) {
+                                    await Swal.fire({
+                                        title: "Payment verified successfully!",
+                                        icon: "success",
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+
+                                    await Swal.fire({
+                                        title: "Order placed successfully!",
+                                        icon: "success",
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+
+                                    // Redirect to order success page
+                                    window.location.href = `/order-success/${razorpayOrder.teeSpaceOrderId}`;
+                                    } else {
+                                        Swal.fire("Verification Failed", result.message || "Something went wrong.", "error")
+                                    }
+
+                                } catch (error) {
+                                    console.error("Error verifying payment:", err);
+                                    Swal.fire("Error", "Payment verification failed. Please contact support.", "error");
+                                }
+                            },
+                            theme: { color: "#3399cc" }
+                        }
+
+                        // Step 5: Open Razorpay checkout
+                        const rzp1 = new Razorpay(options);
+
+                        rzp1.on("payment.failed",function(response){
+                            Swal.fire({
+                                title:"Payment Failed!",
+                                text:response.error.description,
+                                icon:"error",
+                                showConfirmButton:true,
+                                timer:25000
+                            }).then(async()=>{
+                                const res=await fetch('/razorpay/payment-failure',{
+                                    method:"POST",
+                                    headers:{
+                                        "Content-Type":"application/json"
+                                    },
+                                    body:JSON.stringify({
+                                        razorpay_order_id:response.error.metadata.order_id,
+                                        razorpay_payment_id:response.error.metadata.payment_id,
+                                        error_reason:response.error.description,
+                                        appOrderId:razorpayOrder.teeSpaceOrderId
+                                    })
+                                })
+
+                                const result=await res.json()
+                                if(result.success){
+                                    window.location.href = `/razorpay/order-failure/${razorpayOrder.teeSpaceOrderId}?accessToCheckoutPage=${false}`
+                                }
+                            })
+                        })
+                        rzp1.open();
+
+                    } catch (error) {
+                        console.error("Error creating Razorpay order:", error);
+                        Swal.fire("Error", "Unable to start payment. Please try again later.", "error");
+                    }
+                }
+            </script>
     </div>
 </div>
 
@@ -505,97 +652,98 @@
 
 <script>
     const cancelOrderForm=document.getElementById('cancelOrderForm');
-    cancelOrderForm.addEventListener('submit',async (e)=>{
-        e.preventDefault()
+    if(cancelOrderForm){
+        cancelOrderForm.addEventListener('submit',async (e)=>{
+            e.preventDefault()
+            if(<%=order.isCouponApplied %>){
+                const warning=await Swal.fire({
+                    title:"You may lose your coupon discounts!",
+                    text:"Since this order includes a coupon discount, cancelling or returning whole order may result in losing the discount benefits. Please confirm before proceeding",
+                    icon:"warning",
+                    showCancelButton:true,
+                    confirmButtonText:"Proceed"
+                })
 
-        if(<%=order.isCouponApplied %>){
-            const warning=await Swal.fire({
-                title:"You may lose your coupon discounts!",
-                text:"Since this order includes a coupon discount, cancelling or returning whole order may result in losing the discount benefits. Please confirm before proceeding",
-                icon:"warning",
-                showCancelButton:true,
-                confirmButtonText:"Proceed"
-            })
-
-            if(!warning.isConfirmed){
-                return;
-            }
-        }
-        // console.log("form prevented")
-        const confirmResult=await Swal.fire({
-            title:"Are you sure, Cancel Whole order ?",
-            showConfirmButton:true,
-            showCancelButton:true,
-            icon:"question"
-        })
-
-        if(!confirmResult.isConfirmed) return;
-
-        let confirmReason=await Swal.fire({
-            title:"Why are you canceling this order ?",
-            input:"select",
-            inputOptions:{
-                "Ordered the wrong item":"Ordered the wrong item",
-                "Found a better price elsewhere":"Found a better price elsewhere",
-                "Product no longer needed":"Product no longer needed",
-                "Changed my mind about the purchase":"Changed my mind about the purchase",
-                "Quantity or size was incorrect":"Quantity or size was incorrect",
-                "other":"other"
-            },
-            inputPlaceholder:"Select a reason",
-            showCancelButton:true,
-            inputValidator:(value)=>{
-                if(!value){
-                    return "⚠️ Please select a reason before continuing!";
+                if(!warning.isConfirmed){
+                    return;
                 }
             }
-        });
+            // console.log("form prevented")
+            const confirmResult=await Swal.fire({
+                title:"Are you sure, Cancel Whole order ?",
+                showConfirmButton:true,
+                showCancelButton:true,
+                icon:"question"
+            })
 
-        if(!confirmReason.isConfirmed) return;
-        let reason=confirmReason.value;
+            if(!confirmResult.isConfirmed) return;
 
-        if(reason==="other"){
-            const customReason = await Swal.fire({
-                title:"Please specify your reason",
-                input:"textarea",
-                inputPlaceholder:"Type your reason here...",
-                inputAttributes:{'aria-label':'Cancellation reason'},
+            let confirmReason=await Swal.fire({
+                title:"Why are you canceling this order ?",
+                input:"select",
+                inputOptions:{
+                    "Ordered the wrong item":"Ordered the wrong item",
+                    "Found a better price elsewhere":"Found a better price elsewhere",
+                    "Product no longer needed":"Product no longer needed",
+                    "Changed my mind about the purchase":"Changed my mind about the purchase",
+                    "Quantity or size was incorrect":"Quantity or size was incorrect",
+                    "other":"other"
+                },
+                inputPlaceholder:"Select a reason",
                 showCancelButton:true,
                 inputValidator:(value)=>{
-                    if(!value.trim()){
-                        return "⚠️ Please enter a reason"
+                    if(!value){
+                        return "⚠️ Please select a reason before continuing!";
                     }
                 }
+            });
+
+            if(!confirmReason.isConfirmed) return;
+            let reason=confirmReason.value;
+
+            if(reason==="other"){
+                const customReason = await Swal.fire({
+                    title:"Please specify your reason",
+                    input:"textarea",
+                    inputPlaceholder:"Type your reason here...",
+                    inputAttributes:{'aria-label':'Cancellation reason'},
+                    showCancelButton:true,
+                    inputValidator:(value)=>{
+                        if(!value.trim()){
+                            return "⚠️ Please enter a reason"
+                        }
+                    }
+                })
+                if(!customReason.isConfirmed) return;
+                reason=customReason.value;
+            }
+
+            const formData=new FormData(cancelOrderForm);
+            const data=Object.fromEntries(formData.entries());
+
+            const response=await fetch("/user-profile/orders/order-details/cancel-orders",{
+                method:'post',
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify(data)
             })
-            if(!customReason.isConfirmed) return;
-            reason=customReason.value;
-        }
 
-        const formData=new FormData(cancelOrderForm);
-        const data=Object.fromEntries(formData.entries());
-
-        const response=await fetch("/user-profile/orders/order-details/cancel-orders",{
-            method:'post',
-            headers:{
-                'Content-Type':'application/json'
-            },
-            body:JSON.stringify(data)
+            const result=await response.json();
+            if(result.success){
+                Swal.fire({
+                    title:"Done",
+                    text:result.message,
+                    icon:'success',
+                    timer:2000
+                }).then(()=>{
+                    location.reload();
+                })
+            }else{
+                Swal.fire("Oops!",result.message,"error")
+            }
         })
-
-        const result=await response.json();
-        if(result.success){
-            Swal.fire({
-                title:"Done",
-                text:result.message,
-                icon:'success',
-                timer:2000
-            }).then(()=>{
-                location.reload();
-            })
-        }else{
-            Swal.fire("Oops!",result.message,"error")
-        }
-    })
+    }
 </script>
 
 <script>

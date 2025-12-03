@@ -202,6 +202,7 @@ router.get('/orders',userAuth,orderController.showOrders);
 router.get('/order-success/:orderId',userAuth,orderController.showOrderSuccessPage);
 router.get('/user-profile/orders',userAuth,orderController.showOrders);
 router.get('/user-profile/orders/order-details/:orderId',userAuth,orderController.showOrderDetails)
+router.patch('/order-details/retry-order',userAuth,orderController.retryPaymentFromOrderDetailsPage)
 //cancel order
 router.post('/user-profile/orders/order-details/cancel-item',userAuth,orderController.cancelOrderItem)
 router.post('/user-profile/orders/order-details/cancel-orders',userAuth,orderController.cancelWholeOrder)
