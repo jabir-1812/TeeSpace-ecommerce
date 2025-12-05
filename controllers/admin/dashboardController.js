@@ -180,7 +180,7 @@ async function getTopTenProductsData(type, customStart = null, customEnd = null)
     ]);
 
 
-    // console.log("Daatatatttt",data)
+    console.log("Daatatatttt",data)
     return data;
 }
 
@@ -259,7 +259,7 @@ async function getTopTenCatgoriesData(type, customStart = null, customEnd = null
 
 
 
-    console.log("Daatatatttt",data)
+    // console.log("Daatatatttt",data)
     return data;
 }
 
@@ -336,7 +336,7 @@ async function getTopTenBrandsData(type, customStart = null, customEnd = null) {
 
 
 
-    console.log("Daatatatttt",data)
+    // console.log("Daatatatttt",data)
     return data;
 }
 

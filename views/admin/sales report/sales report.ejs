@@ -38,35 +38,54 @@
 
 
 
-    <div class="row mb-3">
-        <div class="col-3">
+    <div class="row mb-3 d-flex justify-content-center">
+
+        <div class="col-2">
             <div class="card shadow d-flex flex-column align-items-center">
-                <div class="h3">📦</div>
-                <div class="h3 fw-bold">Total Orders</div>
-                <div class="fw-bold h3 text-success" id="totalOrdersCount"></div>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="card shadow d-flex flex-column align-items-center">
-                <div class="h3">💰</div>
-                <div class="h4 fw-bold">Total Income</div>
-                <div class="h3 fw-bold text-success" id="totalIncome"></div>
+                <div class="h4">👕</div>
+                <div class="fw-bold">Total Products sold</div>
+                <div class="h4 fw-bold text-success" id="totalProductsSold"></div>
             </div>
         </div>
         
-        <div class="col-3">
+        <div class="col-2">
             <div class="card shadow d-flex flex-column align-items-center">
-                <div class="h3">🎁</div>
-                <div class="h4 fw-bold">Offer Discounts</div>
-                <div class="h3 fw-bold text-success" id="totalOfferDiscount"></div>
+                <div class="h4">📦</div>
+                <div class="fw-bold">Total Orders</div>
+                <div class="fw-bold h4 text-success" id="totalOrdersCount"></div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card shadow d-flex flex-column align-items-center">
+                <div class="h4">💰</div>
+                <div class="fw-bold">Total Income</div>
+                <div class="h4 fw-bold text-success" id="totalIncome"></div>
             </div>
         </div>
         
-        <div class="col-3">
+        <div class="col-2">
             <div class="card shadow d-flex flex-column align-items-center">
-                <div class="h3">🎟️</div>
-                <div class="h4 fw-bold">Coupon Discounts</div>
-                <div class="h3 fw-bold text-success" id="totalCouponDiscount"></div>
+                <div class="h4">🎁</div>
+                <div class="fw-bold">Offer Discounts</div>
+                <div class="h4 fw-bold text-success" id="totalOfferDiscount"></div>
+            </div>
+        </div>
+        
+        <div class="col-2">
+            <div class="card shadow d-flex flex-column align-items-center">
+                <div class="h4">🎟️</div>
+                <div class="fw-bold">Coupon Discounts</div>
+                <div class="h4 fw-bold text-success" id="totalCouponDiscount"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="container-fluid">
+            <div class="row d-flex justify-content-center gap-3">
+                <div class="col-3" id="productSoldCount-firstColumn"></div>
+                <div class="col-3" id="productSoldCount-secondColumn"></div>
+                <div class="col-3" id="productSoldCount-thirdColumn"></div>
             </div>
         </div>
     </div>
@@ -109,10 +128,19 @@
         const end = document.getElementById("endDate").value;
         const res = await fetch(`/admin/sales-report?type=${type}&start=${start}&end=${end}`);
         const data = await res.json();
-        console.log("data.report",data.report)
+      //   console.log("data.report",data.report)
       console.log("dataaaaaaaa========",data)
 
-        renderReport(data.report, type, data.totalOrdersCount, data.totalIncome, data.totalOfferDiscount, data.totalCouponDiscount);  
+        renderReport(
+          data.report, 
+          type, 
+          data.totalOrdersCount, 
+          data.totalIncome, 
+          data.totalOfferDiscount, 
+          data.totalCouponDiscount,
+          data.productSoldCounts,
+          data.totalProductsSold
+        );  
     }
 
     async function fetchCustomReport() {
@@ -123,14 +151,93 @@
       const res = await fetch(`/admin/sales-report?type=${currentReportType}&start=${start}&end=${end}`);
       const data = await res.json();
       console.log("dataaaaaaaa========",data)
-      renderReport(data.report, currentReportType,  data.totalOrdersCount, data.totalIncome, data.totalOfferDiscount, data.totalCouponDiscount);
+      renderReport(
+        data.report, 
+        currentReportType,  
+        data.totalOrdersCount, 
+        data.totalIncome, 
+        data.totalOfferDiscount, 
+        data.totalCouponDiscount,
+        data.productSoldCounts,
+        data.totalProductsSold
+      );
     }
 
-    function renderReport(report, type, totalOrdersCount, totalIncome, totalOfferDiscount, totalCouponDiscount) {
+    function renderReport(report, type, totalOrdersCount, totalIncome, totalOfferDiscount, totalCouponDiscount, productSoldCounts, totalProductsSold) {
       document.getElementById('totalOrdersCount').innerHTML=totalOrdersCount;
       document.getElementById('totalIncome').innerHTML=`Rs.${totalIncome}/-`;
       document.getElementById('totalOfferDiscount').innerHTML=`Rs.${totalOfferDiscount}/-`;
       document.getElementById('totalCouponDiscount').innerHTML=`Rs.${totalCouponDiscount}/-`;
+      document.getElementById('totalProductsSold').innerHTML=`${totalProductsSold}`;
+
+
+      //we are showing the sold counts of products in 3 columns
+      //so we need to devide all the products count by 3,
+      //eg: suppose we have 15 products, we have 3 columns,
+      //so we are listign 5 products in each column.
+
+      const productInFirstColumn=Math.ceil(productSoldCounts.length/3)
+      console.log("product in first coum===",productSoldCounts)
+      const productInSecondColumn=Math.ceil(productSoldCounts.length/3)
+      const productInThirdColumn=productSoldCounts.length - (productInFirstColumn + productInSecondColumn)
+
+        const productSoldCount_firstColumn=document.getElementById('productSoldCount-firstColumn')
+        productSoldCount_firstColumn.innerHTML="";
+        for(let i=0;i<productInFirstColumn;i++){
+            productSoldCount_firstColumn.innerHTML +=`
+                <div class="card">
+                    <div class="d-flex gap-2">
+                        <div><img class="img-thumbnail" width="125px" src="${productSoldCounts[i].productImage[0].url}" alt="${productSoldCounts[i].productName}"></div>
+                        <div class="d-flex flex-column gap-1">
+                            <div class="fw-bold">${productSoldCounts[i].productName}</div>
+                            <div><span  style="font-size: 75%;" class="text-body-tertiary">Category:</span>${productSoldCounts[i].category}</div>
+                            <div><span  style="font-size: 75%;" class="text-body-tertiary">Brand:</span>${productSoldCounts[i].brand}</div>
+                            <div class="fw-bold">Total Sold:${productSoldCounts[i].soldCount}</div>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+
+        const productSoldCount_secondColumn=document.getElementById('productSoldCount-secondColumn')
+        productSoldCount_secondColumn.innerHTML="";
+        for(let i=productInFirstColumn;i<(productInFirstColumn + productInSecondColumn);i++){
+            productSoldCount_secondColumn.innerHTML +=`
+                <div class="card">
+                    <div class="d-flex gap-2">
+                        <div><img class="img-thumbnail" width="125px" src="${productSoldCounts[i].productImage[0].url}" alt="${productSoldCounts[i].productName}"></div>
+                        <div class="d-flex flex-column gap-1">
+                            <div class="fw-bold">${productSoldCounts[i].productName}</div>
+                            <div><span  style="font-size: 75%;" class="text-body-tertiary">Category:</span>${productSoldCounts[i].category}</div>
+                            <div><span  style="font-size: 75%;" class="text-body-tertiary">Brand:</span>${productSoldCounts[i].brand}</div>
+                            <div class="fw-bold">Total Sold:${productSoldCounts[i].soldCount}</div>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+
+        const productSoldCount_thirdColumn=document.getElementById('productSoldCount-thirdColumn')
+        productSoldCount_thirdColumn.innerHTML="";
+
+        for(let i=(productInFirstColumn + productInSecondColumn);i<productSoldCounts.length;i++){
+            productSoldCount_thirdColumn.innerHTML +=`
+                <div class='card'>
+                    <div class="d-flex gap-2">
+                        <div><img class="img-thumbnail" width="125px" src="${productSoldCounts[i].productImage[0].url}" alt="${productSoldCounts[i].productName}"></div>
+                        <div class="d-flex flex-column gap-1">
+                            <div class="fw-bold">${productSoldCounts[i].productName}</div>
+                            <div><span  style="font-size: 75%;" class="text-body-tertiary">Category:</span>${productSoldCounts[i].category}</div>
+                            <div><span  style="font-size: 75%;" class="text-body-tertiary">Brand:</span>${productSoldCounts[i].brand}</div>
+                            <div class="fw-bold">Total Sold:${productSoldCounts[i].soldCount}</div>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    
+
+
 
       const tbody = document.getElementById("reportBody");
       tbody.innerHTML = "";
@@ -287,6 +394,8 @@
 
         window.open(url, "_blank"); // opens in new tab, triggers download
     }
+
+
 
   </script>
 
