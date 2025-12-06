@@ -2,7 +2,8 @@ const Status=require('../../constants/statusCodes')
 const PDFDocument = require("pdfkit");
 const ExcelJS = require('exceljs')
 const Order=require('../../models/orderSchema')
-const Product=require('../../models/productSchema')
+const Product=require('../../models/productSchema');
+// const { default: orders } = require('razorpay/dist/types/orders');
 
 
 const getSalesReportPage=async (req,res)=>{
@@ -83,30 +84,30 @@ async function getReportData(type, start, end) {
 
 
   //retreiving each products's sold count
-	const lookupPipeline = [
-		{ $unwind: "$orderItems" },
-		{
-			$match: {
-			$expr: {
-				$and: [
-				{ $eq: ["$orderItems.productId", "$$productId"] },
-				...(start && end
-					? [
-						{ $gte: ["$orderItems.deliveredOn", startDate] },
-						{ $lte: ["$orderItems.deliveredOn", endDate] }
-					]
-					: [])
-				]
-			}
-			}
-		},
-		{
-			$group: {
-			_id: null,
-			soldQty: { $sum: "$orderItems.quantity" }
-			}
-		}
-	];
+	// const lookupPipeline = [
+	// 	{ $unwind: "$orderItems" },
+	// 	{
+	// 		$match: {
+	// 		$expr: {
+	// 			$and: [
+	// 			{ $eq: ["$orderItems.productId", "$$productId"] },
+	// 			...(start && end
+	// 				? [
+	// 					{ $gte: ["$orderItems.deliveredOn", startDate] },
+	// 					{ $lte: ["$orderItems.deliveredOn", endDate] }
+	// 				]
+	// 				: [])
+	// 			]
+	// 		}
+	// 		}
+	// 	},
+	// 	{
+	// 		$group: {
+	// 		_id: null,
+	// 		soldQty: { $sum: "$orderItems.quantity" }
+	// 		}
+	// 	}
+	// ];
 
 	// const productSoldCounts = await Product.aggregate([
 	// 	{
@@ -136,6 +137,44 @@ async function getReportData(type, start, end) {
 	// 		}
 	// 	}
 	// ]);
+
+    const lookupPipeline = [
+        { $unwind: "$orderItems" },
+
+        {
+            $match: {
+            $expr: {
+                $and: [
+                { $eq: ["$orderItems.productId", "$$productId"] },
+
+                // 🔥 EXCLUDE RETURNED ITEMS
+                {
+                    $or: [
+                    { $eq: ["$orderItems.refundStatus", null] },
+                    { $eq: ["$orderItems.refundStatus", ""] },
+                    { $not: [{ $ifNull: ["$orderItems.refundStatus", true] }] }
+                    ]
+                },
+
+                ...(start && end
+                    ? [
+                        { $gte: ["$orderItems.deliveredOn", startDate] },
+                        { $lte: ["$orderItems.deliveredOn", endDate] }
+                    ]
+                    : [])
+                ]
+            }
+            }
+        },
+
+        {
+            $group: {
+            _id: null,
+            soldQty: { $sum: "$orderItems.quantity" }
+            }
+        }
+    ];
+
 	const productSoldCounts = await Product.aggregate([
 		{
 			$lookup: {
@@ -194,6 +233,8 @@ async function getReportData(type, start, end) {
 			}
 		}
 	]);
+
+    
 
 
 

@@ -1,12 +1,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 
-    <div>
+
+    <div class="d-flex flex-column gap-0">
         <!-- top 10 products -->
-        <div class="container-fluid" id="topProducts">
-            <h1>Top 10 Best-selling products</h1>
-            <div class="d-flex justify-content-center gap-3">
+        <div class="container mb-5 border rounded py-5 shadow" id="topProducts">
+            <h3 class="text-center mb-5">Top 10 Best-selling products</h3>
+            <div class="d-flex justify-content-center gap-3 mb-5">
                 <div class="">
                     <button class="btn" id="dailyProductReportBtn" onclick="fetchProductReports('daily')">Today</button>
                 </div>
@@ -33,23 +35,13 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-9">
-                    <h3>Top 10 products Graph</h3>
+                <div class="col">
                     <canvas id="topTenProductsChart" height="100"></canvas>
                 </div>
-                <div class="col-3">
-                    <h3>Top 10 products List</h3>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Product Name</th>
-                                <th>Total Sold</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topTenProductsTable">
-                        </tbody>
-                    </table>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="d-flex justify-content-between" id="topTenProductsImgCardContainer"></div>
                 </div>
             </div>
         </div>
@@ -91,6 +83,8 @@
                 const quantities=data.map(i=>i.totalSold);
 
                 const ctx = document.getElementById('topTenProductsChart').getContext('2d');
+                Chart.register(ChartDataLabels);
+
                 if(productChartInstance) productChartInstance.destroy();
 
                 productChartInstance= new Chart(ctx,{
@@ -112,17 +106,21 @@
                 })
 
                 //update top ten products table
-                const tbody=document.getElementById('topTenProductsTable');
-                tbody.innerHTML='';
-                data.forEach(ele => {
-                    tbody.innerHTML +=`<tr>
-                                            <td>
-                                                <img class="img-thumbnail" src=${ele.productImage[0].url} width='100px'>    
-                                            </td>
-                                            <td>${ele.productName}</td>
-                                            <td>${ele.totalSold}</td>
-                                        </tr>`
-                });
+                const topTenProductsImgCardsContainer=document.getElementById('topTenProductsImgCardContainer');
+                topTenProductsImgCardsContainer.innerHTML="";
+                data.forEach(ele=>{
+                    topTenProductsImgCardsContainer.innerHTML +=`
+                        <div class="border rounded p-1 shadow-sm">
+                            <div class="d-flex flex-column justify-content-center align-items-center">
+                                <div><img class="rounded" width="100px" src="${ele.productImage[0].url}" alt="${ele.productName}"></div>
+                                <div class="fw-bold">${ele.productName}</div>
+                                <div><span class="text-body-tertiary px-2 border rounded-pill bg-secondary-subtle" style="font-size: 75%;">${ele.brandName}</span></div>
+                                <div><span class=" text-body-tertiary px-2 border rounded-pill bg-secondary-subtle" style="font-size: 75%;">${ele.categoryName}</span></div>
+                                <div class="px-2 border border-subtle rounded-pill bg-success-subtle" style="font-size:75%;">Total Sold:${ele.totalSold}</div>
+                            </div>
+                        </div>
+                    `
+                })
 
 
 
@@ -172,25 +170,29 @@
                 })
 
                 //update top ten products table
-                const tbody=document.getElementById('topTenProductsTable');
-                tbody.innerHTML='';
-                data.forEach(ele => {
-                    tbody.innerHTML +=`<tr>
-                                            <td>
-                                                <img src=${ele.productImage[0].url} width='100px'>    
-                                            </td>
-                                            <td>${ele.productName}</td>
-                                            <td>${ele.totalSold}</td>
-                                        </tr>`
-                });
+                const topTenProductsImgCardsContainer=document.getElementById('topTenProductsImgCardContainer');
+                topTenProductsImgCardsContainer.innerHTML="";
+                data.forEach(ele=>{
+                    topTenProductsImgCardsContainer.innerHTML +=`
+                        <div class="border rounded p-1 shadow-sm">
+                            <div class="d-flex flex-column justify-content-center align-items-center">
+                                <div><img class="rounded" width="100px" src="${ele.productImage[0].url}" alt="${ele.productName}"></div>
+                                <div class="fw-bold">${ele.productName}</div>
+                                <div><span class="text-body-tertiary px-2 border rounded-pill bg-secondary-subtle" style="font-size: 75%;">${ele.brandName}</span></div>
+                                <div><span class=" text-body-tertiary px-2 border rounded-pill bg-secondary-subtle" style="font-size: 75%;">${ele.categoryName}</span></div>
+                                <div class="px-2 border border-subtle rounded-pill bg-success-subtle" style="font-size:75%;">Total Sold:${ele.totalSold}</div>
+                            </div>
+                        </div>
+                    `
+                })
 
             }
             fetchProductReports('daily');
         </script>
 
-        <div class="container-fluid" id="topCategories">
-            <h1>Top 10 Best-selling Categories</h1>
-            <div class="d-flex flex-row justify-content-center gap-3">
+        <div class="container mb-5 border rounded py-5 shadow" id="topCategories">
+            <h3 class="text-center mb-5">Top 10 Best-selling categories</h3>
+            <div class="d-flex flex-row justify-content-center gap-3 mb-5">
                 <div class="">
                     <button class="btn" id="dailyCategoryReportBtn" onclick="fetchCategoryReports('daily')">Today</button>
                 </div>
@@ -217,28 +219,18 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-9">
-                    <h3>Top 10 products Graph</h3>
-                    <canvas id="topTenCategoriesChart" height="100"></canvas>
+                <div class="col-8">
+                    <canvas id="topTenCategoriesBarChart" height="150"></canvas>
                 </div>
-                <div class="col-3">
-                    <h3>Top 10 Categories List</h3>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Category Name</th>
-                                <th>Total Sold Items</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topTenCategoriesTable">
-                        </tbody>
-                    </table>
+                <div class="col-4">
+                    <canvas id="topTenCategoriesDonutChart" ></canvas>
                 </div>
             </div>
         </div>
 
         <script>
-            let categoryChartInstance;
+            let categoryBarChartInstance;
+            let categoryDonutChartInstance;
             async function fetchCategoryReports(type) {
                 const categoryReportBtns=['dailyCategoryReportBtn','weeklyCategoryReportBtn','monthlyCategoryReportBtn','yearlyCategoryReportBtn']
                 const res=await fetch(`/admin/dashboard/top-ten-categories?type=${type}`);
@@ -270,10 +262,14 @@
                 const categoryNames=data.map(i=>i.categoryName);
                 const soldQuantities=data.map(i=>i.totalSold);
 
-                const ctx=document.getElementById('topTenCategoriesChart').getContext('2d')
-                if(categoryChartInstance) categoryChartInstance.destroy();
 
-                categoryChartInstance=new Chart(ctx,{
+                const ctxBar=document.getElementById('topTenCategoriesBarChart').getContext('2d')
+                const ctxDonut=document.getElementById('topTenCategoriesDonutChart').getContext('2d')
+
+                if(categoryBarChartInstance) categoryBarChartInstance.destroy();
+                if(categoryDonutChartInstance) categoryDonutChartInstance.destroy();
+
+                categoryBarChartInstance=new Chart(ctxBar,{
                     type:'bar',
                     data:{
                         labels:categoryNames,
@@ -294,15 +290,50 @@
                     }
                 })
 
-                //update top ten categories table
-                const tbody=document.getElementById('topTenCategoriesTable');
-                tbody.innerHTML='';
-                data.forEach(ele => {
-                    tbody.innerHTML +=`<tr>
-                                            <td>${ele.categoryName}</td>
-                                            <td>${ele.totalSold}</td>
-                                        </tr>`
+                categoryDonutChartInstance = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categoryNames,
+                        datasets: [{
+                            label: "Units Sold",
+                            data: soldQuantities,
+                            backgroundColor: [
+                                '#36A2EB',
+                                '#FF6384',
+                                '#FFCE56',
+                                '#4BC0C0',
+                                '#9966FF',
+                                '#FF9F40',
+                                '#8DD17E',
+                                '#C45850',
+                                '#6FA8DC',
+                                '#F6A5C0'
+                            ],
+                            hoverOffset: 20,
+                        }]
+                    },
+                    plugins: [ChartDataLabels],
+                    options: {
+                        responsive: true,
+                        cutout: '30%',
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            datalabels: {
+                                color: "#fff",
+                                font: {
+                                    weight: 'bold',
+                                    size: 9
+                                },
+                                formatter: (value, context) => {
+                                    return context.chart.data.labels[context.dataIndex];
+                                }
+                            }
+                        }
+                    }
                 });
+
 
             }
 
@@ -330,10 +361,13 @@
                 const categoryNames=data.map(i=>i.categoryName);
                 const soldQuantities=data.map(i=>i.totalSold);
 
-                const ctx=document.getElementById('topTenCategoriesChart').getContext('2d')
-                if(categoryChartInstance) categoryChartInstance.destroy();
+                const ctxBar=document.getElementById('topTenCategoriesBarChart').getContext('2d')
+                const ctxDonut=document.getElementById('topTenCategoriesDonutChart').getContext('2d')
 
-                categoryChartInstance=new Chart(ctx,{
+                if(categoryBarChartInstance) categoryBarChartInstance.destroy();
+                if(categoryDonutChartInstance) categoryDonutChartInstance.destroy();
+
+                categoryBarChartInstance=new Chart(ctxBar,{
                     type:'bar',
                     data:{
                         labels:categoryNames,
@@ -354,23 +388,57 @@
                     }
                 })
 
-                //update top ten categories table
-                const tbody=document.getElementById('topTenCategoriesTable');
-                tbody.innerHTML='';
-                data.forEach(ele => {
-                    tbody.innerHTML +=`<tr>
-                                            <td>${ele.categoryName}</td>
-                                            <td>${ele.totalSold}</td>
-                                        </tr>`
+                categoryDonutChartInstance = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categoryNames,
+                        datasets: [{
+                            label: "Units Sold",
+                            data: soldQuantities,
+                            backgroundColor: [
+                                '#36A2EB',
+                                '#FF6384',
+                                '#FFCE56',
+                                '#4BC0C0',
+                                '#9966FF',
+                                '#FF9F40',
+                                '#8DD17E',
+                                '#C45850',
+                                '#6FA8DC',
+                                '#F6A5C0'
+                            ],
+                            hoverOffset: 20,
+                        }]
+                    },
+                    plugins: [ChartDataLabels],
+                    options: {
+                        responsive: true,
+                        cutout: '30%',
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            datalabels: {
+                                color: "#fff",
+                                font: {
+                                    weight: 'bold',
+                                    size: 9
+                                },
+                                formatter: (value, context) => {
+                                    return context.chart.data.labels[context.dataIndex];
+                                }
+                            }
+                        }
+                    }
                 });
             }
 
             fetchCategoryReports('daily');
         </script>
 
-        <div class="container-fluid" id="topBrands">
-            <h1>Top 10 Best-selling Brands</h1>
-            <div class="d-flex flex-row justify-content-center gap-3">
+        <div class="shadow container mb-5 border rounded py-5" id="topBrands">
+            <h3 class="text-center mb-5">Top 10 Best-selling Brands</h3>
+            <div class="d-flex flex-row justify-content-center gap-3 mb-5">
                 <div class="">
                     <button class="btn" id="dailyBrandReportBtn" onclick="fetchBrandReports('daily')">Today</button>
                 </div>
@@ -397,28 +465,18 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-9">
-                    <h3>Top 10 Brands Chart</h3>
-                    <canvas id="topTenBrandsChart" height="100"></canvas>
+                <div class="col-8">
+                    <canvas id="topTenBrandsBarChart" height="150"></canvas>
                 </div>
-                <div class="col-3">
-                    <h3>Top 10 Brands List</h3>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Brand Name</th>
-                                <th>Total Sold Items</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topTenBrandsTable">
-                        </tbody>
-                    </table>
+                <div class="col-4">
+                    <canvas id="topTenBrandsDonutChart"></canvas>
                 </div>
             </div>
         </div>
 
         <script>
-            let brandChartInstance;
+            let brandBarChartInstance;
+            let brandDonutChartInstance;
             async function fetchBrandReports(type) {
                 const res=await fetch(`/admin/dashboard/top-ten-brands?type=${type}`);
                 const data=await res.json();
@@ -452,10 +510,12 @@
                 const brandNames=data.map(i=>i.brandName);
                 const soldQuantities=data.map(i=>i.totalSold);
 
-                const ctx=document.getElementById('topTenBrandsChart').getContext('2d')
-                if(brandChartInstance) brandChartInstance.destroy();
+                const ctxBar=document.getElementById('topTenBrandsBarChart').getContext('2d')
+                const ctxDonut=document.getElementById('topTenBrandsDonutChart').getContext('2d')
+                if(brandBarChartInstance) brandBarChartInstance.destroy();
+                if(brandDonutChartInstance) brandDonutChartInstance.destroy();
 
-                brandChartInstance=new Chart(ctx,{
+                brandBarChartInstance=new Chart(ctxBar,{
                     type:'bar',
                     data:{
                         labels:brandNames,
@@ -476,14 +536,49 @@
                     }
                 })
 
-                //update top ten categories table
-                const tbody=document.getElementById('topTenBrandsTable');
-                tbody.innerHTML='';
-                data.forEach(ele => {
-                    tbody.innerHTML +=`<tr>
-                                            <td>${ele.brandName}</td>
-                                            <td>${ele.totalSold}</td>
-                                        </tr>`
+                brandDonutChartInstance = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: brandNames,
+                        datasets: [{
+                            label: "Units Sold",
+                            data: soldQuantities,
+                            backgroundColor: [
+                                '#36A2EB', // Blue
+                                '#FF6384', // Pink
+                                '#FFCE56', // Yellow
+                                '#4BC0C0', // Teal
+                                '#9966FF', // Purple
+                                '#FF9F40', // Orange
+                                '#8DD17E', // Green
+                                '#C45850', // Brick Red
+                                '#6FA8DC', // Light Blue
+                                '#F6A5C0'  // Light Pink
+                            ],
+
+                            hoverOffset: 20,
+                        }]
+                    },
+                    plugins: [ChartDataLabels],
+                    options: {
+                        responsive: true,
+                        cutout: '30%',
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            datalabels: {
+                                color: "#fff",
+                                font: {
+                                    weight: 'bold',
+                                    size: 8
+                                },
+                                formatter: (value, context) => {
+                                    return context.chart.data.labels[context.dataIndex];
+                                }
+                            }
+                        }
+                    }
                 });
 
             }
@@ -511,10 +606,12 @@
                 const brandNames=data.map(i=>i.brandName);
                 const soldQuantities=data.map(i=>i.totalSold);
 
-                const ctx=document.getElementById('topTenBrandsChart').getContext('2d')
-                if(brandChartInstance) brandChartInstance.destroy();
+                const ctxBar=document.getElementById('topTenBrandsBarChart').getContext('2d')
+                const ctxDonut=document.getElementById('topTenBrandsDonutChart').getContext('2d')
+                if(brandBarChartInstance) brandBarChartInstance.destroy();
+                if(brandDonutChartInstance) brandDonutChartInstance.destroy();
 
-                brandChartInstance=new Chart(ctx,{
+                brandBarChartInstance=new Chart(ctxBar,{
                     type:'bar',
                     data:{
                         labels:brandNames,
@@ -535,14 +632,49 @@
                     }
                 })
 
-                //update top ten categories table
-                const tbody=document.getElementById('topTenBrandsTable');
-                tbody.innerHTML='';
-                data.forEach(ele => {
-                    tbody.innerHTML +=`<tr>
-                                            <td>${ele.brandName}</td>
-                                            <td>${ele.totalSold}</td>
-                                        </tr>`
+                brandDonutChartInstance = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: brandNames,
+                        datasets: [{
+                            label: "Units Sold",
+                            data: soldQuantities,
+                            backgroundColor: [
+                                '#36A2EB', // Blue
+                                '#FF6384', // Pink
+                                '#FFCE56', // Yellow
+                                '#4BC0C0', // Teal
+                                '#9966FF', // Purple
+                                '#FF9F40', // Orange
+                                '#8DD17E', // Green
+                                '#C45850', // Brick Red
+                                '#6FA8DC', // Light Blue
+                                '#F6A5C0'  // Light Pink
+                            ],
+
+                            hoverOffset: 20,
+                        }]
+                    },
+                    plugins: [ChartDataLabels],
+                    options: {
+                        responsive: true,
+                        cutout: '30%',
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            datalabels: {
+                                color: "#fff",
+                                font: {
+                                    weight: 'bold',
+                                    size: 8
+                                },
+                                formatter: (value, context) => {
+                                    return context.chart.data.labels[context.dataIndex];
+                                }
+                            }
+                        }
+                    }
                 });
             }
 

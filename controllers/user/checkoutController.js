@@ -327,7 +327,7 @@ const loadCheckoutPage = async (req, res) => {
           userWallet,
           appliedCoupons:appliedCouponsObj,
           totalDiscountFromAllCoupons,
-          applicableCouponsCodes
+          applicableCouponsCodes:applicableCouponsCodes
         });
       }
 
@@ -372,7 +372,7 @@ const loadCheckoutPage = async (req, res) => {
         userWallet,
         appliedCoupons:"",
         totalDiscountFromAllCoupons:"",
-        applicableCouponsCodes
+        applicableCouponsCodes:applicableCouponsCodes
       });
 
   } catch (error) {
@@ -476,119 +476,6 @@ const addNewAddress = async (req, res) => {
 
 
 
-// const changeCartQuantity = async (req, res) => {
-//   try {
-//     const userId = req.session.user || req.session.passport?.user;
-//     const { productId, count } = req.body;
-
-//     // 🔹 Validate input
-//     if (!mongoose.Types.ObjectId.isValid(productId))
-//       return res.status(Status.BAD_REQUEST).json({ success: false, message: "Invalid product ID" ,reload:true});
-
-//     if (typeof count !== "number" || isNaN(count))
-//       return res.status(Status.BAD_REQUEST).json({ success: false, message: "Invalid count value",reload:true });
-
-//     // 🔹 Fetch cart & product in parallel
-//     const [cart, product] = await Promise.all([
-//       Cart.findOne({ userId }),
-//       Product.findById(productId),
-//     ]);
-
-//     if (!cart) return res.status(404).json({ success: false, message: "Cart not found",reload:true });
-//     if (!product) return res.status(Status.BAD_REQUEST).json({ success: false, message: "Product not found",reload:true});
-
-//     //get the product stock
-//     const productStock = product.quantity;
-
-//     //get the product item element from the cart items[] with the product ID
-//     const item = cart.items.find(i => i.productId.toString() === productId);
-//     if (!item) return res.status(Status.BAD_REQUEST).json({ success: false, message: "Product not in cart",reload:true });
-
-//     // 🔹 Helper function to recalc totals & render HTML
-//     const renderCart = async (userId, message, success = false) => {
-//       let userCart = await Cart.findOne({ userId }).populate({
-//         path: "items.productId",
-//         select: "productName productImage salePrice regularPrice brand quantity",// only the fields you need
-//         populate: { path: "brand", select: "brandName" },
-//       });
-
-//       let totalPrice = 0;
-//       let totalAmount = 0;
-//       let isCartUpdated = false;//initially set as false.
-
-//       // Check each item quantity vs stock
-//       for (let item of userCart.items) {
-//         if (item.productId && item.quantity > item.productId.quantity) {
-//           item.quantity = item.productId.quantity;// reduce to available stock
-//           isCartUpdated = true;
-//         }
-//         const price = item.productId?.salePrice || 0;
-//         totalPrice += price * item.quantity;
-//         totalAmount += price * item.quantity;
-//       }
-
-//       // If any change happened, save updated cart
-//       if (isCartUpdated) await userCart.save();
-
-//       const [cartHtml, priceDetailsHtml] = await Promise.all([
-//         ejs.renderFile(
-//           path.join(__dirname, "../../views/user/checkout/checkout-partials/2cart-items.ejs"),
-//           { userCart: userCart.toObject(), totalAmount },
-//           { async: true }
-//         ),
-//         ejs.renderFile(
-//           path.join(__dirname, "../../views/user/checkout/checkout-partials/price details.ejs"),
-//           { totalPrice, totalAmount },
-//           { async: true }
-//         ),
-//       ]);
-
-//       return res.status(success ? 200 : 400).json({
-//         success,
-//         message,
-//         html: { cartItems: cartHtml, priceDetails: priceDetailsHtml },
-//       });
-//     };
-
-//     // 🔹 Handle stock conditions
-//     if (productStock === 0) {
-//       await Cart.updateOne(
-//         { userId, "items.productId": productId },
-//         { $set: { "items.$.quantity": 0 } }
-//       );
-//       return renderCart(userId, "Product is out of stock");
-//     }
-
-//     const newQty = item.quantity + count;
-
-//     if (newQty <= 0) {
-//       await Cart.updateOne(
-//         { userId },
-//         { $pull: { items: { productId } } }
-//       );
-//       return res.json({ success: true, message: "Item removed from cart" });
-//     }
-
-//     if (newQty > productStock) {
-//       await Cart.updateOne(
-//         { userId, "items.productId": productId },
-//         { $set: { "items.$.quantity": productStock } }
-//       );
-//       return renderCart(userId, `Available stock is: ${productStock}`);
-//     }
-
-//     // 🔹 Update quantity
-//     await Cart.updateOne(
-//       { userId, "items.productId": productId },
-//       { $inc: { "items.$.quantity": count } }
-//     );
-
-//     return renderCart(userId, "Quantity updated successfully", true);
-//   } catch (error) {
-//     console.error("changeCartQuantity() error:", error);
-//     res.status(Status.INTERNAL_ERROR).json({ success: false, error: "Server error" });
-//   }
-// };
 const changeCartQuantity = async (req, res) => {
   try {
     const userId = req.session.user || req.session.passport?.user;
@@ -737,7 +624,7 @@ const applyCoupon= async(req,res)=>{
             ),
             ejs.renderFile(
             path.join(__dirname, "../../views/user/checkout/checkout-partials/coupon-forms.ejs"),
-            {},
+            {applicableCouponsCodes:null},
             { async: true }
             ),
             ejs.renderFile(
@@ -783,38 +670,7 @@ const applyCoupon= async(req,res)=>{
         }
     }
 
-    // async function fetch_cart_coupons_price(){
-    //     const userCart=await Cart.findOne({userId})
-    //     .populate({
-    //         path:"items.productId",
-    //         select:"productName category brand salePrice regularPrice productImage",
-    //         populate:[
-    //             {
-    //                 path:"brand",
-    //                 select:"brandName"
-    //             },
-    //             {
-    //                 path:"category",
-    //                 select:"name"
-    //             }
-    //         ]
-    //     })
-
-    //     let totalPrice=0,totalAmount=0;
-
-    //     for (let item of userCart.items) {
-    //         const price = item.productId?.salePrice || 0;
-    //         totalPrice += price * item.quantity;
-    //         totalAmount += price * item.quantity;
-    //     }
-
-    //     //fetch applied coupons and send
-    //     //..
-    //     //..
-    //     //..
-        
-    //     return{userCart,totalPrice,totalAmount,coupon:null}
-    // }
+    
 
     //re-checking the: cart item qty vs product qty
     //checking if product is available or not
@@ -859,10 +715,7 @@ const applyCoupon= async(req,res)=>{
               }
             );
 
-            // if (result.modifiedCount === 0) {
-            //   console.log("No matching item found");
-            // }
-
+            
             //after updating we fetching new db data.
             const userCart=await Cart.findOne({userId})
               .populate({
@@ -887,10 +740,9 @@ const applyCoupon= async(req,res)=>{
               totalPrice += price * item.quantity;
               totalAmount += price * item.quantity;
             }
-            //fetch applied coupons
-            //..
-            //..
-            //..
+
+            const applicableCouponsCodes=(await Coupon.find({minPurchase:{$lte:totalPrice}},{couponCode:1,_id:0})).map((coupon)=>coupon.couponCode)
+
 
             const [cartHtml,couponHtml, priceDetailsHtml] = await Promise.all([
                 ejs.renderFile(
@@ -900,7 +752,7 @@ const applyCoupon= async(req,res)=>{
                 ),
                 ejs.renderFile(
                 path.join(__dirname, "../../views/user/checkout/checkout-partials/coupon-forms.ejs"),
-                {},
+                {applicableCouponsCodes:applicableCouponsCodes},
                 { async: true }
                 ),
                 ejs.renderFile(
@@ -1044,15 +896,7 @@ const applyCoupon= async(req,res)=>{
 
     await userCart.save();
 
-    // let userCart2=await Cart.findOne({userId})
-    //   .populate({
-    //     path:"items.productId",
-    //     select:"productName category quantity brand productImage salePrice regularPrice",
-    //     populate:[
-    //       {path:"category",select:"name"},
-    //       {path:"brand",select:"brandName"}
-    //     ]
-    //   })
+   
       let cartObj=userCart.toObject();
     // Merge per-product discounts directly into cart items
     cartObj.items = cartObj.items.map(item => {
@@ -1070,19 +914,7 @@ const applyCoupon= async(req,res)=>{
     });
 
 
-    
-    // return res.json({
-    //   success: true,
-    //   message: "Coupon applied successfully",
-    //   totalPrice,
-    //   totalDiscountFromAllCoupons,
-    //   totalAmount,
-    //   appliedCoupons: allCoupons.map((c) => ({
-    //     code: c.code,
-    //     discountAmount: c.discountAmount,
-    //   })),
-    //   userCart:cartObj
-    // });
+    const applicableCouponsCodes=(await Coupon.find({minPurchase:{$lte:totalPrice}},{couponCode:1,_id:0})).map((coupon)=>coupon.couponCode)
 
     const [cartHtml,couponHtml, priceDetailsHtml] = await Promise.all([
             ejs.renderFile(
@@ -1092,11 +924,14 @@ const applyCoupon= async(req,res)=>{
             ),
             ejs.renderFile(
             path.join(__dirname, "../../views/user/checkout/checkout-partials/coupon-forms.ejs"),
-            {appliedCoupons:allCoupons.map((coupon)=>({
-              code:coupon.code,
-              discountAmount:coupon.discountAmount,
-              couponId:coupon.couponId
-            }))},
+            {
+                applicableCouponsCodes,
+                appliedCoupons:allCoupons.map((coupon)=>({
+                    code:coupon.code,
+                    discountAmount:coupon.discountAmount,
+                    couponId:coupon.couponId,
+                }))
+            },
             { async: true }
             ),
             ejs.renderFile(
@@ -1132,7 +967,7 @@ const applyCoupon= async(req,res)=>{
     });
 
   } catch (error) {
-    console.error('applyCoupon() error',error)
+    console.error('applyCoupon() error == ',error)
     res.status(Status.INTERNAL_ERROR).json({success:false,message:"Something went wrong"})
   }
 }
@@ -1182,5 +1017,3 @@ module.exports={
     applyCoupon,
     removeCoupon
 }
-
-

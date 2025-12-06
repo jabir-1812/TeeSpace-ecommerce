@@ -148,18 +148,53 @@ async function getTopTenProductsData(type, customStart = null, customEnd = null)
     }
 
 
+    // const data = await Order.aggregate([
+    //     { $match: { orderStatus: "Delivered", deliveredOn: { $gte: start, $lt: end } } },
+    //     { $unwind: "$orderItems" },
+    //     { $match: { "orderItems.itemStatus": "Delivered", "orderItems.returnStatus": { $ne: "Refunded" } } },
+    //     {
+    //         $group: {
+    //         _id: "$orderItems.productId",
+    //         totalSold: { $sum: "$orderItems.quantity" }
+    //         }
+    //     },
+    //     {
+    //     $lookup: {
+    //             from: "products",
+    //             localField: "_id",
+    //             foreignField: "_id",
+    //             as: "product"
+    //         }
+    //     },
+    //     { $unwind: "$product" },
+    //     {
+    //         $project: {
+    //             _id: 1,
+    //             totalSold: 1,
+    //             productName: "$product.productName",
+    //             productImage: "$product.productImage"
+    //         }
+    //     },
+    //     { $sort: { totalSold: -1 } },
+    //     { $limit: 10 }
+    // ]);
+
     const data = await Order.aggregate([
         { $match: { orderStatus: "Delivered", deliveredOn: { $gte: start, $lt: end } } },
         { $unwind: "$orderItems" },
         { $match: { "orderItems.itemStatus": "Delivered", "orderItems.returnStatus": { $ne: "Refunded" } } },
+        // { $match: { "orderItems.itemStatus": "Delivered" } },
+
         {
             $group: {
-            _id: "$orderItems.productId",
-            totalSold: { $sum: "$orderItems.quantity" }
+                _id: "$orderItems.productId",
+                totalSold: { $sum: "$orderItems.quantity" }
             }
         },
+
+        // Lookup product
         {
-        $lookup: {
+            $lookup: {
                 from: "products",
                 localField: "_id",
                 foreignField: "_id",
@@ -167,22 +202,52 @@ async function getTopTenProductsData(type, customStart = null, customEnd = null)
             }
         },
         { $unwind: "$product" },
+
+        // Lookup brand
+        {
+            $lookup: {
+                from: "brands",
+                localField: "product.brand",
+                foreignField: "_id",
+                as: "brand"
+            }
+        },
+        { $unwind: { path: "$brand", preserveNullAndEmptyArrays: true } },
+
+        // Lookup category
+        {
+            $lookup: {
+                from: "categories",
+                localField: "product.category",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+
+        // Final projection
         {
             $project: {
                 _id: 1,
                 totalSold: 1,
                 productName: "$product.productName",
-                productImage: "$product.productImage"
+                productImage: "$product.productImage",
+                brandName: "$brand.brandName",       // change field name to match your schema
+                categoryName: "$category.name"  // change field name
             }
         },
+
         { $sort: { totalSold: -1 } },
         { $limit: 10 }
     ]);
 
 
+
     console.log("Daatatatttt",data)
     return data;
 }
+
+
 
 
 
@@ -356,20 +421,5 @@ module.exports = {
     getTopTenBrands
 };
 
-
-
-
-const order={
-    orderStatus:"Delivered",
-    DeliveredOn:'2025-11-15T11:20:25.032+00:00',
-    orderItems:[
-        {
-            itemStatus:"Delivered",
-            deliveredOn:"2025-11-15T11:20:25.032+00:00",
-            productId:"ref id",
-            quantity:10,
-        }
-    ]
-}
 
 
