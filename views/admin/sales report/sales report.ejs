@@ -43,7 +43,7 @@
         <div class="col-2">
             <div class="card shadow d-flex flex-column align-items-center">
                 <div class="h4">👕</div>
-                <div class="fw-bold">Total Products sold</div>
+                <div class="fw-bold">Net Total Products sold</div>
                 <div class="h4 fw-bold text-success" id="totalProductsSold"></div>
             </div>
         </div>
@@ -58,24 +58,24 @@
         <div class="col-2">
             <div class="card shadow d-flex flex-column align-items-center">
                 <div class="h4">💰</div>
-                <div class="fw-bold">Total Income</div>
-                <div class="h4 fw-bold text-success" id="totalIncome"></div>
+                <div class="fw-bold">Net Total Income</div>
+                <div class="h4 fw-bold text-success" id="netTotalIncome"></div>
             </div>
         </div>
         
         <div class="col-2">
             <div class="card shadow d-flex flex-column align-items-center">
                 <div class="h4">🎁</div>
-                <div class="fw-bold">Offer Discounts</div>
-                <div class="h4 fw-bold text-success" id="totalOfferDiscount"></div>
+                <div class="fw-bold">Net Offer Discounts</div>
+                <div class="h4 fw-bold text-success" id="netTotalOfferDiscount"></div>
             </div>
         </div>
         
         <div class="col-2">
             <div class="card shadow d-flex flex-column align-items-center">
                 <div class="h4">🎟️</div>
-                <div class="fw-bold">Coupon Discounts</div>
-                <div class="h4 fw-bold text-success" id="totalCouponDiscount"></div>
+                <div class="fw-bold">Net Coupon Discounts</div>
+                <div class="h4 fw-bold text-success" id="netTotalCouponDiscount"></div>
             </div>
         </div>
     </div>
@@ -96,11 +96,11 @@
                 <thead class="table-dark">
                     <tr>
                     <th>Date / Period</th>
-                    <th>Total Sales (₹)</th>
-                    <th>Total Offer Discounts (₹)</th>
-                    <th>Total Coupon Discounts (₹)</th>
+                    <th>Net Total Sales (₹)</th>
+                    <th>Net Total Offer Discounts (₹)</th>
+                    <th>Net Total Coupon Discounts (₹)</th>
                     <th>Total Orders</th>
-                    <th>Avg Order Value (₹)</th>
+                    <th>Net Avg Order Value (₹)</th>
                     </tr>
                 </thead>
                 <tbody id="reportBody"></tbody>
@@ -135,9 +135,9 @@
           data.report, 
           type, 
           data.totalOrdersCount, 
-          data.totalIncome, 
-          data.totalOfferDiscount, 
-          data.totalCouponDiscount,
+          data.netTotalIncome, 
+          data.netTotalOfferDiscount, 
+          data.netTotalCouponDiscount,
           data.productSoldCounts,
           data.totalProductsSold
         );  
@@ -155,19 +155,19 @@
         data.report, 
         currentReportType,  
         data.totalOrdersCount, 
-        data.totalIncome, 
-        data.totalOfferDiscount, 
-        data.totalCouponDiscount,
+        data.netTotalIncome, 
+        data.netTotalOfferDiscount, 
+        data.netTotalCouponDiscount,
         data.productSoldCounts,
         data.totalProductsSold
       );
     }
 
-    function renderReport(report, type, totalOrdersCount, totalIncome, totalOfferDiscount, totalCouponDiscount, productSoldCounts, totalProductsSold) {
+    function renderReport(report, type, totalOrdersCount, netTotalIncome, netTotalOfferDiscount, netTotalCouponDiscount, productSoldCounts, totalProductsSold) {
       document.getElementById('totalOrdersCount').innerHTML=totalOrdersCount;
-      document.getElementById('totalIncome').innerHTML=`Rs.${totalIncome.toFixed(2)}/-`;
-      document.getElementById('totalOfferDiscount').innerHTML=`Rs.${totalOfferDiscount.toFixed(2)}/-`;
-      document.getElementById('totalCouponDiscount').innerHTML=`Rs.${totalCouponDiscount.toFixed(2)}/-`;
+      document.getElementById('netTotalIncome').innerHTML=`Rs.${netTotalIncome.toFixed(2)}/-`;
+      document.getElementById('netTotalOfferDiscount').innerHTML=`Rs.${netTotalOfferDiscount.toFixed(2)}/-`;
+      document.getElementById('netTotalCouponDiscount').innerHTML=`Rs.${netTotalCouponDiscount.toFixed(2)}/-`;
       document.getElementById('totalProductsSold').innerHTML=`${totalProductsSold}`;
 
 
@@ -292,18 +292,18 @@
         }
 
         labels.push(label);
-        sales.push(r.totalSales);
-        offerDiscounts.push(r.totalOfferDiscount)
-        couponDiscounts.push(r.totalCouponDiscount)
+        sales.push(r.netTotalSales);
+        offerDiscounts.push(r.netTotalOfferDiscount)
+        couponDiscounts.push(r.netTotalCouponDiscount)
 
         tbody.innerHTML += `
           <tr>
             <td>${label}</td>
-            <td>${r.totalSales.toFixed(2)}</td>
-            <td>${r.totalOfferDiscount.toFixed(2)}</td>
-            <td>${r.totalCouponDiscount.toFixed(2)}</td>
+            <td>${r.netTotalSales.toFixed(2)}</td>
+            <td>${r.netTotalOfferDiscount.toFixed(2)}</td>
+            <td>${r.netTotalCouponDiscount.toFixed(2)}</td>
             <td>${r.totalOrders}</td>
-            <td>${r.avgOrderValue ? r.avgOrderValue.toFixed(2) : "-"}</td>
+            <td>${r.netAvgOrderValue ? r.netAvgOrderValue.toFixed(2) : "-"}</td>
           </tr>
         `;
       });

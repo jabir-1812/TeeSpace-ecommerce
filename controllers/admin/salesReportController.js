@@ -62,10 +62,10 @@ async function getReportData(type, start, end) {
   }
 
     groupStage.totalOrders = { $sum: 1 };
-    groupStage.totalOfferDiscount = {$sum: "$finalTotalOfferDiscount"};//net total offer discount
-    groupStage.totalCouponDiscount ={$sum: "$finalTotalCouponDiscount"};//net total coupon discount
-    groupStage.totalSales = { $sum: "$finalTotalAmount" };//net total amount
-    groupStage.avgOrderValue = { $avg: "$finalTotalAmount" };//net avg of total amount
+    groupStage.netTotalOfferDiscount = {$sum: "$finalTotalOfferDiscount"};//net total offer discount
+    groupStage.netTotalCouponDiscount ={$sum: "$finalTotalCouponDiscount"};//net total coupon discount
+    groupStage.netTotalSales = { $sum: "$finalTotalAmount" };//net total amount
+    groupStage.netAvgOrderValue = { $avg: "$finalTotalAmount" };//net avg of total amount
 
   const report = await Order.aggregate([
     { $match: match },
@@ -74,12 +74,12 @@ async function getReportData(type, start, end) {
   ]);
 
 
-  let totalOrdersCount=0,totalOfferDiscount=0, totalCouponDiscount=0, totalIncome=0;
+  let totalOrdersCount=0,netTotalOfferDiscount=0, netTotalCouponDiscount=0, netTotalIncome=0;
   report.forEach((r)=>{
     totalOrdersCount+=r.totalOrders;
-    totalIncome+=r.totalSales;
-    totalOfferDiscount+=r.totalOfferDiscount;
-    totalCouponDiscount+=r.totalCouponDiscount;
+    netTotalIncome+=r.netTotalSales;
+    netTotalOfferDiscount+=r.netTotalOfferDiscount;
+    netTotalCouponDiscount+=r.netTotalCouponDiscount;
   })
 
 
@@ -189,7 +189,7 @@ async function getReportData(type, start, end) {
 	console.log("totalProuctsSold == ",totalProductsSold)
 
 
-  return {report, totalOrdersCount, totalOfferDiscount, totalCouponDiscount, totalIncome, productSoldCounts, totalProductsSold};
+  return {report, totalOrdersCount, netTotalOfferDiscount, netTotalCouponDiscount, netTotalIncome, productSoldCounts, totalProductsSold};
 }
 
 
@@ -203,9 +203,9 @@ const getSalesReport=async (req,res)=>{
         const {
           report, 
           totalOrdersCount, 
-          totalOfferDiscount, 
-          totalCouponDiscount,
-          totalIncome,
+          netTotalOfferDiscount, 
+          netTotalCouponDiscount,
+          netTotalIncome,
 		  productSoldCounts,
 		  totalProductsSold
         }=await getReportData(type,start,end)
@@ -213,9 +213,9 @@ const getSalesReport=async (req,res)=>{
         return res.json({
           report,
           totalOrdersCount,
-          totalOfferDiscount,
-          totalCouponDiscount,
-          totalIncome,
+          netTotalOfferDiscount,
+          netTotalCouponDiscount,
+          netTotalIncome,
 		  productSoldCounts,
 		  totalProductsSold
         })
@@ -238,9 +238,9 @@ const getSalesReportPDF = async (req,res)=>{
         const {
           report, 
           totalOrdersCount, 
-          totalOfferDiscount, 
-          totalCouponDiscount,
-          totalIncome,
+          netTotalOfferDiscount, 
+          netTotalCouponDiscount,
+          netTotalIncome,
           productSoldCounts,
 		  totalProductsSold
         }=await getReportData(type,start,end)
@@ -290,32 +290,32 @@ const getSalesReportPDF = async (req,res)=>{
         doc.font("Helvetica").fillColor("black");
 
         report.forEach((r, i) => {
-        let label = "";
-        if (r._id?.day) label = `${r._id.day}-${r._id.month}-${r._id.year}`;
-        else if (r._id?.week) label = `Week ${r._id.week}, ${r._id.year}`;
-        else if (r._id?.year) label = `${r._id.year}`;
-        else label = `${start} → ${end}`;
+            let label = "";
+            if (r._id?.day) label = `${r._id.day}-${r._id.month}-${r._id.year}`;
+            else if (r._id?.week) label = `Week ${r._id.week}, ${r._id.year}`;
+            else if (r._id?.year) label = `${r._id.year}`;
+            else label = `${start} → ${end}`;
 
-        const y = doc.y + 4;
+            const y = doc.y + 4;
 
-        // Optional: alternate row background color
-        if (i % 2 === 0) {
-            doc
-            .rect(38, y - 3, 512, 18)
-            .fill("#f9f9f9")
-            .fillColor("black");
-        }
+            // Optional: alternate row background color
+            if (i % 2 === 0) {
+                doc
+                .rect(38, y - 3, 512, 18)
+                .fill("#f9f9f9")
+                .fillColor("black");
+            }
 
-        
-        doc.text(label, 40, y, { width: 80, ellipsis: true });
-        doc.text(`${r.totalOrders}`, 130, y);
-        doc.text(`Rs.${r.totalSales.toFixed(2)}`, 210, y);
-        doc.text(`Rs.${r.totalOfferDiscount.toFixed(2)}`, 310, y);
-        doc.text(`Rs.${r.totalCouponDiscount.toFixed(2)}`, 410, y);
-        doc.text(`Rs.${r.avgOrderValue?.toFixed(2) || "-"}`, 520, y, { align: "right" });
+            
+            doc.text(label, 40, y, { width: 80, ellipsis: true });
+            doc.text(`${r.totalOrders}`, 130, y);
+            doc.text(`Rs.${r.netTotalSales.toFixed(2)}`, 210, y);
+            doc.text(`Rs.${r.netTotalOfferDiscount.toFixed(2)}`, 310, y);
+            doc.text(`Rs.${r.netTotalCouponDiscount.toFixed(2)}`, 410, y);
+            doc.text(`Rs.${r.netAvgOrderValue?.toFixed(2) || "-"}`, 520, y, { align: "right" });
 
 
-        doc.moveDown(0.5);
+            doc.moveDown(0.5);
         });
 
         doc.moveDown(1);
@@ -331,9 +331,9 @@ const getSalesReportPDF = async (req,res)=>{
         doc.font("Helvetica");
 
         doc.text(`Total Orders: ${totalOrdersCount}`, 40);
-        doc.text(`Total Offer Discount: Rs.${totalOfferDiscount.toFixed(2)}`, 40);
-        doc.text(`Total Coupon Discount:  Rs.${totalCouponDiscount.toFixed(2)}`, 40);
-        doc.text(`Total Income:          Rs.${totalIncome.toFixed(2)}`, 40);
+        doc.text(`Total Offer Discount: Rs.${netTotalOfferDiscount.toFixed(2)}`, 40);
+        doc.text(`Total Coupon Discount:  Rs.${netTotalCouponDiscount.toFixed(2)}`, 40);
+        doc.text(`Total Income:          Rs.${netTotalIncome.toFixed(2)}`, 40);
 
         // ⭐ ADD TOTAL PRODUCTS SOLD HERE
         doc.text(`Total Products Sold: ${totalProductsSold}`, 40);
@@ -397,9 +397,9 @@ const getSalesReportExcel = async (req, res) => {
         const {
             report,
             totalOrdersCount,
-            totalOfferDiscount,
-            totalCouponDiscount,
-            totalIncome,
+            netTotalOfferDiscount,
+            netTotalCouponDiscount,
+            netTotalIncome,
             productSoldCounts,
             totalProductsSold
         } = await getReportData(type, start, end);
@@ -413,10 +413,10 @@ const getSalesReportExcel = async (req, res) => {
         sheet.columns = [
             { header: "Period", key: "period", width: 25 },
             { header: "Total Orders", key: "totalOrders", width: 15 },
-            { header: "Total Sales (Rs.)", key: "totalSales", width: 20 },
-            { header: "Average Order Value (Rs.)", key: "avgOrderValue", width: 25 },
-            { header: "Total Offer Discount (Rs.)", key: "totalOfferDiscount", width: 20 },
-            { header: "Total Coupon Discount (Rs.)", key: "totalCouponDiscount", width: 20 },
+            { header: "Total Sales (Rs.)", key: "netTotalSales", width: 20 },
+            { header: "Average Order Value (Rs.)", key: "netAvgOrderValue", width: 25 },
+            { header: "Total Offer Discount (Rs.)", key: "netTotalOfferDiscount", width: 20 },
+            { header: "Total Coupon Discount (Rs.)", key: "netTotalCouponDiscount", width: 20 },
         ];
 
         report.forEach((r) => {
@@ -432,10 +432,10 @@ const getSalesReportExcel = async (req, res) => {
             sheet.addRow({
                 period: label,
                 totalOrders: r.totalOrders,
-                totalSales: r.totalSales,
-                avgOrderValue: r.avgOrderValue ? r.avgOrderValue.toFixed(2) : "-",
-                totalOfferDiscount: r.totalOfferDiscount,
-                totalCouponDiscount: r.totalCouponDiscount,
+                netTotalSales: r.netTotalSales,
+                netAvgOrderValue: r.netAvgOrderValue ? r.netAvgOrderValue.toFixed(2) : "-",
+                netTotalOfferDiscount: r.netTotalOfferDiscount,
+                netTotalCouponDiscount: r.netTotalCouponDiscount,
             });
         });
 
@@ -449,9 +449,9 @@ const getSalesReportExcel = async (req, res) => {
         summaryHeader.alignment = { horizontal: "left" };
 
         sheet.addRow(["Total Orders", totalOrdersCount]);
-        sheet.addRow(["Total Offer Discount (Rs.)", totalOfferDiscount.toFixed(2)]);
-        sheet.addRow(["Total Coupon Discount (Rs.)", totalCouponDiscount.toFixed(2)]);
-        sheet.addRow(["Total Income (Rs.)", totalIncome.toFixed(2)]);
+        sheet.addRow(["Total Offer Discount (Rs.)", netTotalOfferDiscount.toFixed(2)]);
+        sheet.addRow(["Total Coupon Discount (Rs.)", netTotalCouponDiscount.toFixed(2)]);
+        sheet.addRow(["Total Income (Rs.)", netTotalIncome.toFixed(2)]);
         
         // ⭐ ADD TOTAL PRODUCTS SOLD
         sheet.addRow(["Total Products Sold", totalProductsSold]);
