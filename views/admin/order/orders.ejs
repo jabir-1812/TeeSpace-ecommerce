@@ -66,7 +66,7 @@
                                 <td><%= new Date(order.createdAt).toLocaleString() %></td>
                                 <td><%= order.userId?.name || "Unknown" %></td>
                                 <td><%= order.userId?.email || "-" %></td>
-                                <td>₹<%= order.totalAmount %></td>
+                                <td>₹<%= order.totalAmount.toFixed(2) %></td>
 
                                 <!-- Order Status -->
                                 <td>

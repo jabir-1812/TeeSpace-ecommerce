@@ -165,9 +165,9 @@
 
     function renderReport(report, type, totalOrdersCount, totalIncome, totalOfferDiscount, totalCouponDiscount, productSoldCounts, totalProductsSold) {
       document.getElementById('totalOrdersCount').innerHTML=totalOrdersCount;
-      document.getElementById('totalIncome').innerHTML=`Rs.${totalIncome}/-`;
-      document.getElementById('totalOfferDiscount').innerHTML=`Rs.${totalOfferDiscount}/-`;
-      document.getElementById('totalCouponDiscount').innerHTML=`Rs.${totalCouponDiscount}/-`;
+      document.getElementById('totalIncome').innerHTML=`Rs.${totalIncome.toFixed(2)}/-`;
+      document.getElementById('totalOfferDiscount').innerHTML=`Rs.${totalOfferDiscount.toFixed(2)}/-`;
+      document.getElementById('totalCouponDiscount').innerHTML=`Rs.${totalCouponDiscount.toFixed(2)}/-`;
       document.getElementById('totalProductsSold').innerHTML=`${totalProductsSold}`;
 
 
@@ -185,7 +185,7 @@
         productSoldCount_firstColumn.innerHTML="";
         for(let i=0;i<productInFirstColumn;i++){
             productSoldCount_firstColumn.innerHTML +=`
-                <div class="card">
+                <div class="card shadow">
                     <div class="d-flex gap-2">
                         <div><img class="img-thumbnail" width="125px" src="${productSoldCounts[i].productImage[0].url}" alt="${productSoldCounts[i].productName}"></div>
                         <div class="d-flex flex-column gap-1">
@@ -203,7 +203,7 @@
         productSoldCount_secondColumn.innerHTML="";
         for(let i=productInFirstColumn;i<(productInFirstColumn + productInSecondColumn);i++){
             productSoldCount_secondColumn.innerHTML +=`
-                <div class="card">
+                <div class="card shadow">
                     <div class="d-flex gap-2">
                         <div><img class="img-thumbnail" width="125px" src="${productSoldCounts[i].productImage[0].url}" alt="${productSoldCounts[i].productName}"></div>
                         <div class="d-flex flex-column gap-1">
@@ -222,7 +222,7 @@
 
         for(let i=(productInFirstColumn + productInSecondColumn);i<productSoldCounts.length;i++){
             productSoldCount_thirdColumn.innerHTML +=`
-                <div class='card'>
+                <div class='card shadow'>
                     <div class="d-flex gap-2">
                         <div><img class="img-thumbnail" width="125px" src="${productSoldCounts[i].productImage[0].url}" alt="${productSoldCounts[i].productName}"></div>
                         <div class="d-flex flex-column gap-1">
