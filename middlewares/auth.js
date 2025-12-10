@@ -1,3 +1,4 @@
+const passport = require('passport');
 const Status=require('../constants/statusCodes')
 const User=require('../models/userSchema');
 
@@ -6,7 +7,7 @@ const User=require('../models/userSchema');
 const userAuth = async (req, res, next) => {
     try {
         // 1. Check if session exists
-        if (!req.session.user) {
+        if (!req.session.user && !req.session?.passport.user) {
             // If it's an AJAX request, send JSON instead of redirect
             if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
                 return res.status(Status.UNAUTHORIZED).json({ status: false, success:false, message: 'Login required' });
@@ -16,7 +17,8 @@ const userAuth = async (req, res, next) => {
         }
 
         // 2. Check if user exists in DB
-        const user = await User.findById(req.session.user);
+        const userId=req.session.user || req.session?.passport.user
+        const user = await User.findById(userId);
         if (!user) {
             if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
                 return res.status(Status.UNAUTHORIZED).json({ status: false, message: 'User not found, Login required' });

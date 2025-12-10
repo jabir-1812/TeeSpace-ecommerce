@@ -34,7 +34,7 @@
             <td><%=data[i].email%></td>
             <td><%=data[i].phone || 'N/A'%></td>
             <td>
-              <button class="<%= data[i].isBlocked ? 'btn btn-success' : 'btn btn-danger' %>"
+              <button class="btn  <%= data[i].isBlocked ? 'btn-success' : 'btn-danger' %>"
                       id="user-<%= data[i]._id %>"
                       data-user-id="<%= data[i]._id %>"
                       data-is-blocked="<%= data[i].isBlocked %>"
@@ -96,13 +96,13 @@
         const data=await response.json();
         await Swal.fire("Done!",data.message,"success");
         if(data.success){
-          // console.log("data success unblock")
-          // const blockUnblockButton=document.getElementById(`user-${userId}`);
-          // blockUnblockButton.textContent="Unblock";
-          // blockUnblockButton.dataset.isBlocked=true;
-          // blockUnblockButton.className="";
-          // blockUnblockButton.classList.add('btn-success')
-          location.reload()
+        //   console.log("data success unblock")
+          const blockUnblockButton=document.getElementById(`user-${userId}`);
+          blockUnblockButton.textContent="Unblock";
+          blockUnblockButton.dataset.isBlocked=true;
+          blockUnblockButton.className="";
+          blockUnblockButton.classList.add('btn','btn-success')
+        //   location.reload()
         }
         
        } 
@@ -128,13 +128,13 @@
         await Swal.fire("Done!",data.message,"success");
 
         if(data.success){
-          // console.log("data success block")
-          // const blockUnblockButton=document.getElementById(`user-${userId}`);
-          // blockUnblockButton.textContent="Block";
-          // blockUnblockButton.dataset.isBlocked=false;
-          // blockUnblockButton.className="";
-          // blockUnblockButton.classList.add('btn-danger');
-          location.reload()
+          console.log("data success block")
+          const blockUnblockButton=document.getElementById(`user-${userId}`);
+          blockUnblockButton.textContent="Block";
+          blockUnblockButton.dataset.isBlocked=false;
+          blockUnblockButton.className="";
+          blockUnblockButton.classList.add('btn','btn-danger');
+        //   location.reload()
         }
 
        }

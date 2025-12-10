@@ -180,7 +180,6 @@ const loadAllProductsPage = async (req, res) => {
         .populate("brand")
         .exec();
 
-        // console.log("producttttttt:", product);
 
         res.render("./admin/products/product", {
         layout:"adminLayout",
