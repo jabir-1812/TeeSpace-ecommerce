@@ -8,6 +8,4 @@ const invalidRoute=async (req, res) => {
     }
 }
 
-module.exports={
-    invalidRoute
-}
+export default invalidRoute

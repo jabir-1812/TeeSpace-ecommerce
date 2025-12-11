@@ -1,6 +1,6 @@
-const User=require('../../models/userSchema');
-const mongoose=require('mongoose');
-const bcrypt=require('bcrypt');
+import User from '../../models/userSchema.js'
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt'
 
 
 const loadLogin=(req,res)=>{
@@ -70,7 +70,7 @@ const pageError=async (req,res)=>{
 }
 
 
-module.exports={
+export default {
     loadLogin,
     login,
     logout,

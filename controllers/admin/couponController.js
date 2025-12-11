@@ -1,6 +1,6 @@
-const Status=require('../../constants/statusCodes')
-const Coupon=require('../../models/couponSchema')
-const Category=require('../../models/categorySchema')
+import Status from '../../constants/statusCodes.js';
+import Coupon from '../../models/couponSchema.js';
+import Category from '../../models/categorySchema.js';
 
 
 
@@ -248,7 +248,7 @@ const activateCoupon = async (req,res)=>{
     }
 }
 
-module.exports={
+export default {
     getCouponsPage,
     getAddNewCouponPage,
     addNewCoupon,

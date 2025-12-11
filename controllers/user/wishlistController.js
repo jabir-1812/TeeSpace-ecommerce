@@ -1,8 +1,8 @@
-const Status=require('../../constants/statusCodes')
-const User=require('../../models/userSchema')
-const Wishlist=require('../../models/wishlistSchema')
-const Cart=require('../../models/cartSchema')
-const mongoose = require("mongoose");
+import Status from '../../constants/statusCodes.js';
+import User from '../../models/userSchema.js';
+import Wishlist from '../../models/wishlistSchema.js';
+import Cart from '../../models/cartSchema.js';
+import mongoose from 'mongoose';
 
 
 const showWishlist = async (req, res) => {
@@ -113,7 +113,7 @@ const removeFromWishlist=async (req,res)=>{
     }
 }
 
-module.exports={
+export default {
     showWishlist,
     addToWishlist,
     removeFromWishlist

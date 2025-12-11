@@ -1,18 +1,16 @@
-const Status=require('../../constants/statusCodes')
-const mongoose=require('mongoose')
-const User=require('../../models/userSchema');
-const Cart=require('../../models/cartSchema')
-const Category=require('../../models/categorySchema')
-const Product=require('../../models/productSchema')
-const Banner=require('../../models/bannerSchema');
-const Brand=require('../../models/brandSchema');
-const nodemailer=require('nodemailer');
-const env=require('dotenv').config();
-const bcrypt=require('bcrypt');
-const Offer=require('../../models/offerSchema')
-const Coupon=require('../../models/couponSchema')
-const crypto=require('crypto')
-const logger=require('../../config/logger')
+import Status from '../../constants/statusCodes.js';
+import User from '../../models/userSchema.js';
+import Cart from '../../models/cartSchema.js';
+import Category from '../../models/categorySchema.js';
+import Product from '../../models/productSchema.js';
+import Banner from '../../models/bannerSchema.js';
+import Brand from '../../models/brandSchema.js';
+import nodemailer from 'nodemailer';
+import bcrypt from 'bcrypt';
+import Offer from '../../models/offerSchema.js';
+import Coupon from '../../models/couponSchema.js';
+import crypto from 'crypto';
+import logger from '../../config/logger.js';
 
 
 
@@ -623,7 +621,7 @@ const searchProducts=async (req,res)=>{
     }
 }
 
-module.exports ={
+export default {
     loadHomepage,
     pageNotFound,
     loadSignup,

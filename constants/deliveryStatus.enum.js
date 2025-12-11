@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   PENDING: "Pending",
   ORDER_CONFIRMED:"Order Confirmed",
   SHIPPED: "Shipped",

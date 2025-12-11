@@ -1,5 +1,4 @@
-// utils/orderIdGenerator.js
-const Counter = require("../models/counter");
+import Counter from '../models/counter.js'
 
 async function getNextOrderId() {
   const counter = await Counter.findOneAndUpdate(
@@ -13,4 +12,4 @@ async function getNextOrderId() {
   return `ORD${new Date().getFullYear()}${orderNumber}`;
 }
 
-module.exports = getNextOrderId;
+export default getNextOrderId;

@@ -1,7 +1,7 @@
-const Status=require('../../constants/statusCodes')
-const Banner=require('../../models/bannerSchema');
-const path=require('path')
-const fs=require('fs')
+import Status from '../../constants/statusCodes.js'
+import Banner from '../../models/bannerSchema.js'
+import path from 'path';
+import fs from 'fs'
 
 
 const getBannerPage=async (req,res)=>{
@@ -129,7 +129,7 @@ const deleteBanner=async (req,res)=>{
 }
 
 
-module.exports={
+export default {
     getBannerPage,
     loadAddBannerPage,
     addBanner,

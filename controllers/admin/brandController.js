@@ -1,13 +1,11 @@
-const Status=require('../../constants/statusCodes')
-const path=require('path')
-const fs=require('fs')
-const sharp=require("sharp")
-const cloudinary = require('../../config/cloudinary');
-const Brand=require('../../models/brandSchema');
-const Product=require('../../models/productSchema');
-const Offer = require('../../models/offerSchema')
-
-
+import Status from '../../constants/statusCodes.js'
+import path from 'path';
+import fs from 'fs';
+import sharp from 'sharp';
+import cloudinary from '../../config/cloudinary.js';
+import Brand from '../../models/brandSchema.js';
+import Product from '../../models/productSchema.js';
+import Offer from '../../models/offerSchema.js';
 
 const loadAllBrands=async (req,res)=>{
     try {
@@ -418,7 +416,7 @@ const deleteBrand=async (req,res)=>{
         res.status(Status.INTERNAL_ERROR).redirect("/admin/page-error")
     }
 }
-module.exports={
+export default {
     loadAllBrands,
     loadAddBrandPage,
     addBrand,

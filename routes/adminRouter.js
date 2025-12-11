@@ -1,24 +1,24 @@
-const express=require('express')
+import express from 'express'
 const router=express.Router();
-const adminController=require('../controllers/admin/adminController');
-const {userAuth,adminAuth}=require('../middlewares/auth');
-const customerController=require('../controllers//admin/customerController');
-const categoryController=require('../controllers/admin/categoryController');
-const brandController=require('../controllers/admin/brandController');
-const productController=require('../controllers/admin/productController');
-const bannerController=require('../controllers/admin/bannerController');
-const orderController=require('../controllers/admin/adminOrderController');
-const couponController=require('../controllers/admin/couponController');
-const salesReportController=require('../controllers/admin/salesReportController')
-const dashboardController=require('../controllers/admin/dashboardController')
-const multer=require('multer');
-const {bannerStorage}=require('../config/cloudinaryBanner')
-const bannerUploads=multer({storage:bannerStorage});
+import adminController from '../controllers/admin/adminController.js';
+import auth from '../middlewares/auth.js';
+const {adminAuth}=auth;
+import customerController from '../controllers/admin/customerController.js';
+import categoryController from '../controllers/admin/categoryController.js';
+import brandController from '../controllers/admin/brandController.js';
+import productController from '../controllers/admin/productController.js';
+import bannerController from '../controllers/admin/bannerController.js';
+import orderController from '../controllers/admin/adminOrderController.js';
+import couponController from '../controllers/admin/couponController.js';
+import salesReportController from '../controllers/admin/salesReportController.js';
+import dashboardController from '../controllers/admin/dashboardController.js';
+import multer from 'multer';
+import cloudinaryBanner from '../config/cloudinaryBanner.js';
+const {bannerStorage} = cloudinaryBanner;
+const bannerUploads = multer({storage:bannerStorage}) 
 
-
-
-const upload=require('../middlewares/multer')
-const logger=require('../config/logger')
+import upload from '../middlewares/multer.js'
+import logger from '../config/logger.js'
 
 
 //404
@@ -131,4 +131,4 @@ router.get('/sales-report/download/pdf',adminAuth,salesReportController.getSales
 router.get('/sales-report/download/excel',adminAuth,salesReportController.getSalesReportExcel)
 
 
-module.exports=router; 
+export default router

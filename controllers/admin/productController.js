@@ -1,13 +1,11 @@
-const Status=require('../../constants/statusCodes')
-const path=require('path');
-const fs=require('fs')
-const Brand = require("../../models/brandSchema");
-const Category=require('../../models/categorySchema');
-const Product = require("../../models/productSchema");
-const cloudinary = require("../../config/cloudinary");
-const sharp = require('sharp');
-
-
+import Status from '../../constants/statusCodes.js';
+import path from 'path';
+import fs from 'fs';
+import Brand from '../../models/brandSchema.js';
+import Category from '../../models/categorySchema.js';
+import Product from '../../models/productSchema.js';
+import cloudinary from '../../config/cloudinary.js';
+import sharp from 'sharp';
 
 
 
@@ -487,7 +485,7 @@ const editProduct = async (req, res) => {
 
 
 
-module.exports={
+export default {
     loadAddProductPage,
     addProduct,
     loadAllProductsPage,

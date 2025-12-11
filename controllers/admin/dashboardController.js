@@ -1,9 +1,9 @@
-const Status=require('../../constants/statusCodes')
-const Order=require('../../models/orderSchema')
-const Product=require('../../models/productSchema')
-const Category=require('../../models/categorySchema')
-const Brand=require('../../models/brandSchema')
-const DELIVERY_STATUS=require('../../constants/deliveryStatus.enum')
+import Status from '../../constants/statusCodes.js';
+import Order from '../../models/orderSchema.js';
+import Product from '../../models/productSchema.js';
+import Category from '../../models/categorySchema.js';
+import Brand from '../../models/brandSchema.js';
+import DELIVERY_STATUS from '../../constants/deliveryStatus.enum.js'; 
 
 
 
@@ -414,7 +414,7 @@ async function getTopTenBrandsData(type, customStart = null, customEnd = null) {
 
 
 
-module.exports = {
+export default {
     loadDashboard,
     getTopTenProducts,
     getTopTenCategories,

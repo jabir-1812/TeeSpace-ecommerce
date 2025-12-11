@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const { Schema } = mongoose;
-const DELIVERY_STATUS=require('../constants/deliveryStatus.enum')
+import DELIVERY_STATUS from '../constants/deliveryStatus.enum.js';
 
 
 const orderSchema = new Schema(
@@ -113,4 +113,4 @@ const orderSchema = new Schema(
 
 
 const Order = mongoose.model("Order", orderSchema);
-module.exports=Order;
+export default Order;

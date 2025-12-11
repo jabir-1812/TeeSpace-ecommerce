@@ -1,4 +1,4 @@
-const Coupon = require('../models/couponSchema');
+import Coupon from '../models/couponSchema.js';
 
 async function giveReferralCoupon(userId) {
   // // Check if already rewarded
@@ -30,5 +30,5 @@ async function giveReferralCoupon(userId) {
   });
 }
 
-module.exports = giveReferralCoupon;
+export default giveReferralCoupon;
 

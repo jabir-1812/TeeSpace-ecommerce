@@ -1,4 +1,4 @@
-const StatusCode = Object.freeze({
+const STATUS_CODE = Object.freeze({
   OK: 200,
   CREATED: 201,
   BAD_REQUEST: 400,
@@ -9,4 +9,4 @@ const StatusCode = Object.freeze({
   INTERNAL_ERROR: 500,
 });
 
-module.exports = StatusCode;
+export default STATUS_CODE

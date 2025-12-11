@@ -1,4 +1,4 @@
-const STATUS_CODES=require('../constants/statusCodes')
+import STATUS_CODE from '../constants/statusCodes.js';
 
 
 
@@ -6,7 +6,7 @@ const STATUS_CODES=require('../constants/statusCodes')
 const errorHandler = async (err, req, res, next)=>{
     try {
             console.error(err.stack);
-            res.status(STATUS_CODES.INTERNAL_ERROR).render('error-page', { title: "Server Error" });
+            res.status(STATUS_CODE.INTERNAL_ERROR).render('error-page', { title: "Server Error" });
     } catch (error) {
         console.error("errorHandler() middleware error===",error)
     }
@@ -14,6 +14,4 @@ const errorHandler = async (err, req, res, next)=>{
 
 
 
-module.exports = {
-    errorHandler
-}
+export default errorHandler

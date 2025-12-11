@@ -1,5 +1,4 @@
-// utils/invoice.js
-const Counter = require("../models/counter");
+import Counter from '../models/counter.js'
 
 async function generateInvoiceNumber() {
     const counter = await Counter.findOneAndUpdate(
@@ -10,4 +9,4 @@ async function generateInvoiceNumber() {
     return `INV-${new Date().getFullYear()}-${counter.value}`;
 }
 
-module.exports = { generateInvoiceNumber };
+export default generateInvoiceNumber

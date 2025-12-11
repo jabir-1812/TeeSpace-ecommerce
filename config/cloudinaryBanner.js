@@ -1,9 +1,11 @@
-// cloudinaryProduct.js
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-require('dotenv').config();
+// cloudinaryProduct.js (ESM)
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import dotenv from 'dotenv';
 
-// make sure it's configured once
+dotenv.config();
+
+// configure cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
@@ -14,9 +16,9 @@ cloudinary.config({
 const bannerStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "banners", // 👈 your new folder
+    folder: "banners",
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
   },
 });
 
-module.exports = { cloudinary, bannerStorage };
+export default { cloudinary, bannerStorage };

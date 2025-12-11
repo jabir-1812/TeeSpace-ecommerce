@@ -1,8 +1,7 @@
-const Status=require('../../constants/statusCodes')
-const Product=require('../../models/productSchema');
-const Category=require('../../models/categorySchema');
-
-const User=require('../../models/userSchema');
+import Status from '../../constants/statusCodes.js';
+import Product from '../../models/productSchema.js';
+import Category from '../../models/categorySchema.js';
+import User from '../../models/userSchema.js';
 
 
 
@@ -55,6 +54,6 @@ const productDetails = async (req,res)=>{
     }
 }
 
-module.exports={
+export default {
     productDetails
 }

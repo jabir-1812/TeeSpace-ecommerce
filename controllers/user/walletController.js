@@ -1,9 +1,9 @@
-const Status=require('../../constants/statusCodes')
-const User=require('../../models/userSchema')
-const Wallet=require('../../models/walletSchema')
-const Razorpay=require('razorpay')
-const crypto = require('crypto')
-require('dotenv').config();
+import Status from '../../constants/statusCodes.js';
+import User from '../../models/userSchema.js';
+import Wallet from '../../models/walletSchema.js';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+
 
 
 
@@ -170,7 +170,7 @@ const addMoney=async (req,res)=>{
 
 
 
-module.exports={
+export default {
     getWallet,
     createRazorPayOrder,
     verifyRazorpayPayment,

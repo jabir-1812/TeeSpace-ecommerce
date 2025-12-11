@@ -1,18 +1,18 @@
-const Status=require('../../constants/statusCodes')
-const User=require('../../models/userSchema');
-const Product=require('../../models/productSchema');
-const Address=require('../../models/addressSchema');
-const Cart=require('../../models/cartSchema');
-const Wallet=require('../../models/walletSchema')
-const { ObjectId } = require('mongodb');
-const { default: mongoose } = require("mongoose");
-const Coupon = require('../../models/couponSchema');
-const ejs = require("ejs");
-const path = require("path");
-// const { default: products } = require('razorpay/dist/types/products');
+import Status from '../../constants/statusCodes.js';
+import User from '../../models/userSchema.js';
+import Product from '../../models/productSchema.js';
+import Address from '../../models/addressSchema.js';
+import Cart from '../../models/cartSchema.js';
+import Wallet from '../../models/walletSchema.js';
+import mongoose from 'mongoose';
+import Coupon from '../../models/couponSchema.js';
+import ejs from 'ejs';
+import path from 'path';
+import { fileURLToPath } from "url";
 
-// const { default: products } = require('razorpay/dist/types/products');
-require('dotenv').config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 
 
@@ -1008,7 +1008,7 @@ const removeCoupon = async (req,res)=>{
 
 
 
-module.exports={
+export default {
     loadCheckoutPage,
     editAddress,
     addNewAddress,

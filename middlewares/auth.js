@@ -1,6 +1,6 @@
-const passport = require('passport');
-const Status=require('../constants/statusCodes')
-const User=require('../models/userSchema');
+import passport from 'passport';
+import Status from '../constants/statusCodes.js';
+import User from '../models/userSchema.js'
 
 
 
@@ -79,7 +79,7 @@ const adminAuth = async (req, res, next) => {
 
 
 
-module.exports={
+export default {
     userAuth,
     adminAuth
 }

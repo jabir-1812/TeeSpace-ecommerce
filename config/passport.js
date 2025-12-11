@@ -1,11 +1,10 @@
-const passport=require('passport');
-const GoogleStrategy=require('passport-google-oauth20').Strategy;//imports google OAuth
-                                                                //gets the strategy class to tell Passport how to login
-const User=require('../models/userSchema')
-const env=require('dotenv').config();
+import passport from 'passport';
+import GoogleStrategy from 'passport-google-oauth20';//imports google OAuth
+                                                    //gets the strategy class to tell Passport how to login
+import User from '../models/userSchema.js';
 
-const crypto=require('crypto');
-const giveReferralCoupon = require('../utils/giveReferralCoupon');
+import crypto from 'crypto';
+import giveReferralCoupon from '../utils/giveReferralCoupon.js';
 
 
 
@@ -74,7 +73,10 @@ passport.deserializeUser((id,done)=>{   //it checks the session
     })
 })
 
-module.exports=passport;
+
+
+
+export {passport}
 
 
 

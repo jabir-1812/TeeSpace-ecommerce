@@ -1,19 +1,16 @@
-const STATUS_CODES=require('../../constants/statusCodes')
-const DELIVERY_STATUS=require('../../constants/deliveryStatus.enum')
-const Cart=require('../../models/cartSchema')
-const Address=require('../../models/addressSchema')
-const Product=require('../../models/productSchema')
-const Order=require('../../models/orderSchema')
-const getNextOrderId=require('../../utils/orderIdGenerator')
-const User = require('../../models/userSchema')
-const PDFDocument = require("pdfkit");
-const Razorpay=require('razorpay')
-const crypto = require('crypto')
-const Wallet = require('../../models/walletSchema')
-require('dotenv').config();
-const Coupon=require('../../models/couponSchema')
-// const { STATUS_CODES } = require('http')
-// const { default: products } = require('razorpay/dist/types/products')
+import STATUS_CODES from '../../constants/statusCodes.js';
+import DELIVERY_STATUS from '../../constants/deliveryStatus.enum.js';
+import Cart from '../../models/cartSchema.js';
+import Address from '../../models/addressSchema.js';
+import Product from '../../models/productSchema.js';
+import Order from '../../models/orderSchema.js';
+import getNextOrderId from '../../utils/orderIdGenerator.js';
+import User from '../../models/userSchema.js';
+import PDFDocument from 'pdfkit';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import Wallet from '../../models/walletSchema.js';
+import Coupon from '../../models/couponSchema.js';
 
 class AppError extends Error {
   constructor(message, statusCode = 400) {
@@ -3749,9 +3746,9 @@ const returnOrderItem = async (req, res) => {
 
 
 
-module.exports={
+export default {
     createRazorPayOrder,
-	  verifyRazorpayPayment,
+	verifyRazorpayPayment,
     razorpayPaymentFailure,
     showOrderFailurePage,
     cancelFailedOrder,

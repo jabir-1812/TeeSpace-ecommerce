@@ -1,15 +1,13 @@
-const Status=require('../../constants/statusCodes')
-const User = require("../../models/userSchema");
-const Address=require('../../models/addressSchema');
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcrypt");
-const env = require("dotenv").config();
-const session = require("express-session");
-const { response } = require("express");
-const Coupon=require('../../models/couponSchema');
-const sharp=require("sharp");
-const cloudinary = require("../../config/cloudinary");
-const StatusCode = require('../../constants/statusCodes');
+import Status from '../../constants/statusCodes.js';
+import StatusCode from '../../constants/statusCodes.js';
+import User from '../../models/userSchema.js';
+import Address from '../../models/addressSchema.js';
+import nodemailer from 'nodemailer';
+import bcrypt from 'bcrypt';
+import Coupon from '../../models/couponSchema.js';
+import sharp from 'sharp';
+import cloudinary from '../../config/cloudinary.js';
+
 
 function generateOTP() {
   const digits = "1234567890";
@@ -775,7 +773,7 @@ const getReferralCoupons=async(req,res)=>{
 
 
 
-module.exports = {
+export default {
   getForgotPasswordPage,
   verifyEmail,
   verifyForgotPasswordOtp,

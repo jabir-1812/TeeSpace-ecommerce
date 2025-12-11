@@ -1,10 +1,10 @@
-const Status=require('../../constants/statusCodes')
-const DELIVERY_STATUS=require('../../constants/deliveryStatus.enum')
-const Order=require('../../models/orderSchema');
-const User=require('../../models/userSchema');
-const Wallet=require('../../models/walletSchema')
-const Product=require('../../models/productSchema')
-const {generateInvoiceNumber}=require('../../utils/invoice')
+import Status from '../../constants/statusCodes.js'
+import DELIVERY_STATUS from '../../constants/deliveryStatus.enum.js';
+import Order from '../../models/orderSchema.js';
+import User from '../../models/userSchema.js';
+import Wallet from '../../models/walletSchema.js';
+import Product from '../../models/productSchema.js';
+import generateInvoiceNumber from '../../utils/invoice.js';
 
 
 
@@ -552,7 +552,7 @@ const updateReturnStatus=async(req,res)=>{
 }
 
 
-module.exports={
+export default {
     listAllOrders,
     getOrderDetails,
     updateItemStatus,

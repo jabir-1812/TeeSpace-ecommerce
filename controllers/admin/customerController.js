@@ -1,5 +1,5 @@
-const Status=require('../../constants/statusCodes')
-const User=require('../../models/userSchema');
+import Status from '../../constants/statusCodes.js';
+import User from '../../models/userSchema.js';
 
 const customerInfo=async (req,res)=>{
     try {
@@ -72,7 +72,7 @@ const unblockCustomer=async (req,res)=>{
     }
 }
 
-module.exports={
+export default {
     customerInfo,
     blockCustomer,
     unblockCustomer

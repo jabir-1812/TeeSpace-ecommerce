@@ -1,9 +1,8 @@
-const Status=require('../../constants/statusCodes')
-const PDFDocument = require("pdfkit");
-const ExcelJS = require('exceljs')
-const Order=require('../../models/orderSchema')
-const Product=require('../../models/productSchema');
-// const { default: orders } = require('razorpay/dist/types/orders');
+import Status from '../../constants/statusCodes.js';
+import PDFDocument from 'pdfkit';
+import ExcelJS from 'exceljs';
+import Order from '../../models/orderSchema.js';
+import Product from '../../models/productSchema.js';
 
 
 const getSalesReportPage=async (req,res)=>{
@@ -509,34 +508,9 @@ const getSalesReportExcel = async (req, res) => {
 
 
 
-module.exports={
+export default {
     getSalesReportPage,
     getSalesReport,
     getSalesReportPDF,
     getSalesReportExcel
 }
-
-
-
-
-
-
-// const obj={
-//     orderStatus:"Delivered",
-//     orderItems:[
-//         {
-//             productId:"",
-//             quantity:1,
-//             totalAmout:100,
-//             itemStatus:"Delivered",
-//             refundStatus:"Refunded to your wallet"
-//         },
-//         {
-//             productId:"",
-//             quantity:2,
-//             totalAmount:200,
-//             itemStatus:"Cancelled",
-//             refundStatus:"Refunded to your wallet"
-//         },
-//     ]
-// }

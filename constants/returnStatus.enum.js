@@ -1,4 +1,4 @@
-module.exports ={
+export default {
     REQUESTED:"Requested",
     APPROVED:"Approved",
     PICKUP_SCHEDULED:"Pickup Scheduled",

@@ -1,10 +1,9 @@
-const Status=require('../../constants/statusCodes')
-const Category=require('../../models/categorySchema');
-const Product =require('../../models/productSchema')
-const Offer = require('../../models/offerSchema')
+import Status from '../../constants/statusCodes.js';
+import Category from '../../models/categorySchema.js';
+import Product from '../../models/productSchema.js';
+import Offer from '../../models/offerSchema.js';
 
-const 
-categoryInfo = async (req,res)=>{
+const categoryInfo = async (req,res)=>{
     try {
         // Get all categories with pagination and search
         const ITEMS_PER_PAGE = 5;
@@ -284,7 +283,7 @@ const unlistCategory = async (req,res)=>{
 }
 
 
-module.exports={
+export default {
     categoryInfo,
     loadAddCategoryPage,
     addCategory,

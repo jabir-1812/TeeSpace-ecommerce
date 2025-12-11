@@ -1,5 +1,5 @@
-const { createLogger, format, transports } = require('winston');
-const { combine, timestamp, printf, colorize } = format;
+import { createLogger, format, transports } from 'winston';
+const { combine, timestamp, printf, colorize, uncolorize } = format;
 
 // custom log format
 const logFormat = printf(({ level, message, timestamp }) => {
@@ -9,17 +9,22 @@ const logFormat = printf(({ level, message, timestamp }) => {
 const logger = createLogger({
   level: 'info',
   format: combine(
-    colorize({ all: true }),    // ✅ Enables color for all log levels
+    colorize({ all: true }), // color for console
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     logFormat
   ),
   transports: [
-    // new transports.Console(),
-    new transports.File({ filename: 'logs/combined.log', format: format.uncolorize() }), // ✅ remove colors from file
-    new transports.File({ filename: 'logs/error.log', level: 'error', format: format.uncolorize() })
+    new transports.File({
+      filename: 'logs/combined.log',
+      format: uncolorize(), // remove colors from file
+    }),
+    new transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      format: uncolorize(),
+    })
   ]
 });
 
-module.exports = logger;
-
+export default  logger ;
 

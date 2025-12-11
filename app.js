@@ -1,22 +1,26 @@
-const express=require('express');
+import express from 'express';
 const app=express();
-const path=require('path');
-require('dotenv').config();
-const passport=require('./config/passport')
-const db=require('./config/db');
-const userRouter=require('./routes/userRouter');
-const adminRouter=require('./routes/adminRouter');
-const expressLayout=require('express-ejs-layouts')
-const session=require('express-session');
-const nocache=require('nocache')
-const morgan=require('morgan')
-const logger=require('./config/logger')
-const STATUS_CODES=require('./constants/statusCodes');
-const {invalidRoute}=require('./middlewares/invalidRoute')
-const {errorHandler}=require('./middlewares/errorHandling')
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import 'dotenv/config';
+import {passport} from './config/passport.js';
+import connectDB from './config/db.js';
+import userRouter from './routes/userRouter.js';
+import adminRouter from './routes/adminRouter.js';
+import expressLayout from 'express-ejs-layouts';
+import session from 'express-session';
+import nocache from 'nocache';
+import morgan from 'morgan';
+import logger from './config/logger.js';
+import STATUS_CODES from './constants/statusCodes.js';
+import invalidRoute from './middlewares/invalidRoute.js';
+import errorHandler from './middlewares/errorHandling.js';
 
 
-db();
+
+connectDB();
 
 // create a stream object for Morgan to use Winston
 const stream = {
@@ -61,17 +65,6 @@ app.use(express.static('public'));
 app.use('/',userRouter);
 app.use('/admin',adminRouter);
 
-
-// app.use((req, res) => {
-//   res.render('invalid-route',{
-//     title:"Invalid Route"
-//   })
-// });
-
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(STATUS_CODES.INTERNAL_ERROR).render('error-page', { title: "Server Error" });
-// });
 
 app.use(invalidRoute)
 app.use(errorHandler)

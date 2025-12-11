@@ -1,5 +1,5 @@
-const mongoose=require('mongoose');
-const { cloudinary } = require('../config/cloudinaryBanner');
+import mongoose from 'mongoose';
+// import { cloudinary } from '../config/cloudinaryBanner.js';
 const {Schema}=mongoose;
 
 
@@ -34,4 +34,4 @@ const bannerSchema=new Schema({
 })
 
 const Banner=mongoose.model('Banner',bannerSchema);
-module.exports=Banner;
+export default Banner;

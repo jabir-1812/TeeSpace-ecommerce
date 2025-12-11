@@ -1,26 +1,22 @@
-const express=require('express');
-const path=require('path')
+import express from 'express';
 const router=express.Router();
-const passport=require('passport');
-const userController=require('../controllers/user/userController')
-const profileController=require('../controllers/user/profileController');
-const productController=require('../controllers/user/productController');
-const wishlistController=require('../controllers/user/wishlistController')
-const cartController=require('../controllers/user/cartController');
-const checkoutController=require('../controllers/user/checkoutController')
-const orderController=require('../controllers/user/orderController');
-const walletController=require('../controllers/user/walletController')
-const { userAuth} = require('../middlewares/auth');
-const User=require('../models/userSchema')
-const giveReferralCoupon=require('../utils/giveReferralCoupon')
-
-const multer=require('multer');
-
-
-const upload=require('../middlewares/multer')
-
-// const upload=multer({storage:profileStorage})
-const logger=require('../config/logger')
+import path from 'path';
+import passport from 'passport';
+import userController from '../controllers/user/userController.js'
+import profileController from '../controllers/user/profileController.js'
+import productController from '../controllers/user/productController.js'
+import wishlistController from '../controllers/user/wishlistController.js'
+import cartController from '../controllers/user/cartController.js'
+import checkoutController from '../controllers/user/checkoutController.js'
+import orderController from '../controllers/user/orderController.js'
+import walletController from '../controllers/user/walletController.js'
+import auth from '../middlewares/auth.js';
+const {userAuth}=auth;
+import User from '../models/userSchema.js'
+import giveReferralCoupon from '../utils/giveReferralCoupon.js';
+import multer from 'multer'
+import upload from '../middlewares/multer.js'
+import logger from '../config/logger.js'
 
 
 
@@ -232,4 +228,4 @@ router.get('/user-profile/referral-coupons',profileController.getReferralCoupons
 
 
 
-module.exports=router;
+export default router

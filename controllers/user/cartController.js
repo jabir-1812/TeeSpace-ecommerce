@@ -1,11 +1,9 @@
-const Status=require('../../constants/statusCodes')
-const User = require("../../models/userSchema");
-const Product = require("../../models/productSchema");
-const Cart=require('../../models/cartSchema');
-const Wishlist=require('../../models/wishlistSchema')
-const mongodb = require("mongodb");
-const { ObjectId } = require("mongodb");
-const { default: mongoose } = require("mongoose");
+import Status from '../../constants/statusCodes.js';
+import User from '../../models/userSchema.js';
+import Product from '../../models/productSchema.js';
+import Cart from '../../models/cartSchema.js';
+import Wishlist from '../../models/wishlistSchema.js';
+import mongoose from 'mongoose';
 
 
 const loadCart = async (req, res) => {
@@ -319,7 +317,7 @@ const checkCartBeforeCheckout=async(req,res)=>{
 
 
 
-module.exports = {
+export default {
   loadCart,
   addToCart,
   changeCartQuantity,
