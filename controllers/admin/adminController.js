@@ -1,6 +1,7 @@
 import User from '../../models/userSchema.js'
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt'
+import adminAccountServices from '../../services/admin services/adminAccountServices.js'
 
 
 const loadLogin=(req,res)=>{
@@ -14,14 +15,10 @@ const loadLogin=(req,res)=>{
 const login=async (req,res)=>{
     try {
         const {email,password}=req.body;
-        // console.log(`email:${email}
-        //     password:${password}`)
-        const admin=await User.findOne({email,isAdmin:true});
-        // console.log("admin=====>",admin)
+        const admin=await adminAccountServices.findAdmin(email)
         
         if(admin){
-            // console.log("if case worked=====")
-            const passwordMatch=await bcrypt.compare(password,admin.password);
+            const passwordMatch=await adminAccountServices.comparePassword(password, admin.password)
             if(passwordMatch){
                 req.session.admin=admin._id;
                 return res.redirect('/admin')
@@ -39,20 +36,6 @@ const login=async (req,res)=>{
 
 
 
-// const logout=async (req,res)=>{
-//     try {
-//         req.session.destroy(err=>{
-//             if(err){
-//                 console.log("Error destroying session:",err)
-//                 return res.redirect('/admin/page-error')
-//             }
-//             res.redirect('/admin/login')
-//         })
-//     } catch (error) {
-//         console.log("Unexpected error during logout,",error)
-//         res.redirect('/admin/page-error')
-//     }
-// }
 
 const logout=async (req,res)=>{
     try {
@@ -63,6 +46,7 @@ const logout=async (req,res)=>{
         res.redirect('/admin/page-error')
     }
 }
+
 
 
 const pageError=async (req,res)=>{
