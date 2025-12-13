@@ -11,6 +11,8 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Wallet from '../../models/walletSchema.js';
 import Coupon from '../../models/couponSchema.js';
+import mongoose from 'mongoose';
+import { session } from 'passport';
 
 class AppError extends Error {
   constructor(message, statusCode = 400) {
@@ -1353,21 +1355,48 @@ const verifyRazorpayPayment = async (req,res)=>{
       return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Payment verification failed." });
     }
 
-     // Mark order as paid
+
+    //reduce stock
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+        for(let item of order.orderItems){
+            const productId=item.productId._id;
+            const quantityToReduce=item.quantity;
+
+            const result = await Product.updateOne(
+                {
+                    _id:productId,
+                    quantity:{$gte:quantityToReduce}
+                },
+                {
+                    $inc:{quantity:-quantityToReduce}
+                },
+                {session}
+            );
+
+            if(result.modifiedCount === 0){
+                throw new Error(`Not enough stocks for ${item.productId.productName}`);
+            }
+        }
+
+        await session.commitTransaction();
+
+    } catch (error) {
+        await session.abortTransaction();
+        return res.status(STATUS_CODES.BAD_REQUEST).json({ message: error.message });
+    } finally {
+        session.endSession();
+    }
+
+
+    // Mark order as paid
     order.paymentStatus = "Paid";
     order.orderStatus = DELIVERY_STATUS.PENDING;
     await order.save();
 
-    //reduce stock
-    // const userCart=await Cart.findOne({userId}).populate('items.productId')
-    for(let item of order.orderItems){
-        await Product.findByIdAndUpdate(item.productId._id,{
-          $inc:{quantity:-item.quantity}
-        })
-    }
-
     
-
     //check if any referral coupons
     //if yes, it should be removed, referral coupons are one time usable
     const allReferralCoupons=await Coupon.find({userId})
@@ -1390,10 +1419,11 @@ const verifyRazorpayPayment = async (req,res)=>{
     return res.json({ success: true, message: "Payment verified successfully." ,orderId:teeSpaceOrderId});
 	} catch (error) {
 		console.log("verifyRazorpayPayment() error===>",error)
-    return res.status(STATUS_CODES.INTERNAL_ERROR).json({
-      success: false,
-      message: "Something went wrong while verifying payment.",
-    });
+        return res.status(STATUS_CODES.INTERNAL_ERROR).json({
+            success: false,
+            message: "Something went wrong while verifying payment.",
+            messageForUser:error.message
+        });
 	}
 }
 
