@@ -42,10 +42,6 @@ const listAllOrders = async (req, res) => {
 
 const getOrderDetails=async (req,res)=>{
     try {
-        //     const order = await Order.findById(req.params.orderId)
-        //   .populate("userId", "name email phone")
-        //   .lean();
-
         const order = await orderServices.getOrderDetails(req.params.orderId)
 
         res.render("admin/order/order-details", {
@@ -65,7 +61,7 @@ const updateItemStatus = async (req, res) => {
         const { orderId, itemId, status } = req.body;
 
         // Find the order
-        const order = await Order.findOne({ orderId });
+        const order =await orderServices.findOrder(orderId)
         if (!order) return res.status(Status.NOT_FOUND).json({ success: false, message: "Order not found" });
 
         // Find item inside order
@@ -77,48 +73,19 @@ const updateItemStatus = async (req, res) => {
         }
 
         // Update status
-        item.itemStatus = status;
+        await orderServices.updateItemStatus(item, status)
         if(status===DELIVERY_STATUS.DELIVERED){
-            item.deliveredOn=new Date();
+            await orderServices.markDeliveredDate(item)
         }
+
 
         // --- Update overall orderStatus based on items ---
-        const allStatuses = order.orderItems.map(i => i.itemStatus);
-        const allStatusSet=new Set(allStatuses)
-
-        if(allStatusSet.size===1 && allStatusSet.has(DELIVERY_STATUS.CANCELLED)){
-        order.orderStatus = DELIVERY_STATUS.CANCELLED
-        }
-        if(allStatusSet.size===1 && allStatusSet.has(DELIVERY_STATUS.DELIVERED)){
-        order.orderStatus = DELIVERY_STATUS.DELIVERED
-        order.deliveredOn = new Date();
-        }
-        if(allStatusSet.size===2 && allStatusSet.has(DELIVERY_STATUS.DELIVERED) && allStatusSet.has(DELIVERY_STATUS.CANCELLED)){
-        order.orderStatus=DELIVERY_STATUS.DELIVERED;
-        
-        const deliveredDates=order.orderItems
-            .map((item)=>item.deliveredOn)
-            .filter((date)=>date)
-        deliveredDates.sort((a,b)=>a-b);
-        const latestDeliveredDate=deliveredDates[deliveredDates.length-1];
-        order.deliveredOn=latestDeliveredDate;
-        }
-
+        await orderServices.updateOrderLevelStatus(order)
         
 
         // --- 🔑 Invoice logic ---
         if (!order.invoice?.generated) {
-            const hasShippedOrDelivered = order.orderItems.some(
-                (i) => i.itemStatus === DELIVERY_STATUS.SHIPPED || i.itemStatus === DELIVERY_STATUS.DELIVERED
-            );
-
-            if (hasShippedOrDelivered) {
-                order.invoice = {
-                    number: await generateInvoiceNumber(), // custom function
-                    date: new Date(),
-                    generated: true,
-                };
-            }
+            await orderServices.generateInvoice(order)
         }
 
         await order.save();

@@ -1386,6 +1386,7 @@ const verifyRazorpayPayment = async (req,res)=>{
 
     } catch (error) {
         await session.abortTransaction();
+        console.log("verifyRazorpayPayment == mongo DB transaction error == ",error)
         return res.status(STATUS_CODES.BAD_REQUEST).json({ message: error.message });
     } finally {
         session.endSession();

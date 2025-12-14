@@ -1,5 +1,7 @@
 import User from '../../models/userSchema.js';
 import Order from '../../models/orderSchema.js';
+import DELIVERY_STATUS from '../../constants/deliveryStatus.enum.js'
+import generateInvoiceNumber from '../../utils/invoice.js';
 
 
 
@@ -60,6 +62,13 @@ async function listAllOrders({ page, limit, search, status, sort }) {
 
 
 
+async function findOrder(orderId) {
+    return Order.findOne({orderId:orderId})
+}
+
+
+
+
 
 async function getOrderDetails(orderId) {
     return Order.findById(orderId)
@@ -71,8 +80,71 @@ async function getOrderDetails(orderId) {
 
 
 
+async function updateItemStatus(item, status) {
+    item.itemStatus = status
+}
+
+
+
+
+
+async function markDeliveredDate(item) {
+    item.deliveredOn = new Date();
+}
+
+
+
+
+async function updateOrderLevelStatus(order) {
+    const allStatuses = order.orderItems.map(i => i.itemStatus);
+    const allStatusSet=new Set(allStatuses)
+
+    if(allStatusSet.size===1 && allStatusSet.has(DELIVERY_STATUS.CANCELLED)){
+        order.orderStatus = DELIVERY_STATUS.CANCELLED
+    }
+    if(allStatusSet.size===1 && allStatusSet.has(DELIVERY_STATUS.DELIVERED)){
+        order.orderStatus = DELIVERY_STATUS.DELIVERED
+        order.deliveredOn = new Date();
+    }
+    if(allStatusSet.size===2 && allStatusSet.has(DELIVERY_STATUS.DELIVERED) && allStatusSet.has(DELIVERY_STATUS.CANCELLED)){
+        order.orderStatus=DELIVERY_STATUS.DELIVERED;
+    
+        const deliveredDates=order.orderItems
+            .map((item)=>item.deliveredOn)
+            .filter((date)=>date)
+        deliveredDates.sort((a,b)=>a-b);
+        const latestDeliveredDate=deliveredDates[deliveredDates.length-1];
+        order.deliveredOn=latestDeliveredDate;
+    }
+}
+
+
+
+
+
+async function generateInvoice(order) {
+    const hasShippedOrDelivered = order.orderItems.some(
+        (i) => i.itemStatus === DELIVERY_STATUS.SHIPPED || i.itemStatus === DELIVERY_STATUS.DELIVERED
+    );
+
+    if (hasShippedOrDelivered) {
+        order.invoice = {
+            number: await generateInvoiceNumber(), // custom function
+            date: new Date(),
+            generated: true,
+        };
+    }
+}
+
+
+
 
 export default {
     listAllOrders,
-    getOrderDetails
+    getOrderDetails,
+    findOrder,
+    updateItemStatus,
+    updateOrderLevelStatus,
+    markDeliveredDate,
+    generateInvoice
 }
