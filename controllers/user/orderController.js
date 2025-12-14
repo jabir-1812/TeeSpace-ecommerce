@@ -12,7 +12,8 @@ import crypto from 'crypto';
 import Wallet from '../../models/walletSchema.js';
 import Coupon from '../../models/couponSchema.js';
 import mongoose from 'mongoose';
-import { session } from 'passport';
+import passport from 'passport';
+const {session}=passport
 
 class AppError extends Error {
   constructor(message, statusCode = 400) {
