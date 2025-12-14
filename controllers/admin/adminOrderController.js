@@ -5,79 +5,54 @@ import User from '../../models/userSchema.js';
 import Wallet from '../../models/walletSchema.js';
 import Product from '../../models/productSchema.js';
 import generateInvoiceNumber from '../../utils/invoice.js';
+import orderServices from '../../services/admin services/orderServices.js';
 
 
 
-const listAllOrders=async (req,res)=>{
+const listAllOrders = async (req, res) => {
     try {
-        let { page = 1, limit = 10, search = "", status = "", sort = "newest" } = req.query;
-        page = parseInt(page);
-        limit = parseInt(limit);
+        const { page, limit, search, status, sort } = req.query;
 
-        const query = {};
-
-        //  Search (orderId OR user name/email)
-        if (search) {
-        const users = await User.find({
-            $or: [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } }
-            ]
-        }).select("_id");
-
-        const userIds = users.map(u => u._id);
-
-        query.$or = [
-            { orderId: { $regex: search, $options: "i" } },
-            { userId: { $in: userIds } }
-        ];
-        }
-
-        //  Filter by status
-        if (status) {
-        query.orderStatus = status;
-        }
-
-        //  Sorting
-        let sortOption = { createdAt: -1 }; // default newest
-        if (sort === "oldest") sortOption = { createdAt: 1 };
-        if (sort === "amountAsc") sortOption = { totalAmount: 1 };
-        if (sort === "amountDesc") sortOption = { totalAmount: -1 };
-
-        // Pagination
-        const totalOrders = await Order.countDocuments(query);
-        const orders = await Order.find(query)
-        .populate("userId", "name email")
-        .sort(sortOption)
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
+        const result = await orderServices.listAllOrders({
+            page,
+            limit,
+            search,
+            status,
+            sort
+        });
 
         res.render("admin/order/orders", {
-        layout:"adminLayout",
-        title: "All Orders",
-        orders,
-        currentPage: page,
-        totalPages: Math.ceil(totalOrders / limit),
-        search,
-        status,
-        sort
+            layout: "adminLayout",
+            title: "All Orders",
+            orders: result.orders,
+            currentPage: result.currentPage,
+            totalPages: result.totalPages,
+            search,
+            status,
+            sort
         });
+
     } catch (error) {
-        console.log('listAllOrders()   error======>',error)
-        res.redirect('page-error')
+        console.log("listAllOrders() error ====>", error);
+        res.redirect("page-error");
     }
-}
+};
 
 
 
 const getOrderDetails=async (req,res)=>{
     try {
-        const order = await Order.findById(req.params.orderId)
-      .populate("userId", "name email phone")
-      .lean();
+        //     const order = await Order.findById(req.params.orderId)
+        //   .populate("userId", "name email phone")
+        //   .lean();
 
-    res.render("admin/order/order-details", {layout:"adminLayout", order, title: "Order Details" });
+        const order = await orderServices.getOrderDetails(req.params.orderId)
+
+        res.render("admin/order/order-details", {
+            layout:"adminLayout", 
+            order, 
+            title: "Order Details" 
+        });
     } catch (error) {
         console.log("getOrderDetails() error=====>",error);
         res.redirect('/page-error')
