@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 dotenv.config();
-console.log("FROM APP:", process.env.GOOGLE_CLIENT_ID);
 import express from 'express';
 const app=express();
 import path from "path";
