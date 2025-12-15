@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
             })
         } else {
           await Swal.fire("Error", data.message || "Failed to update", "error")
-              then(()=>{
+              .then(()=>{
                 location.reload();
               })
         }
