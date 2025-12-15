@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import STATUS_CODES from '../../constants/statusCodes.js';
 import DELIVERY_STATUS from '../../constants/deliveryStatus.enum.js';
 import Cart from '../../models/cartSchema.js';

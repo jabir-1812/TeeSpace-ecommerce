@@ -1,10 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from 'express';
 const app=express();
 import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import 'dotenv/config';
 import {passport} from './config/passport.js';
 import connectDB from './config/db.js';
 import userRouter from './routes/userRouter.js';
@@ -77,3 +78,4 @@ app.listen(process.env.PORT,(err)=>{
         console.log(`Server is running at : http://localhost:${process.env.PORT}`);
     }
 })
+

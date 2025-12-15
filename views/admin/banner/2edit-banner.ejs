@@ -52,14 +52,14 @@
 
         <div id="oldImageContainer">
             <h4>Current Image</h4>
-            <img src="/uploads/resized-images/<%= banner.image %>" alt="Current Banner Image">
+            <img src="<%= banner.image %>" alt="Current Banner Image">
             <button type="button" id="removeOldImage">Remove image</button>
         </div>
 
         <div id="newImageSection" style="display: none;">
             <input type="file" id="imageInput" accept="image/*" />
             <div id="bannerImage-error" class="error-message"></div>
-            <img id="image" />
+            <img id="image" width="200px"/>
             <button type="button" id="cropButton" style="display: none;">Crop & Save</button>
         
             <div id="preview" style="display: none;">
@@ -134,7 +134,7 @@
 
         if (cropper) cropper.destroy();
         cropper = new Cropper(image, {
-          aspectRatio: 1,
+          aspectRatio: 16/9,
           viewMode: 1,
           autoCropArea: 1
         });

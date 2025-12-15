@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import Status from '../../constants/statusCodes.js';
 import StatusCode from '../../constants/statusCodes.js';
 import User from '../../models/userSchema.js';

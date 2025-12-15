@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import Status from '../../constants/statusCodes.js'
 import path from 'path';
 import fs from 'fs';
@@ -67,7 +69,7 @@ const loadAddBrandPage=async (req,res)=>{
 
 const addBrand=async (req,res)=>{
     try {
-        const { brandName } = req.body;
+         const { brandName } = req.body;
 
         if (!brandName || !req.file) {
             return res.status(Status.BAD_REQUEST).json({

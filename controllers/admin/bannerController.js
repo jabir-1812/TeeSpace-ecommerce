@@ -1,7 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
 import Status from '../../constants/statusCodes.js'
 import Banner from '../../models/bannerSchema.js'
 import path from 'path';
 import fs from 'fs'
+import sharp from 'sharp';
+import cloudinary from "../../config/cloudinary.js";
 
 
 const getBannerPage=async (req,res)=>{
@@ -49,9 +53,55 @@ const addBanner=async (req,res)=>{
         const data=req.body;
         console.log("dataa",data)
         const image=req.file;
+        console.log("banner image ==", image)
+
+        let processedBuffer;
+        try {
+            processedBuffer = await sharp(req.file.buffer)
+                .resize(500, 500, { fit: "cover" })  // ✅ crop center
+                .toFormat("webp")                    // ✅ convert to webp
+                .webp({ quality: 85 })               // ✅ compression
+                .toBuffer();
+        } catch (error) {
+            console.error("Sharp Error:", error);
+            return res.status(Status.INTERNAL_ERROR).json({
+                success: false,
+                message: "Image processing failed",
+                error: error.message
+            });
+        }
+
+        // ✅ Upload image to Cloudinary using buffer
+        const uploadToCloudinary = () => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                    folder: "banners"   // ✅ your folder name
+                    },
+                    (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                    }
+                );
+                stream.end(processedBuffer);
+            });
+        };
+
+        let uploadResult;
+        try {
+            uploadResult = await uploadToCloudinary();
+        } catch (cloudError) {
+            console.error("Cloudinary Upload Error:", cloudError);
+            return res.status(Status.INTERNAL_ERROR).json({
+            success: false,
+            message: "Failed to upload image to Cloudinary",
+            error: cloudError.message
+            });
+        }
 
         const newBanner=new Banner({
-            image:image.filename,
+            cloudinaryId:uploadResult.public_id,
+            image:uploadResult.secure_url,
             title:data.title,
             description:data.description,
             startDate:new Date(data.startDate+"T00:00:00"),
@@ -61,7 +111,6 @@ const addBanner=async (req,res)=>{
 
         await newBanner.save().then((data)=>{console.log("success dataaa",data)});
         res.status(Status.OK).json({message:"Banner added successfully"});
-        // res.redirect('/admin/banners')
     } catch (error) {
         console.log("addBanner() error:",error);
         res.redirect('/admin/page-error')
@@ -100,12 +149,59 @@ const editBanner = async (req,res)=>{
         banner.endDate=endDate;
         banner.link=link;
 
-        if(removeOldImage==='true' && req.file){
-            if(banner.image && fs.existsSync(`public/uploads/resized-images/${banner.image}`)){
-                console.log("if case worked unlinkkkkkkkkkkkkkkkkkkk")
-                fs.unlinkSync(`public/uploads/resized-images/${banner.image}`);
+        if(req.file){
+            let processedBuffer;
+            try {
+                processedBuffer = await sharp(req.file.buffer)
+                    .resize(500, 500, { fit: "cover" })  // ✅ crop center
+                    .toFormat("webp")                    // ✅ convert to webp
+                    .webp({ quality: 85 })               // ✅ compression
+                    .toBuffer();
+            } catch (error) {
+                console.error("Sharp Error:", error);
+                return res.status(Status.INTERNAL_ERROR).json({
+                    success: false,
+                    message: "Image processing failed",
+                    error: error.message
+                });
             }
-            banner.image=req.file.filename;
+
+             // 2️⃣ UPLOAD NEW IMAGE TO CLOUDINARY FIRST
+            const uploadNewBanner = () => {
+                return new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream(
+                    { folder: "banners", format: "webp" },
+                    (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                    }
+                ).end(processedBuffer);
+                });
+            };
+
+            let newImg;
+            try {
+                newImg = await uploadNewBanner();
+            } catch (error) {
+                console.log(error)
+
+                return res.status(Status.INTERNAL_ERROR).json({
+                success: false,
+                message: "Failed to upload new banner to Cloudinary",
+                error: error.message
+                });
+            }
+
+            // 3️⃣ DELETE OLD IMAGE FROM CLOUDINARY (AFTER SUCCESS)
+            try {
+                await cloudinary.uploader.destroy(banner.cloudinaryId);
+            } catch (err) {
+                console.error("Old image delete failed:", err);
+                // Not a critical failure, don't return error
+            }
+
+            banner.image = newImg.secure_url;
+            banner.cloudinaryId = newImg.public_id;
         }
 
         await banner.save();

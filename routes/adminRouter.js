@@ -13,9 +13,9 @@ import couponController from '../controllers/admin/couponController.js';
 import salesReportController from '../controllers/admin/salesReportController.js';
 import dashboardController from '../controllers/admin/dashboardController.js';
 import multer from 'multer';
-import cloudinaryBanner from '../config/cloudinaryBanner.js';
-const {bannerStorage} = cloudinaryBanner;
-const bannerUploads = multer({storage:bannerStorage}) 
+// import cloudinaryBanner from '../config/cloudinaryBanner.js';
+// const {bannerStorage} = cloudinaryBanner;
+// const bannerUploads = multer({storage:bannerStorage}) 
 
 import upload from '../middlewares/multer.js'
 import logger from '../config/logger.js'
@@ -97,9 +97,9 @@ router.post('/edit-product/:id',adminAuth,upload.array('newImages'),productContr
 //Banner Management
 router.get('/banners',adminAuth,bannerController.getBannerPage);
 router.get('/add-banner',adminAuth,bannerController.loadAddBannerPage);
-router.post('/add-banner',adminAuth,bannerUploads.single('image'),bannerController.addBanner);
+router.post('/add-banner',adminAuth,upload.single('image'),bannerController.addBanner);
 router.get('/edit-banner/:id',adminAuth,bannerController.loadEditBannerPage);
-router.post('/edit-banner/:id',adminAuth,bannerUploads.single('image'),bannerController.editBanner);
+router.post('/edit-banner/:id',adminAuth,upload.single('image'),bannerController.editBanner);
 router.get('/delete-banner',adminAuth,bannerController.deleteBanner)
 
 
