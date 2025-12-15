@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import passport from 'passport';
 import GoogleStrategy from 'passport-google-oauth20';//imports google OAuth
                                                     //gets the strategy class to tell Passport how to login
@@ -6,13 +8,13 @@ import User from '../models/userSchema.js';
 import crypto from 'crypto';
 import giveReferralCoupon from '../utils/giveReferralCoupon.js';
 
-
+// console.log("CLIENT_ID:", process.env);
 
 //tells passport to use google login strategy
 // we are creating new google strategy
 passport.use(new GoogleStrategy({                   
-    clientID:process.env.GOOGlE_CLIENT_ID,      //we tell google who we are     
-    clientSecret:process.env.GOOGlE_CLIENT_SECRET,
+    clientID:process.env.GOOGLE_CLIENT_ID,      //we tell google who we are     
+    clientSecret:process.env.GOOGLE_CLIENT_SECRET,
     callbackURL:'/auth/google/callback',//redirect route after successful user login
     passReqToCallback:true        //allows access to req in callback 
 },
@@ -77,17 +79,3 @@ passport.deserializeUser((id,done)=>{   //it checks the session
 
 
 export {passport}
-
-
-
-
-
-
-
-
-
-
-
-
-
-

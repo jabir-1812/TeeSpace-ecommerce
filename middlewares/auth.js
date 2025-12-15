@@ -7,7 +7,7 @@ import User from '../models/userSchema.js'
 const userAuth = async (req, res, next) => {
     try {
         // 1. Check if session exists
-        if (!req.session.user && !req.session?.passport.user) {
+        if (!req.session?.user && !req.session?.passport?.user) {
             // If it's an AJAX request, send JSON instead of redirect
             if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
                 return res.status(Status.UNAUTHORIZED).json({ status: false, success:false, message: 'Login required' });
@@ -17,7 +17,7 @@ const userAuth = async (req, res, next) => {
         }
 
         // 2. Check if user exists in DB
-        const userId=req.session.user || req.session?.passport.user
+        const userId=req.session.user || req.session?.passport?.user
         const user = await User.findById(userId);
         if (!user) {
             if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
@@ -75,6 +75,7 @@ const adminAuth = async (req, res, next) => {
         res.status(Status.INTERNAL_ERROR).send("Internal Server Error");
     }
 };
+
 
 
 

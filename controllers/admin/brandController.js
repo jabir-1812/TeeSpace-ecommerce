@@ -1,4 +1,5 @@
 import brandServices from '../../services/admin services/brandServices.js';
+import offerServices from '../../services/admin services/offerServices.js';
 import Status from '../../constants/statusCodes.js'
 import path from 'path';
 import fs from 'fs';
@@ -52,9 +53,91 @@ const loadAddBrandPage=async (req,res)=>{
 
 
 
+// const addBrand=async (req,res)=>{
+//     try {
+//         const { brandName } = req.body;
+
+//         if (!brandName || !req.file) {
+//             return res.status(Status.BAD_REQUEST).json({
+//                 success: false,
+//                 message: "Brand name and logo are required"
+//             });
+//         }
+
+//         const findBrand=await Brand.findOne({brandName:{$regex:`^${brandName}$`,$options:"i"}})
+//         if(findBrand) return res.status(Status.BAD_REQUEST).json({message:"Brand name exists"})
+
+//         // 2️⃣ Use SHARP to resize & compress BEFORE uploading
+//         let processedBuffer;
+//         try {
+//             processedBuffer = await sharp(req.file.buffer) // from multer memory storage
+//                 .resize(500, 500, { fit: "cover" })  // ✅ crop center
+//                 .toFormat("webp")                    // ✅ convert to webp
+//                 .webp({ quality: 85 })               // ✅ compression
+//                 .toBuffer();
+//         } catch (err) {
+//             console.error("Sharp Error:", err);
+//             return res.status(Status.INTERNAL_ERROR).json({
+//                 success: false,
+//                 message: "Image processing failed",
+//                 error: err.message
+//             });
+//         }
+
+//         // ✅ Upload image to Cloudinary using buffer
+//         const uploadToCloudinary = () => {
+//             return new Promise((resolve, reject) => {
+//                 const stream = cloudinary.uploader.upload_stream(
+//                     {
+//                     folder: "brand_logos"   // ✅ your folder name
+//                     },
+//                     (error, result) => {
+//                     if (error) return reject(error);
+//                     resolve(result);
+//                     }
+//                 );
+//                 stream.end(processedBuffer);
+//             });
+//         };
+
+//         let uploadResult;
+//         try {
+//             uploadResult = await uploadToCloudinary();
+//         } catch (cloudError) {
+//             console.error("Cloudinary Upload Error:", cloudError);
+//             return res.status(Status.INTERNAL_ERROR).json({
+//             success: false,
+//             message: "Failed to upload image to Cloudinary",
+//             error: cloudError.message
+//             });
+//         }
+
+//         // ✅ Save brand to DB
+//         const brand = await Brand.create({
+//             brandName,
+//             brandImage: uploadResult.secure_url,
+//             cloudinaryId: uploadResult.public_id
+//         });
+
+//         return res.json({
+//             success: true,
+//             message: "Brand added successfully",
+//         });
+
+        
+//     } catch (error) {
+//         console.error(err);
+//         res.status(Status.INTERNAL_ERROR).json({
+//             success: false,
+//             message: "Server error"
+//         });
+//     }
+// }
+
 const addBrand=async (req,res)=>{
     try {
-        const { brandName } = req.body;
+        const brandName = req.body.brandName.trim();
+
 
         if (!brandName || !req.file) {
             return res.status(Status.BAD_REQUEST).json({
@@ -63,17 +146,13 @@ const addBrand=async (req,res)=>{
             });
         }
 
-        const findBrand=await Brand.findOne({brandName:{$regex:`^${brandName}$`,$options:"i"}})
+        const findBrand=await brandServices.findBrandByBrandName(brandName)
         if(findBrand) return res.status(Status.BAD_REQUEST).json({message:"Brand name exists"})
 
         // 2️⃣ Use SHARP to resize & compress BEFORE uploading
         let processedBuffer;
         try {
-            processedBuffer = await sharp(req.file.buffer) // from multer memory storage
-                .resize(500, 500, { fit: "cover" })  // ✅ crop center
-                .toFormat("webp")                    // ✅ convert to webp
-                .webp({ quality: 85 })               // ✅ compression
-                .toBuffer();
+            processedBuffer = await brandServices.resizeBrandImage(req.file.buffer)
         } catch (err) {
             console.error("Sharp Error:", err);
             return res.status(Status.INTERNAL_ERROR).json({
@@ -83,40 +162,20 @@ const addBrand=async (req,res)=>{
             });
         }
 
-        // ✅ Upload image to Cloudinary using buffer
-        const uploadToCloudinary = () => {
-            return new Promise((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                    {
-                    folder: "brand_logos"   // ✅ your folder name
-                    },
-                    (error, result) => {
-                    if (error) return reject(error);
-                    resolve(result);
-                    }
-                );
-                stream.end(processedBuffer);
-            });
-        };
-
         let uploadResult;
         try {
-            uploadResult = await uploadToCloudinary();
+            uploadResult = await brandServices.uploadBrandImageToCloudinary(processedBuffer)
         } catch (cloudError) {
             console.error("Cloudinary Upload Error:", cloudError);
             return res.status(Status.INTERNAL_ERROR).json({
-            success: false,
-            message: "Failed to upload image to Cloudinary",
-            error: cloudError.message
+                success: false,
+                message: "Failed to upload image to Cloudinary",
+                error: cloudError.message
             });
         }
 
         // ✅ Save brand to DB
-        const brand = await Brand.create({
-            brandName,
-            brandImage: uploadResult.secure_url,
-            cloudinaryId: uploadResult.public_id
-        });
+        await brandServices.createBrand(brandName, uploadResult)
 
         return res.json({
             success: true,
@@ -125,7 +184,7 @@ const addBrand=async (req,res)=>{
 
         
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(Status.INTERNAL_ERROR).json({
             success: false,
             message: "Server error"
@@ -136,67 +195,98 @@ const addBrand=async (req,res)=>{
 
 
 
+// const addBrandOffer = async(req,res)=>{
+//     try{
+//         const { brandId, percentage, startDate, endDate, description } = req.body;
+
+//         // 1️⃣ Check if brand exists
+//         const brand = await Brand.findById(brandId);
+//         if (!brand) {
+//         return res.status(404).json({ status: false, message: "Brand not found" });
+//         }
+
+//         // 2️⃣ Find products in this brand
+//         const products = await Product.find({ brand: brand._id });
+
+//         // 3️⃣ Update each product's brandOffer & salePrice if needed
+//         if (products.length > 0) {
+//             const bulkOps = products.map((product) => {
+//                 const update = { brandOffer: percentage };
+//                 if (percentage > product.productOffer && percentage > product.categoryOffer) {
+//                 update.salePrice = product.regularPrice * (1 - percentage / 100);
+//                 }
+//                 return {
+//                     updateOne: {
+//                         filter: { _id: product._id },
+//                         update: { $set: update },
+//                     },
+//                 };
+//             });
+
+//             if (bulkOps.length > 0) {
+//                 await Product.bulkWrite(bulkOps);
+//             }
+//         }
+
+//         // 4️⃣ Update category with offer info
+//         await Brand.updateOne(
+//             { _id: brandId },
+//             {
+//                 $set: {
+//                 offer: percentage,
+//                 offerStartDate: startDate || null,
+//                 offerEndDate: endDate || null,
+//                 offerDescription: description || "",
+//                 },
+//             }
+//         );
+
+//         // 5️⃣ Sync to Offer collection (centralized)
+//         await Offer.findOneAndUpdate(
+//             { refId: brand._id, type: "brand" },
+//             {
+//                 name: brand.brandName,
+//                 type: "brand",
+//                 refId: brand._id,
+//                 percentage,
+//                 startDate: startDate || null,
+//                 endDate: endDate || null,
+//                 description: description || "",
+//                 active: true,
+//             },
+//             { upsert: true } // create if not exists
+//         );
+
+//         // 6️⃣ Send response
+//         res.json({ status: true, message: "Brand offer added successfully" });
+//   } catch (error) {
+//         console.error("Error adding brand offer:", error);
+//         res.status(Status.INTERNAL_ERROR).json({ status: false, message: "Internal Server Error" });
+//   }
+// }
 const addBrandOffer = async(req,res)=>{
     try{
         const { brandId, percentage, startDate, endDate, description } = req.body;
 
         // 1️⃣ Check if brand exists
-        const brand = await Brand.findById(brandId);
+        const brand = await brandServices.findBrandbyBrandId(brandId)
         if (!brand) {
         return res.status(404).json({ status: false, message: "Brand not found" });
         }
 
         // 2️⃣ Find products in this brand
-        const products = await Product.find({ brand: brand._id });
+        const products = await brandServices.findAllProductsOfThisBrand(brandId)
 
         // 3️⃣ Update each product's brandOffer & salePrice if needed
         if (products.length > 0) {
-            const bulkOps = products.map((product) => {
-                const update = { brandOffer: percentage };
-                if (percentage > product.productOffer && percentage > product.categoryOffer) {
-                update.salePrice = product.regularPrice * (1 - percentage / 100);
-                }
-                return {
-                    updateOne: {
-                        filter: { _id: product._id },
-                        update: { $set: update },
-                    },
-                };
-            });
-
-            if (bulkOps.length > 0) {
-                await Product.bulkWrite(bulkOps);
-            }
+            await brandServices.updateProductSalePrices(products, percentage)
         }
 
         // 4️⃣ Update category with offer info
-        await Brand.updateOne(
-            { _id: brandId },
-            {
-                $set: {
-                offer: percentage,
-                offerStartDate: startDate || null,
-                offerEndDate: endDate || null,
-                offerDescription: description || "",
-                },
-            }
-        );
+        await brandServices.updateOfferDetailsInBrand(brandId, percentage, startDate, endDate, description)
 
         // 5️⃣ Sync to Offer collection (centralized)
-        await Offer.findOneAndUpdate(
-            { refId: brand._id, type: "brand" },
-            {
-                name: brand.brandName,
-                type: "brand",
-                refId: brand._id,
-                percentage,
-                startDate: startDate || null,
-                endDate: endDate || null,
-                description: description || "",
-                active: true,
-            },
-            { upsert: true } // create if not exists
-        );
+        await offerServices.updateBrandOffer(brand, percentage, startDate, endDate, description)
 
         // 6️⃣ Send response
         res.json({ status: true, message: "Brand offer added successfully" });
