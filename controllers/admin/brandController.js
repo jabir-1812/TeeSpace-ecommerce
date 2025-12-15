@@ -1,3 +1,4 @@
+import brandServices from '../../services/admin services/brandServices.js';
 import Status from '../../constants/statusCodes.js'
 import path from 'path';
 import fs from 'fs';
@@ -7,28 +8,14 @@ import Brand from '../../models/brandSchema.js';
 import Product from '../../models/productSchema.js';
 import Offer from '../../models/offerSchema.js';
 
+
+
 const loadAllBrands=async (req,res)=>{
     try {
-        const ITEMS_PER_PAGE=5;
         const page=parseInt(req.query.page) || 1;
         const search = req.query.search || '';
 
-        const totalBrands=await Brand.countDocuments({brandName:{$regex:".*"+search+".*",$options:"i"}})
-        const totalPages=Math.ceil(totalBrands/ITEMS_PER_PAGE);
-        const brands=await Brand.find({brandName:{$regex:".*"+search+".*",$options:"i"}})
-        .sort({createdAt:-1})
-        .skip((page-1)*ITEMS_PER_PAGE)
-        .limit(ITEMS_PER_PAGE)
-
-        const products=await Product.aggregate([{$group:{_id:"$brand",products:{$sum:1}}}])
-
-        for(const brand of brands){
-            for(const p of products){
-                if(brand._id.toString()===p._id.toString()){
-                    brand.products=p.products;
-                }
-            }
-        }
+        const {brands, products, totalBrands, totalPages} =await brandServices.loadAllBrands(search, page)
 
 
         res.render('./admin/brand/3brands',{
