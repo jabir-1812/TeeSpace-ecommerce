@@ -43,21 +43,21 @@ const razorpay=new Razorpay({
 const createRazorPayOrder = async(req,res)=>{
 	try {
 		const userId=req.session.user || req.session.passport?.user;
-    if(!userId)return res.status(STATUS_CODES.BAD_REQUEST).json({message:"session expired"})
+        if(!userId)return res.status(STATUS_CODES.BAD_REQUEST).json({message:"session expired"})
 
 		const {addressId,appliedCoupons=[]}=req.body;
 
-  //  Fetch address and copy it
-      const userAddressDoc = await Address.findOne(
-          { userId, "address._id": addressId },
-          { "address.$": 1 }
-      );
-      if (!userAddressDoc || userAddressDoc.address.length === 0) {
-          return res.status(404).json({ success: false, message: "Address not found, Add a new address" });
-      }
-      const selectedAddress = userAddressDoc.address[0];
+        //  Fetch address and copy it
+        const userAddressDoc = await Address.findOne(
+            { userId, "address._id": addressId },
+            { "address.$": 1 }
+        );
+        if (!userAddressDoc || userAddressDoc.address.length === 0) {
+            return res.status(404).json({ success: false, message: "Address not found, Add a new address" });
+        }
+        const selectedAddress = userAddressDoc.address[0];
 
-    let userCart = await Cart.findOne({ userId })
+        let userCart = await Cart.findOne({ userId })
           .populate({
             path: "items.productId",
             select: "productName productImage salePrice regularPrice brand quantity isBlocked category", // only the fields you need
@@ -98,6 +98,7 @@ const createRazorPayOrder = async(req,res)=>{
       let isCartUpdated = false;//initially set as false.
       let anyOutOfStockProduct=false;
       let anyZeroCountProduct=false;
+      let anyUnavailableProduct=false;
 
 
       // Check each item quantity vs stock
@@ -108,6 +109,9 @@ const createRazorPayOrder = async(req,res)=>{
           }
           if(item.quantity===0){
             anyZeroCountProduct=true;
+          }
+          if(item.productId.isBlocked){
+            anyUnavailableProduct=true;
           }
         if (item.productId && item.quantity > item.productId.quantity) {
           item.quantity = item.productId.quantity; // reduce to available stock
@@ -135,29 +139,33 @@ const createRazorPayOrder = async(req,res)=>{
       if(anyZeroCountProduct){
         return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
       }
+      
+      if(anyUnavailableProduct){
+        return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Unavailable product(s) in your cart",reload:true})
+      }
 
       //if any coupon applied, calculate discount and reduce it from total price
       if(userCart.appliedCoupons.length > 0){
 			if(appliedCoupons.length === userCart.appliedCoupons.length){
-			//we have
-			//appliedCoupon=[{},{}] from req.body
-			//userCart.appliedCoupon=[{},{}]
-			//checking both are matching and same
+                //we have
+                //appliedCoupon=[{},{}] from req.body
+                //userCart.appliedCoupon=[{},{}]
+                //checking both are matching and same
 				const areCouponsMatch=userCart.appliedCoupons.every((userCartCoupon)=>{
-				return appliedCoupons.some((formDataCoupon)=>{
-					return (userCartCoupon.couponId.toString()===formDataCoupon.couponId &&
-					userCartCoupon.code===formDataCoupon.couponCode)
-				})
+				    return appliedCoupons.some((formDataCoupon)=>{
+                        return (userCartCoupon.couponId.toString()===formDataCoupon.couponId.toString() &&
+                                userCartCoupon.code===formDataCoupon.couponCode)
+                        })
 				})
 				if(!areCouponsMatch){
-				userCart.appliedCoupons=[];
-				await userCart.save()
-				return res.status(STATUS_CODES.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
+                    userCart.appliedCoupons=[];
+                    await userCart.save()
+                    return res.status(STATUS_CODES.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
 				}
 			}else{
-			userCart.appliedCoupons=[];
-			await userCart.save()
-			return res.status(STATUS_CODES.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
+                userCart.appliedCoupons=[];
+                await userCart.save()
+                return res.status(STATUS_CODES.INTERNAL_ERROR).json({message:"Coupon mismatch, please try again",reload:true})
 			}
 			
 			//checking coupons are valid, and available
@@ -174,33 +182,33 @@ const createRazorPayOrder = async(req,res)=>{
 				startDate: { $lt: now }
 			});
 			if(appliedCouponIds.length !== coupons.length){
-			return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",reload:true})
+			    return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Some coupons are expired or unavailable, Please try again",reload:true})
 			}
 
 			//re-checking if cart total meeting minPurchase for coupon discount.every coupon has atleast 0 minPurchase
 			const areCouponsMeetMinPurchase=coupons.every((coupon)=>{
-			return coupon.minPurchase <= totalPrice
+			    return coupon.minPurchase <= totalPrice
 			})
 			if(!areCouponsMeetMinPurchase){
-			userCart.appliedCoupons=[];
-			userCart.save()
-			return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",reload:true})
+                userCart.appliedCoupons=[];
+                userCart.save()
+                return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Minimum Purchase required for the coupon, Please try again",reload:true})
 			}
 
 			//check if the product is valid category
 			for(const coupon of coupons){
-			if(coupon.isCategoryBased){
-				const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
-				const hasApplicableProduct=userCart.items.some((item)=>{
-				return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
-				})
-				//if there is no applicable products, remove the coupon from user's cart
-				if(!hasApplicableProduct){
-					userCart.appliedCoupons=[]
-					await userCart.save();
-					return res.status(STATUS_CODES.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",reload:true})
-				}
-			}
+                if(coupon.isCategoryBased){
+                    const applicableCategoryIds = coupon.applicableCategories.map(applicableCatId => applicableCatId.toString());
+                    const hasApplicableProduct=userCart.items.some((item)=>{
+                        return (item.productId?.category && applicableCategoryIds.includes(item.productId.category._id.toString()))
+                    })
+                    //if there is no applicable products, remove the coupon from user's cart
+                    if(!hasApplicableProduct){
+                        userCart.appliedCoupons=[]
+                        await userCart.save();
+                        return res.status(STATUS_CODES.BAD_REQUEST).json({message:"These product categories don't have this coupon discount, Please try again",reload:true})
+                    }
+                }
 			}
 
 			//all set
@@ -241,18 +249,18 @@ const createRazorPayOrder = async(req,res)=>{
 						itemTotalCouponDiscount+=discount;
 
 						if(!appliedCouponsMap.has(coupon.couponCode)){
-								appliedCouponsMap.set(
-									coupon.couponCode,
-									{
-                      couponId:coupon._id,
-                      discountType:coupon.discountType,
-                      discountValue:coupon.discountValue,
-                      minPurchase:coupon.minPurchase,
-                      maxDiscountAmount:coupon.maxDiscountAmount,
-                      isCategoryBased:coupon.isCategoryBased,
-                      applicableCategories:coupon.applicableCategories,
-                      excludeCategories:coupon.excludedCategories
-									}
+                            appliedCouponsMap.set(
+                                coupon.couponCode,
+                                {
+                                    couponId:coupon._id,
+                                    discountType:coupon.discountType,
+                                    discountValue:coupon.discountValue,
+                                    minPurchase:coupon.minPurchase,
+                                    maxDiscountAmount:coupon.maxDiscountAmount,
+                                    isCategoryBased:coupon.isCategoryBased,
+                                    applicableCategories:coupon.applicableCategories,
+                                    excludeCategories:coupon.excludedCategories
+                                }
 							)
 						}
 
@@ -283,19 +291,19 @@ const createRazorPayOrder = async(req,res)=>{
 						itemTotalCouponDiscount+=discount;
 
 						if(!appliedCouponsMap.has(coupon.couponCode)){
-								appliedCouponsMap.set(
-									coupon.couponCode,
-									{
-                      couponId:coupon._id,
-                      discountType:coupon.discountType,
-                      discountValue:coupon.discountValue,
-                      minPurchase:coupon.minPurchase,
-                      maxDiscountAmount:coupon.maxDiscountAmount,
-                      isCategoryBased:coupon.isCategoryBased,
-                      applicableCategories:coupon.applicableCategories,
-                      excludeCategories:coupon.excludedCategories
-									}
-							)
+                            appliedCouponsMap.set(
+                                coupon.couponCode,
+                                {
+                                    couponId:coupon._id,
+                                    discountType:coupon.discountType,
+                                    discountValue:coupon.discountValue,
+                                    minPurchase:coupon.minPurchase,
+                                    maxDiscountAmount:coupon.maxDiscountAmount,
+                                    isCategoryBased:coupon.isCategoryBased,
+                                    applicableCategories:coupon.applicableCategories,
+                                    excludeCategories:coupon.excludedCategories
+                                }
+                            )
 						}
 
 						// appliedCoupons.push({
@@ -328,20 +336,21 @@ const createRazorPayOrder = async(req,res)=>{
 			appliedCoupons.length=0;
 
 			for(const [key,value] of appliedCouponsMap){
-			appliedCoupons.push(value)
+			    appliedCoupons.push(value)
 			}
+            // console.log("appliedcoupons =====", appliedCoupons)
 
 			//prepare order items obj with coupon discount
 			const orderItems=userCart.items.map((item)=>{
 			// console.log("item===============",item)
-			return {
-				productId:item.productId._id.toString(),
-				categoryId:item.productId.category._id.toString(),
-				productName:item.productId.productName,
-				productImage:item.productId.productImage[0].url,
-				quantity:item.quantity,
-				itemStatus:DELIVERY_STATUS.PENDING
-			}
+                return {
+                    productId:item.productId._id.toString(),
+                    categoryId:item.productId.category._id.toString(),
+                    productName:item.productId.productName,
+                    productImage:item.productId.productImage[0].url,
+                    quantity:item.quantity,
+                    itemStatus:DELIVERY_STATUS.PENDING
+                }
 			})
 
 			// // console.log("orderItems BEFORE===========>",orderItems)
@@ -362,11 +371,11 @@ const createRazorPayOrder = async(req,res)=>{
 
 
 			const totalMrp=itemPriceDetails.reduce((sum,curr)=>{
-			return sum+curr.itemTotalMrp
+			    return sum+curr.itemTotalMrp
 			},0)
 
 			const totalCouponDiscount=itemPriceDetails.reduce((sum,curr)=>{
-			return sum+curr.itemTotalCouponDiscount
+			    return sum+curr.itemTotalCouponDiscount
 			},0)
 
 			// const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
@@ -374,7 +383,7 @@ const createRazorPayOrder = async(req,res)=>{
 			// },0)
 
 			const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
-			return sum+curr.itemTotalAmount
+			    return sum+curr.itemTotalAmount
 			},0)
 
 			const totalOfferDiscount=totalMrp-totalPrice;
@@ -406,10 +415,12 @@ const createRazorPayOrder = async(req,res)=>{
 				finalTotalAmount:totalAmount
 			});
 
+            // console.log("newOrder ===", newOrder.appliedCoupons)
+
 			await newOrder.save();
 
 			
-			console.log("totalAmount============",totalAmount)
+			// console.log("totalAmount============",totalAmount)
 
 			const options={
 			amount:Math.round(totalAmount) * 100,
@@ -690,6 +701,8 @@ const retryPayment=async (req,res)=>{
         let isCartUpdated = false;//initially set as false.
         let anyOutOfStockProduct=false;
         let anyZeroCountProduct=false;
+        let anyUnavailableProduct=false
+
 
 
 
@@ -702,6 +715,9 @@ const retryPayment=async (req,res)=>{
           //checkin if any product has zero buying quantity
           if(item.quantity===0){
             anyZeroCountProduct=true;
+          }
+           if(item.productId.isBlocked){
+            anyUnavailableProduct=true;
           }
 
         if (item.productId && item.quantity > item.productId.quantity) {
@@ -730,6 +746,10 @@ const retryPayment=async (req,res)=>{
 
       if(anyZeroCountProduct){
         return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
+      }
+
+      if(anyUnavailableProduct){
+        return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Unavailable product(s) in your cart",reload:true})
       }
 
       //if any coupon applied, calculate discount and reduce it from total price
@@ -1038,6 +1058,8 @@ const retryPaymentFromOrderDetailsPage=async (req,res)=>{
 		let totalPrice=0;
 		let totalAmount = 0;
 		let anyOutOfStockProduct=false;
+        let anyUnavailableProduct=false;
+
 
 		//validate each item's quantity vs product stock
 		for(const item of order.orderItems){
@@ -1048,6 +1070,10 @@ const retryPaymentFromOrderDetailsPage=async (req,res)=>{
 			if(item.quantity > item.productId.quantity){
 				return res.status(STATUS_CODES.NOT_FOUND).json({message:"Some product(s) are few left."})
 			}
+
+            if(item.productId.isBlocked){
+				return res.status(STATUS_CODES.NOT_FOUND).json({message:"Some product(s) are unavailable"})
+            }
 
 			totalPrice += (item.productId ? item.productId.salePrice : 0) * item.quantity;
 			totalAmount += (item.productId ? item.productId.salePrice : 0) * item.quantity;
@@ -1403,7 +1429,10 @@ const verifyRazorpayPayment = async (req,res)=>{
     
     //check if any referral coupons
     //if yes, it should be removed, referral coupons are one time usable
+    console.log("order.appliedCoupons ============ ",order.appliedCoupons)
+
     const allReferralCoupons=await Coupon.find({userId})
+    console.log("all referral coupons === ",allReferralCoupons)
     const appliedRefCoupons=allReferralCoupons.filter((allC)=>{
       return order.appliedCoupons.some((oc)=>{
         return allC._id.toString()===oc.couponId.toString()
@@ -1498,6 +1527,7 @@ const place_cod_order=async (req,res)=>{
         let isCartUpdated = false;//initially set as false.
         let anyOutOfStockProduct=false;
         let anyZeroCountProduct=false;
+        let anyUnavailableProduct=false
 
 
 
@@ -1511,6 +1541,9 @@ const place_cod_order=async (req,res)=>{
             //checking if any products buying count is zero
             if(item.quantity===0){
                 anyZeroCountProduct=true;
+            }
+            if(item.productId.isBlocked){
+                anyUnavailableProduct=true;
             }
           if (item.productId && item.quantity > item.productId.quantity) {
             item.quantity = item.productId.quantity; // reduce to available stock
@@ -1538,6 +1571,10 @@ const place_cod_order=async (req,res)=>{
 
         if(anyZeroCountProduct){
           return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
+        }
+
+        if(anyUnavailableProduct){
+            return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Unavailable product(s) in your cart",reload:true})
         }
 
         if(userCart.appliedCoupons.length === 0 && totalAmount>1000){
@@ -1974,6 +2011,8 @@ const placeWalletPaidOrder = async (req,res)=>{
       let isCartUpdated = false;//initially set as false.
       let anyOutOfStockProduct=false;
       let anyZeroCountProduct=false;
+      let anyUnavailableProduct=false;
+
 
 
 
@@ -1988,6 +2027,10 @@ const placeWalletPaidOrder = async (req,res)=>{
            if(item.quantity===0){
             anyZeroCountProduct=true;
           }
+
+            if(item.productId.isBlocked){
+                anyUnavailableProduct=true;
+            }
 
         if (item.productId && item.quantity > item.productId.quantity) {
           item.quantity = item.productId.quantity; // reduce to available stock
@@ -2015,6 +2058,10 @@ const placeWalletPaidOrder = async (req,res)=>{
 
       if(anyZeroCountProduct){
         return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
+      }
+
+       if(anyUnavailableProduct){
+        return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Unavailable product(s) in your cart",reload:true})
       }
 
       if(userCart.appliedCoupons.length > 0){

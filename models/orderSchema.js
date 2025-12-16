@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 const { Schema } = mongoose;
 import DELIVERY_STATUS from '../constants/deliveryStatus.enum.js';
 
@@ -77,6 +77,7 @@ const orderSchema = new Schema(
     totalOfferDiscount:{type:Number,required:true,default:0},
     appliedCoupons:[
       {
+        couponId:{type:mongoose.Schema.Types.ObjectId, ref:'Coupon'},
         discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
         discountValue: { type: Number, required: true },
         minPurchase: { type: Number, default: 0 },
