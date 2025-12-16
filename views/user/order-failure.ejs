@@ -186,7 +186,7 @@
     <div class="order-details">
         <p>
             <strong>Order ID:</strong> <%= order.orderId %><br>
-            <strong>Attempted Amount:</strong> Rs. <%= order.totalAmount %>/-<br>
+            <strong>Attempted Amount:</strong> Rs. <%= Math.round(order.totalAmount) %>/-<br>
             <strong>Reason:</strong> <%= order.razorPayFailureReason %><br>
             <strong>RazorPay Order ID:</strong> <%= order.razorPayOrderId %><br>
             <strong>RazorPay Payment ID:</strong> <%= order.razorPayPaymentId %>

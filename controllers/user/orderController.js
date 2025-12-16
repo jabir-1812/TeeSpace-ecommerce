@@ -383,8 +383,8 @@ const createRazorPayOrder = async(req,res)=>{
 				isCouponApplied:appliedCoupons.length > 0 ? true:false,
 				totalPrice,
 				finalTotalPrice:totalPrice,
-				totalAmount,
-				finalTotalAmount:totalAmount
+				totalAmount:Math.round(totalAmount),
+				finalTotalAmount:Math.round(totalAmount)
 			});
 
             // console.log("newOrder ===", newOrder.appliedCoupons)
@@ -450,8 +450,8 @@ const createRazorPayOrder = async(req,res)=>{
 		  finalTotalPrice:totalPrice,
           totalOfferDiscount,
 		  finalTotalOfferDiscount:totalOfferDiscount,
-          totalAmount,
-		  finalTotalAmount:totalAmount
+          totalAmount:Math.round(totalAmount),
+		  finalTotalAmount:Math.round(totalAmount)
       });
 
       await newOrder.save();
