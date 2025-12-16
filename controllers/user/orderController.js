@@ -263,17 +263,6 @@ const createRazorPayOrder = async(req,res)=>{
                                 }
 							)
 						}
-
-						// appliedCoupons.push({
-						//   discountType:coupon.discountType,
-						//   discountValue:coupon.discountValue,
-						//   minPurchase:coupon.minPurchase,
-						//   maxDiscountAmount:coupon.maxDiscountAmount,
-						//   isCategoryBased:coupon.isCategoryBased,
-						//   applicableCategories:coupon.applicableCategories,
-						//   excludeCategories:coupon.excludedCategories
-
-						// })
 					}else{//if coupon is not category based
 						let discount=0;
 						
@@ -305,17 +294,6 @@ const createRazorPayOrder = async(req,res)=>{
                                 }
                             )
 						}
-
-						// appliedCoupons.push({
-						//   discountType:coupon.discountType,
-						//   discountValue:coupon.discountValue,
-						//   minPurchase:coupon.minPurchase,
-						//   maxDiscountAmount:coupon.maxDiscountAmount,
-						//   isCategoryBased:coupon.isCategoryBased,
-						//   applicableCategories:coupon.applicableCategories,
-						//   excludeCategories:coupon.excludedCategories
-
-						// })
 					}
 				}
 				itemPriceDetails.push({
@@ -338,11 +316,9 @@ const createRazorPayOrder = async(req,res)=>{
 			for(const [key,value] of appliedCouponsMap){
 			    appliedCoupons.push(value)
 			}
-            // console.log("appliedcoupons =====", appliedCoupons)
 
 			//prepare order items obj with coupon discount
 			const orderItems=userCart.items.map((item)=>{
-			// console.log("item===============",item)
                 return {
                     productId:item.productId._id.toString(),
                     categoryId:item.productId.category._id.toString(),
@@ -353,7 +329,6 @@ const createRazorPayOrder = async(req,res)=>{
                 }
 			})
 
-			// // console.log("orderItems BEFORE===========>",orderItems)
 
 			orderItems.forEach((o)=>{
 				const itemPrices=itemPriceDetails.find((i)=>{ return i.productId === o.productId})
@@ -378,9 +353,6 @@ const createRazorPayOrder = async(req,res)=>{
 			    return sum+curr.itemTotalCouponDiscount
 			},0)
 
-			// const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
-			//   return sum+curr.itemTotalPrice
-			// },0)
 
 			const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
 			    return sum+curr.itemTotalAmount
@@ -484,17 +456,6 @@ const createRazorPayOrder = async(req,res)=>{
 
       await newOrder.save();
 
-      // // 6. Reduce stock
-      // for (let item of userCart.items) {
-      //     await Product.findByIdAndUpdate(item.productId._id, {
-      //         $inc: { quantity: -item.quantity }
-      //     });
-      // }
-
-      // 7. Clear cart
-      // await Cart.updateOne({userId}, { $set: { items: [] ,appliedCoupons:[]} });
-      // console.log("newOrder===>orderId====>",newOrder);
-
       const options={
         amount:Math.round(totalAmount) * 100,
         currency:"INR",
@@ -522,24 +483,7 @@ const createRazorPayOrder = async(req,res)=>{
 
 
 
-// const razorpayPaymentFailure=async (req,res)=>{
-//   try {
-//     const {razorpay_order_id, razorpay_payment_id, error_reason, appOrderId} = req.body;
-//     await Order.updateOne(
-//       {orderId:appOrderId},
-//       {
-//         paymentStatus:"Failed",
-//         razorPayOrderId:razorpay_order_id,
-//         razorPayPaymentId:razorpay_payment_id,
-//         razorPayFailureReason:error_reason
-//       }
-//     )
-//     res.json({success:true})
-//   } catch (error) {
-//     console.error("razorpayPaymentFailure() error========",error);
-//     return res.status(STATUS_CODES.INTERNAL_ERROR).json({message:"Something went wrong"})
-//   }
-// }
+
 const razorpayPaymentFailure=async (req,res)=>{
   try {
     const {razorpay_order_id, razorpay_payment_id, error_reason, appOrderId} = req.body;
@@ -934,9 +878,6 @@ const retryPayment=async (req,res)=>{
 			return sum+curr.itemTotalCouponDiscount
 			},0)
 
-			// const totalPrice=itemPriceDetails.reduce((sum,curr)=>{
-			//   return sum+curr.itemTotalPrice
-			// },0)
 
 			const totalAmount=itemPriceDetails.reduce((sum,curr)=>{
 			return sum+curr.itemTotalAmount
@@ -999,6 +940,10 @@ const retryPayment=async (req,res)=>{
 		order.finalTotalPrice=totalPrice;
 		order.totalAmount=totalAmount;
 		order.finalTotalAmount=totalAmount;
+
+        order.orderItems.forEach((orderItem)=>{
+            orderItem.itemStatus=DELIVERY_STATUS.PENDING;
+        })
 
 		await order.save();
 
@@ -1424,6 +1369,9 @@ const verifyRazorpayPayment = async (req,res)=>{
     // Mark order as paid
     order.paymentStatus = "Paid";
     order.orderStatus = DELIVERY_STATUS.PENDING;
+    order.orderItems.forEach((orderItem)=>{
+        orderItem.itemStatus=DELIVERY_STATUS.PENDING
+    })
     await order.save();
 
     
@@ -2060,9 +2008,7 @@ const placeWalletPaidOrder = async (req,res)=>{
         return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Product(s) with zero buying count in your cart, Please increase the buying count"})
       }
 
-       if(anyUnavailableProduct){
-        return res.status(STATUS_CODES.BAD_REQUEST).json({message:"Unavailable product(s) in your cart",reload:true})
-      }
+      
 
       if(userCart.appliedCoupons.length > 0){
             if(appliedCoupons.length === userCart.appliedCoupons.length){

@@ -66,7 +66,7 @@
 					<td class="text-center">₹<%= item.price %></td>
 
 					<!-- Item Status with Update -->
-					<% if(item.itemStatus!=='Delivered' && item.itemStatus!== 'Cancelled'){ %>
+					<% if(item.itemStatus!=='Delivered' && item.itemStatus!== 'Cancelled'  && item.itemStatus !== 'Payment Failed'){ %>
 					<td class="text-center">
 					<div class="d-flex justify-content-center align-items-center gap-2">
 						<select class="form-select form-select-sm w-auto status-select" 
@@ -90,7 +90,11 @@
 					<td class="text-center">
 						<span class="badge text-bg-danger">Cancelled</span>
 					</td>
-					<% } %>
+					<% }else if(item.itemStatus==='Payment Failed'){ %>
+                        <td class="text-center">
+						    <span class="badge text-bg-danger">Payment Failed</span>
+					    </td>
+                    <% } %>
 
 					<td class="text-center" data-cell-id="<%= item._id %>">
               <% if (item.returnStatus === "Requested") { %>
