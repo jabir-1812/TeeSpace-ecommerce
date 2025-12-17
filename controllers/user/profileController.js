@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+import mongoose from "mongoose";
 import Status from '../../constants/statusCodes.js';
 import StatusCode from '../../constants/statusCodes.js';
 import User from '../../models/userSchema.js';
@@ -539,18 +540,63 @@ const loadAddAddressPage =async (req,res)=>{
 }
 
 
+// const showAddresses=async (req,res)=>{
+//   try {
+//     const userId=req.session.user || req.session.passport?.user;
+//     const userData=await User.findById(userId);
+//     const addressData=await Address.findOne({userId})
+
+
+//     res.render('./user/profile/address/addresses',{
+//       title:"Addresses",
+//       user:userData,
+//       userAddress:addressData,
+//       cartLength:"",
+//     })
+//   } catch (error) {
+//     console.log('showAddresses() error===>',error);
+//     res.redirect('/page-not-found')
+//   }
+// }
 const showAddresses=async (req,res)=>{
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 3; // addresses per page
+    const skip = (page - 1) * limit;
+
     const userId=req.session.user || req.session.passport?.user;
     const userData=await User.findById(userId);
-    const addressData=await Address.findOne({userId})
 
-    res.render('./user/profile/address/addresses',{
-      title:"Addresses",
-      user:userData,
-      userAddress:addressData,
-      cartLength:""
-    })
+
+    // Paginated addresses
+    const addresses = await Address.aggregate([
+        { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+        { $unwind: "$address" },
+        { $sort: { "address.createdAt": -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        { $project: { address: 1, _id: 0 } }
+    ]);
+
+    // Total count
+    const totalResult = await Address.aggregate([
+        { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+        { $project: { total: { $size: "$address" } } }
+    ]);
+
+    const totalAddresses = totalResult[0]?.total || 0;
+    const totalPages = Math.ceil(totalAddresses / limit);
+
+    res.render("./user/profile/address/addresses", {
+        title:"Addresses",
+        user:userData,
+        cartLength:"",
+        userAddress: {
+            address: addresses.map(a => a.address)
+        },
+        currentPage: page,
+        totalPages
+    });
   } catch (error) {
     console.log('showAddresses() error===>',error);
     res.redirect('/page-not-found')
