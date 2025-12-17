@@ -136,7 +136,7 @@
 
 
             cropButton.onclick=()=>{
-                const canvas=cropper.getCroppedCanvas({width:500,height:500});
+                const canvas=cropper.getCroppedCanvas({width:1920,height:600});
                 canvas.toBlob(blob=>{
                     croppedImage[0]={blob,name:file.name};
                     let fileName=file.name;

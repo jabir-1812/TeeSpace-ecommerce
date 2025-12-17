@@ -1,90 +1,86 @@
-<style>
-    .error-message {
-    color: #dc3545;
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
-    display: none;
-  }
-</style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
-<%- include("../../../views/partials/admin/header") %>
-
-<section class="main-content">
-    <h1>Edit Banner</h1>
+<div class="container">
+    <div class="row mb-3">
+        <h3 class="text-center">Edit Banner</h3>
+    </div>
 
     <form id="editBannerForm" action="/admin/edit-banner/<%= banner._id %>">
-        <div>
-            <label for="bannerTitle">Banner Title</label>
-            <input type="text" name="title" id="bannerTitle" value="<%= banner.title %>">
-            <div id="bannerTitle-error" class="error-message"></div>
-        </div>
-        
-
-        <div>
-            <label for="description">Description</label>
-            <textarea name="description" id="description"> <%= banner.description %> </textarea>
-            <div id="description-error" class="error-message"></div>
-        </div>
-
-        <div>
-            <label for="startDate">Start Date</label>
-            <input type="date" id="startDate" name="startDate"
-                   value="<%= banner.startDate.toISOString().split('T')[0] %>">
-            <div id="startDate-error" class="error-message"></div>
+        <div class="row mb-3">
+            <div class="col-sm-4">
+                <label for="bannerTitle" class="fw-bold">Banner Title:</label>
+                <input type="text" name="title" id="bannerTitle" class="form-control" value="<%= banner.title %>">
+                <div id="bannerTitle-error" class="error-message text-danger"></div>
+            </div>
+            <div class="col-sm-8">
+                <label for="description" class="fw-bold">Description:</label>
+                <textarea name="description" id="description" class="form-control"><%= banner.description %></textarea>
+                <div id="description-error" class="error-message text-danger"></div>
+            </div>
         </div>
 
-        <div>
-            <label for="endDate">End Date</label>
-            <input type="date" id="endDate" name="endDate"
-                    value="<%= banner.endDate.toISOString().split('T')[0] %>">
-            <div id="endDate-error" class="error-message"></div>
-        </div>
+        <div class="row mb-3">
+            <div class="col-sm-4">
+                <label for="startDate" class="fw-bold">Start Date:</label>
+                <input type="date" id="startDate" name="startDate" class="form-control" value="<%= banner.startDate.toISOString().split('T')[0] %>">
+                <div id="startDate-error" class="error-message text-danger"></div>
+            </div>
 
-        <div>
-            <label for="bannerLink">Link</label>
-            <input type="text" name="link" id="bannerLink" value="<%= banner.link %>">
-            <div id="bannerLink-error" class="error-message"></div>
+            <div class="col-sm-4">
+                <label for="endDate" class="fw-bold">End Date:</label>
+                <input type="date" id="endDate" name="endDate" class="form-control" value="<%= banner.endDate.toISOString().split('T')[0] %>">
+                <div id="endDate-error" class="error-message text-danger"></div>
+            </div>
+
+            <div class="col-sm-4">
+                <label for="bannerLink" class="fw-bold">Link:</label>
+                <input type="text" name="link" id="bannerLink" class="form-control" value="<%= banner.link %>">
+                <div id="bannerLink-error" class="error-message text-danger"></div>
+            </div>
         </div>
 
         <!-- hidden input field to track removing of old image -->
         <input type="hidden" name="removeOldImage" id="removeOldImageInput" value="false">
-
-        <div id="oldImageContainer">
-            <h4>Current Image</h4>
-            <img src="<%= banner.image %>" alt="Current Banner Image">
-            <button type="button" id="removeOldImage">Remove image</button>
-        </div>
-
-        <div id="newImageSection" style="display: none;">
-            <input type="file" id="imageInput" accept="image/*" />
-            <div id="bannerImage-error" class="error-message"></div>
-            <img id="image" width="200px"/>
-            <button type="button" id="cropButton" style="display: none;">Crop & Save</button>
-        
-            <div id="preview" style="display: none;">
-                <img id="croppedPreview" />
-                <button type="button" id="removeImage">Remove</button>
+        <div class="row justify-content-center">
+            <div class="col-4 d-flex flex-column align-items-center" id="oldImageContainer">
+                <span class="fw-bold">Current Banner Image:</span>
+                <img class="img-thumbnail" src="<%= banner.image %>" alt="Current Banner Image">
+                <button type="button" class="btn btn-outline-danger" id="removeOldImage">Remove</button>
             </div>
         </div>
 
 
-        <div>
-            <button class="btn btn-dark">Update</button>
-            <a href="/admin/banners" class="btn btn-outline-dark">Cancel</a>
+        <div class="row justify-content-center">
+            <div style="display: none;" id="newImageSection">
+                <div class="col-9 d-flex flex-column align-items-center gap-2">
+                    <input type="file" class="form-control" id="imageInput" accept="image/*">
+                    <div id="bannerImage-error" class="error-message text-danger"></div>
+                    <img id="image" width="300px" src="" alt="">
+                    <button class="btn btn-success" type="button" id="cropButton" style="display: none;">Crop & Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-9" id="preview" style="display: none;">
+                <img class="img-thumbnail" id="croppedPreview" />
+                <button class="btn btn-outline-danger" type="button" id="removeImage">Remove</button>
+            </div>
+        </div>
+
+
+        <div class="row my-3">
+            <div class="col d-flex justify-content-center gap-5">
+                <button class="btn btn-dark">Update Banner</button>
+                <a href="/admin/banners" class="btn btn-outline-dark">Cancel</a>
+            </div>            
         </div>
     </form>
+</div>
 
-    <div id="successAlert" style="display: none; background: green; color: white; padding: 10px; margin-top: 20px;">
-         Item updated successfully!
-    </div>
 
-</section>
-
-<%- include("../../../views/partials/admin/footer") %>
 <!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
 <script>
     const form=document.getElementById('editBannerForm');
@@ -107,7 +103,7 @@
     const preview = document.getElementById('preview');
     const croppedPreview = document.getElementById('croppedPreview');
     const removeImage = document.getElementById('removeImage');
-    const successAlert = document.getElementById('successAlert');
+    // const successAlert = document.getElementById('successAlert');
     const newImageSection = document.getElementById('newImageSection');
     const oldImageContainer = document.getElementById('oldImageContainer');
     const removeOldImageInput = document.getElementById('removeOldImageInput');
@@ -115,15 +111,17 @@
 
     if (removeOldImageBtn) {
         removeOldImageBtn.addEventListener('click', () => {
-        oldImageContainer.style.display = 'none';
+        oldImageContainer.innerHTML='';
         newImageSection.style.display = 'block';
         removeOldImageInput.value = 'true';
+        document.getElementById('sample').style.display='none'
         });
     }
 
     imageInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
+    preview.style.display='none'
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -146,7 +144,7 @@
   cropButton.addEventListener('click', () => {
     if (!cropper) return;
 
-    cropper.getCroppedCanvas({ width: 300, height: 300 }).toBlob(blob => {
+    cropper.getCroppedCanvas({ width: 1920, height: 600 }).toBlob(blob => {
       croppedBlob = blob;
 
       const previewURL = URL.createObjectURL(blob);

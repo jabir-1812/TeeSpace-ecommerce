@@ -58,9 +58,15 @@ const addBanner=async (req,res)=>{
         let processedBuffer;
         try {
             processedBuffer = await sharp(req.file.buffer)
-                .resize(500, 500, { fit: "cover" })  // ✅ crop center
+                .resize({
+                    width:1920,
+                    height:600,
+                    fit:"cover",
+                    position:'centre',
+                    withoutEnlargement:true
+                })
                 .toFormat("webp")                    // ✅ convert to webp
-                .webp({ quality: 85 })               // ✅ compression
+                .webp({ quality: 80,effort:4 })               // ✅ compression
                 .toBuffer();
         } catch (error) {
             console.error("Sharp Error:", error);
@@ -117,6 +123,11 @@ const addBanner=async (req,res)=>{
     }
 }
 
+
+
+
+
+
 const loadEditBannerPage=async (req,res)=>{
     try {
         const id=req.params.id;
@@ -153,9 +164,15 @@ const editBanner = async (req,res)=>{
             let processedBuffer;
             try {
                 processedBuffer = await sharp(req.file.buffer)
-                    .resize(500, 500, { fit: "cover" })  // ✅ crop center
+                    .resize({
+                        width:1920,
+                        height:600,
+                        fit:"cover",
+                        position:'centre',
+                        withoutEnlargement:true
+                    }) 
                     .toFormat("webp")                    // ✅ convert to webp
-                    .webp({ quality: 85 })               // ✅ compression
+                    .webp({ quality: 80,effort:4 })               // ✅ compression
                     .toBuffer();
             } catch (error) {
                 console.error("Sharp Error:", error);
