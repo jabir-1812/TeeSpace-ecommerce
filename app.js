@@ -71,7 +71,7 @@ app.use(invalidRoute)
 app.use(errorHandler)
 
 
-app.listen(process.env.PORT,(err)=>{
+app.listen(process.env.PORT || 3000,(err)=>{
     if(err){
         console.log("error starting server:",err)
     }else{
