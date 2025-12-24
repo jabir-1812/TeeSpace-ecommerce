@@ -15,6 +15,7 @@ import Wallet from '../../models/walletSchema.js';
 import Coupon from '../../models/couponSchema.js';
 import mongoose from 'mongoose';
 import passport from 'passport';
+import { triggerAsyncId } from "async_hooks";
 const {session}=passport
 
 class AppError extends Error {
@@ -2973,6 +2974,11 @@ async function restoreStock(orderItems,reason) {
 // };
 
 
+//check stock 
+//give 15perc discou
+
+
+
 // Cancel a single product in an order
 const cancelOrderItem = async (req, res) => {
     try {
@@ -2995,6 +3001,33 @@ const cancelOrderItem = async (req, res) => {
 
         if (cancellingItem.itemStatus !== "Pending") {
         return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Item cannot be cancelled at this stage" });
+        }
+
+
+        //stock of the product
+        const cancellingProduct=await Product.findOne({_id:cancellingItem.productId})
+        const stockOfCancellingItem=cancellingProduct.quantity;
+
+        let giveOffer=false;
+        if(stockOfCancellingItem<5 && cancellingItem.offerDiscount>0){
+            giveOffer=true;
+        }
+
+        if(giveOffer){
+            const userWallet=await Wallet.findOne({userId})
+            if(!userWallet){
+                userWallet = new Wallet({ userId: order.userId, balance: 0, transactions: [] });
+            }
+
+            const refundAmount=(cancellingProduct.salePrice)*15/100;
+
+            userWallet.balance+=refundAmount;
+            userWallet.transactions.push({
+                amount:refundAmount,
+                type:"credit",
+                description:`Refund for ${cancellingItem.productName} (Order ${order.orderId}) 25 percentage refund`
+            })
+            await userWallet.save();
         }
 
 
@@ -3394,6 +3427,8 @@ const cancelOrderItem = async (req, res) => {
             await order.save();
 
         }
+
+
 
         const allStatuses = order.orderItems.map(i => i.itemStatus);
         const allStatusSet=new Set(allStatuses)
